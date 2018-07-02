@@ -1,0 +1,1 @@
+# vipps-magento
