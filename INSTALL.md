@@ -40,15 +40,17 @@ Vipps Payments configuration is divided by sections. It helps to quickly find an
 1. Basic Vipps Settings.
 1. Express Checkout Settings.
 
+![Screenshot of Vipps Settings](docs/vipps_method.png)
+
 Please ensure you check all configuration settings prior to using Vipps Payment. Pay attention to the Vipps Basic Settings section, namely Saleunit Serial Number, Client ID, Client Secret, Subscription Key 1, Subscription Key 2.
 
 # Basic Vipps Settings
 
-(TODO: Insert!)
+![Screenshot of Basic Vipps Settings](docs/vipps_basic.png)
 
 # Express Checkout Settings
 
-(TODO: Insert!)
+![Screenshot of Express Vipps Settings](docs/express_vipps_settings.png)
 
 # Support
 
