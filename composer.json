@@ -1,0 +1,43 @@
+{
+    "name": "vipps/module-payment",
+    "type": "magento2-module",
+    "description": "Vipps Payment Method",
+    "license": "proprietary",
+    "require": {
+        "magento/framework": "101.0.*",
+        "magento/module-sales": "101.0.*",
+        "magento/module-payment": "100.2.*",
+        "magento/module-checkout": "100.2.*",
+        "psr/log": "~1.0"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Vipps\\Payment\\": ""
+        }
+    },
+    "extra": {
+        "vaimo-module-category": "Integration"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "vendor/bin/phpcs --config-set default_standard MEQP2",
+            "vendor/bin/phpcs --config-set installed_paths \"$(pwd)/vendor/magento/marketplace-eqp\"",
+            "vendor/bin/phpcs --config-set php7.0_path \"$(which php)\""
+        ]
+    },
+    "repositories": {
+        "magento": {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        }
+    },
+    "require-dev": {
+        "magento/marketplace-eqp": "~1.0",
+        "phpunit/phpunit": "~6.2.0",
+        "phpmd/phpmd": "@stable",
+        "magento/zendframework1": "~1.12.16"
+    }
+}
