@@ -1,0 +1,52 @@
+<?php
+/**
+ * Copyright 2018 Vipps
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/** @var \Vipps\Payment\Block\Profiling\View $block */
+$item = $block->getItem();
+?>
+<div class="fieldset-wrapper">
+    <div class="fieldset-wrapper-title">
+        <span class="title"><?php echo __('Profiling Item Information'); ?></span>
+    </div>
+    <table class="admin__table-secondary">
+        <tbody>
+            <tr>
+                <th style="width: 30%;"><?php echo __('Increment Id'); ?></th>
+                <td><?php echo $item->getIncrementId(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Created At'); ?></th>
+                <td><?php echo $item->getCreatedAt(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Request Type'); ?></th>
+                <td><?php echo $item->getRequestType(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Response Code'); ?></th>
+                <td><?php echo $item->getStatusCode(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Request'); ?></th>
+                <td><?php /* @escapeVerified */ echo $item->getFormattedRequest(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Response'); ?></th>
+                <td><?php /* @escapeVerified */ echo $item->getFormattedResponse(); ?></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
