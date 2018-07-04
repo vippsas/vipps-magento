@@ -9,7 +9,7 @@
 
 # Installation via Composer (recommended)
 
-1. Navigate to your Magento root directory.
+1. Navigate to your [Magento root directory](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/build/module-file-structure.html).
 1. Enter command: `composer require vipps/module-payment`
 1. Enter command: `php bin/magento module:enable Vipps_Payment` 
 1. Enter command: `php bin/magento setup:upgrade`
