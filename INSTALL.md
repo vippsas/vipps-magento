@@ -7,23 +7,25 @@
 1. Vipps merchant account. See https://www.vipps.no/vilkar/vipps-terms-and-conditions 
 1. As with ALL Magento extensions, it is highly recommended to backup your site before installation and to install and test on a staging environment prior to production deployments.
 
-# Installation via Marketplace (recommended)
+# Installation via Composer (recommended)
+
+1. Navigate to your Magento root directory.
+1. Enter command: `composer require vipps/module-payment`
+1. Enter command: `php bin/magento module:enable Vipps_Payment` 
+1. Enter command: `php bin/magento setup:upgrade`
+1. Put your Magento in production mode if it’s required.
+
+# Installation via Marketplace
 
 Here are steps required to install Payments extension via Component Manager.
 
 1. Make a purchase for vipps extension on Marketplace.
-1. From your Magento® Admin access System -> Web Setup Wizard page.
-1. Enter Marketplace authentication keys. Please read about authentication keys generation. 4. Navigate to Component Manager page.
-1. On the Component Manager page click “Sync” button to update your new purchased extensions.
-1. Click Install in the Action column for Realex Payments component. 7. Follow Web Setup Wizard instructions.
-
-# Installation via composer
-
-1. Navigate to your Magento root directory.
-1. Enter command `composer require vipps/module-payment`
-1. Enter command `php bin/magento module:enable Vipps_Payment` 
-1. Enter command `php bin/magento setup:upgrade`
-1. Put your Magento in production mode if it’s required.
+1. From your Magento® Admin access `System` -> `Web Setup Wizard` page.
+1. Enter Marketplace authentication keys. Please read about authentication keys generation. 
+1. Navigate to `Component Manager` page.
+1. On the `Component Manager` page click the `Sync button to update your new purchased extensions.
+1. Click `Install` in the `Action` column for `Realex Payments` component.
+1. . Follow Web Setup Wizard instructions.
 
 # Configuration
 
