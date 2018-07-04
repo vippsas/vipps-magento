@@ -19,7 +19,7 @@
 
 Here are steps required to install Payments extension via Component Manager.
 
-1. Make a purchase for vipps extension on Marketplace.
+1. Make a purchase for vipps extension on [Magento Marketplace](https://marketplace.magento.com).
 1. From your Magento® Admin access `System` -> `Web Setup Wizard` page.
 1. Enter Marketplace authentication keys. Please read about authentication keys generation. 
 1. Navigate to `Component Manager` page.
