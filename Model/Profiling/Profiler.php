@@ -79,13 +79,18 @@ class Profiler implements ProfilerInterface
         /** @var ItemInterface $itemDO */
         $itemDO = $this->dataItemFactory->create();
 
-        $itemDO->setRequestType($this->parseRequestType($transfer));
+        $data = $this->parseDataFromTransferObject($transfer);
+
+        $requestType = $data['type'] ?? 'undefined';
+        $orderId = $data['order_id'] ?? $this->parseOrderId($response);
+
+        $itemDO->setRequestType($requestType);
         $itemDO->setRequest($this->packArray(
             array_merge(['headers' => $transfer->getHeaders()], ['body' => $transfer->getBody()])
         ));
 
         $itemDO->setStatusCode($response->getStatusCode());
-        $itemDO->setIncrementId($this->parseOrderId($response));
+        $itemDO->setIncrementId($orderId);
         $itemDO->setResponse($this->packArray($this->parseResponse($response)));
 
         $item = $this->itemRepository->save($itemDO);
@@ -106,19 +111,20 @@ class Profiler implements ProfilerInterface
     }
 
     /**
-     * Parse request type from url
+     * Parse data from transfer object
      *
      * @param TransferInterface $transfer
      *
-     * @return string
+     * @return array
      */
-    private function parseRequestType(TransferInterface $transfer)
+    private function parseDataFromTransferObject(TransferInterface $transfer)
     {
+        $result = [];
         if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
-            $status = $matches[3] ?? TypeInterface::INITIATE_PAYMENT;
-            return $status;
+            $result['order_id'] = $matches[2] ?? ($transfer->getBody()['transaction']['orderId'] ?? null);
+            $result['type'] = $matches[3] ?? TypeInterface::INITIATE_PAYMENT;
         }
-        return 'undefined';
+        return $result;
     }
 
     /**

@@ -27,7 +27,7 @@ class TransactionLogHistory extends DataObject
     /**
      * @var string
      */
-    private $lastOrderStatus = Transaction::TRANSACTION_OPERATION_CANCEL;
+    private $lastTransactionStatus = Transaction::TRANSACTION_OPERATION_CANCEL;
 
     /**
      * @var string
@@ -54,9 +54,9 @@ class TransactionLogHistory extends DataObject
     public function getLastTransactionStatus()
     {
         if ($this->getLastItem()) {
-            $this->lastOrderStatus = $this->getLastItem()->getOperation();
+            $this->lastTransactionStatus = $this->getLastItem()->getOperation();
         }
-        return $this->lastOrderStatus;
+        return $this->lastTransactionStatus;
     }
 
     /**
@@ -84,7 +84,7 @@ class TransactionLogHistory extends DataObject
             $items = $this->getItems();
             $lastTransactionTime = 0;
             foreach ($items as $item) {
-                if ($item->getTimeStamp() > $lastTransactionTime) {
+                if ($item->getTimeStamp() >= $lastTransactionTime) {
                     $lastTransactionTime = $item->getTimeStamp();
                     $this->lastItem = $item;
                 }

@@ -163,6 +163,6 @@ class ShippingDetails extends DataObject
      */
     public function getAddressLine2()
     {
-        return $this->getData(self::ADDRESS)[self::ADDRESS_LINE_2];
+        return $this->getData(self::ADDRESS)[self::ADDRESS_LINE_2] ?? '';
     }
 }

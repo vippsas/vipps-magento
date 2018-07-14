@@ -331,21 +331,26 @@ class OrderManagement
     }
 
     /**
-     * @param $orderStatus
+     * @param $transactionStatus
      *
      * @throws LocalizedException
      */
-    private function validateTransactionStatus($orderStatus)
+    private function validateTransactionStatus($transactionStatus)
     {
-        if ($orderStatus == Transaction::TRANSACTION_STATUS_INITIATE) {
-            throw new LocalizedException(__('Your order was not approved in Vipps.'));
-        }
+        $initiatedStatuses = [
+            Transaction::TRANSACTION_STATUS_INITIATE,
+            Transaction::TRANSACTION_STATUS_INITIATED
+        ];
         $canceledStatuses = [
             Transaction::TRANSACTION_OPERATION_CANCEL,
             Transaction::TRANSACTION_STATUS_AUTOCANCEL,
             Transaction::TRANSACTION_STATUS_CANCELLED
         ];
-        if (in_array($orderStatus, $canceledStatuses)) {
+
+        if (in_array($transactionStatus, $initiatedStatuses)) {
+            throw new LocalizedException(__('Your order was not approved in Vipps.'));
+        }
+        if (in_array($transactionStatus, $canceledStatuses)) {
             throw new LocalizedException(__('Your order was canceled in Vipps.'));
         }
     }
