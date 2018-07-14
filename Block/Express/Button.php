@@ -61,18 +61,16 @@ class Button extends Template implements ShortcutInterface
      * @param Template\Context $context
      * @param Random $mathRandom
      * @param ConfigInterface $config
-     * @param Repository $assetRepo
      * @param array $data
      */
     public function __construct(
         Template\Context $context,
         Random $mathRandom,
         ConfigInterface $config,
-        Repository $assetRepo,
         array $data = []
     ) {
         $this->config = $config;
-        $this->assetRepo = $assetRepo;
+        $this->assetRepo = $context->getAssetRepository();
         $this->mathRandom = $mathRandom;
         parent::__construct($context, $data);
     }

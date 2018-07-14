@@ -29,6 +29,11 @@ class Transaction
     /**
      * @var string
      */
+    const TRANSACTION_STATUS_INITIATED = 'initiated';
+
+    /**
+     * @var string
+     */
     const TRANSACTION_STATUS_REGISTER = 'register';
 
     /**

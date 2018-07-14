@@ -15,6 +15,7 @@
  */
 namespace Vipps\Payment\Model\Helper;
 
+use Magento\Checkout\{Helper\Data, Model\Type\Onepage};
 use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote, Model\Quote\Address};
 use Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
 use Vipps\Payment\Gateway\Transaction\{ShippingDetails, Transaction};
@@ -31,14 +32,22 @@ class QuoteUpdater extends AbstractHelper
     private $quoteRepository;
 
     /**
-     * Constructor
+     * @var Data
+     */
+    private $checkoutHelper;
+
+    /**
+     * QuoteUpdater constructor.
      *
      * @param CartRepositoryInterface $quoteRepository
+     * @param Data $checkoutHelper
      */
     public function __construct(
-        CartRepositoryInterface $quoteRepository
+        CartRepositoryInterface $quoteRepository,
+        Data $checkoutHelper
     ) {
         $this->quoteRepository = $quoteRepository;
+        $this->checkoutHelper = $checkoutHelper;
     }
 
     /**
@@ -49,37 +58,44 @@ class QuoteUpdater extends AbstractHelper
      */
     public function execute(Quote $quote, Transaction $transaction)
     {
-        if (!$transaction->isExpressCheckout()) {
-            return;
-        }
-        $payment = $quote->getPayment();
-        $payment->setMethod('vipps');
-        $this->updateQuote($quote, $transaction);
-    }
+        $this->updateCheckoutMethod($quote);
 
-    /**
-     * @param Quote $quote
-     * @param Transaction $transaction
-     */
-    private function updateQuote(Quote $quote, Transaction $transaction)
-    {
-        $quote->setMayEditShippingAddress(false);
-        $quote->setMayEditShippingMethod(true);
+        if ($transaction->isExpressCheckout()) {
+            $payment = $quote->getPayment();
+            $payment->setMethod('vipps');
 
-        $this->updateQuoteAddress($quote, $transaction);
-        $this->disabledQuoteAddressValidation($quote);
+            $quote->setMayEditShippingAddress(false);
+            $quote->setMayEditShippingMethod(true);
 
-        $quote->collectTotals();
+            $this->updateQuoteAddress($quote, $transaction);
+            $this->disabledQuoteAddressValidation($quote);
 
-        /**
-         * Unset shipping assignment to prevent from saving / applying outdated data
-         * @see \Magento\Quote\Model\QuoteRepository\SaveHandler::processShippingAssignment
-         */
-        if ($quote->getExtensionAttributes()) {
-            $quote->getExtensionAttributes()->setShippingAssignments(null);
+            /**
+             * Unset shipping assignment to prevent from saving / applying outdated data
+             * @see \Magento\Quote\Model\QuoteRepository\SaveHandler::processShippingAssignment
+             */
+            if ($quote->getExtensionAttributes()) {
+                $quote->getExtensionAttributes()->setShippingAssignments(null);
+            }
         }
 
         $this->quoteRepository->save($quote);
+    }
+
+    /**
+     * Update checkout method
+     *
+     * @param Quote $quote
+     */
+    private function updateCheckoutMethod(Quote $quote)
+    {
+        if (!$quote->getCheckoutMethod()) {
+            if ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
+                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
+            } else {
+                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
+            }
+        }
     }
 
     /**

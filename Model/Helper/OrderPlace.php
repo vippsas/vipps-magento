@@ -16,9 +16,10 @@
 namespace Vipps\Payment\Model\Helper;
 
 use Magento\Quote\Model\Quote;
-use Magento\Checkout\{Helper\Data, Model\Type\Onepage};
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Quote\Api\{CartRepositoryInterface, CartManagementInterface};
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class OrderPlace
@@ -37,11 +38,6 @@ class OrderPlace
     private $customerSession;
 
     /**
-     * @var Data
-     */
-    private $checkoutHelper;
-
-    /**
      * @var CartRepositoryInterface
      */
     private $quoteRepository;
@@ -52,17 +48,14 @@ class OrderPlace
      * @param CartRepositoryInterface $quoteRepository
      * @param CartManagementInterface $cartManagement
      * @param SessionManagerInterface $customerSession
-     * @param Data $checkoutHelper
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
         CartManagementInterface $cartManagement,
-        SessionManagerInterface $customerSession,
-        Data $checkoutHelper
+        SessionManagerInterface $customerSession
     ) {
         $this->cartManagement = $cartManagement;
         $this->customerSession = $customerSession;
-        $this->checkoutHelper = $checkoutHelper;
         $this->quoteRepository = $quoteRepository;
     }
 
@@ -70,30 +63,24 @@ class OrderPlace
      * @param Quote $quote
      *
      * @return int
+     * @throws CouldNotSaveException
+     * @throws NoSuchEntityException
      */
     public function execute(Quote $quote)
     {
-        $this->updateCheckoutMethod($quote);
-        return $this->cartManagement->placeOrder($quote->getId());
-    }
+        // Here we need to active a quote
+        // this active flag present only during this current request (does not stored in DB)
+        // We should do this because when we called $this->quoteRepository->save()
+        // the next request to repository e.g. $this->quoteRepository->getActive() - return quote
+        // from DB with "isActive" = false;
 
-    /**
-     * Update quote checkout method.
-     *
-     * @param Quote $quote
-     */
-    private function updateCheckoutMethod(Quote $quote)
-    {
-        if (!$quote->getCheckoutMethod()) {
-            if ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
-                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
-            } else {
-                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
-            }
-        }
-        $this->quoteRepository->save($quote);
-        //We need to load Quote and activate it
+        /** @var Quote $quote */
         $quote = $this->quoteRepository->get($quote->getId());
         $quote->setIsActive(true);
+
+        // collect totals before place order
+        $quote->collectTotals();
+
+        return $this->cartManagement->placeOrder($quote->getId());
     }
 }
