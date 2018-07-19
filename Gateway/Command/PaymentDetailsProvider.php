@@ -16,6 +16,7 @@
 namespace Vipps\Payment\Gateway\Command;
 
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
  * Class PaymentDetailsProvider
@@ -42,7 +43,8 @@ class PaymentDetailsProvider
     /**
      * @param array $arguments
      *
-     * @return array
+     * @return mixed
+     * @throws VippsException
      */
     public function get(array $arguments)
     {

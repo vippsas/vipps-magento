@@ -20,10 +20,11 @@ use Magento\Framework\{
     Controller\ResultInterface, App\ResponseInterface, App\Action\Action, App\Action\Context
 };
 use Magento\Quote\Api\{
-    CartRepositoryInterface,ShipmentEstimationInterface, Data\AddressInterfaceFactory
+    CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
 };
+use Magento\Quote\Model\Quote;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\OrderManagement;
+use Vipps\Payment\Model\QuoteLocator;
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
@@ -40,9 +41,9 @@ class ShippingDetails extends Action
     private $cartRepository;
 
     /**
-     * @var OrderManagement
+     * @var QuoteLocator
      */
-    private $orderManagement;
+    private $quoteLocator;
 
     /**
      * @var Json
@@ -69,7 +70,7 @@ class ShippingDetails extends Action
      *
      * @param Context $context
      * @param CartRepositoryInterface $cartRepository
-     * @param OrderManagement $orderManagement
+     * @param QuoteLocator $quoteLocator
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
      * @param Json $serializer
@@ -78,7 +79,7 @@ class ShippingDetails extends Action
     public function __construct(
         Context $context,
         CartRepositoryInterface $cartRepository,
-        OrderManagement $orderManagement,
+        QuoteLocator $quoteLocator,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         Json $serializer,
@@ -86,7 +87,7 @@ class ShippingDetails extends Action
     ) {
         parent::__construct($context);
         $this->cartRepository = $cartRepository;
-        $this->orderManagement = $orderManagement;
+        $this->quoteLocator = $quoteLocator;
         $this->serializer = $serializer;
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
@@ -102,11 +103,10 @@ class ShippingDetails extends Action
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $params = $this->_request->getParams();
-            next($params);
-            $reservedOrderId = key($params);
-            $quote = $this->orderManagement->getQuoteByReservedOrderId($reservedOrderId);
-            $vippsAddress = $this->serializer->unserialize($this->_request->getContent());
+            $reservedOrderId = $this->getReservedOrderId();
+            $quote = $this->getQuote($reservedOrderId);
+
+            $vippsAddress = $this->serializer->unserialize($this->getRequest()->getContent());
             $address = $this->addressFactory->create();
             $address->addData([
                 'postcode' => $vippsAddress['postCode'],
@@ -150,7 +150,40 @@ class ShippingDetails extends Action
                 'status' => ZendResponse::STATUS_CODE_500,
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
+        } finally {
+            $this->logger->debug($this->getRequest()->getContent());
         }
         return $result;
+    }
+
+    /**
+     * Get reserved order id from request url
+     *
+     * @return int|null|string
+     */
+    private function getReservedOrderId()
+    {
+        $params = $this->getRequest()->getParams();
+        next($params);
+        $reservedOrderId = key($params);
+
+        return $reservedOrderId;
+    }
+
+    /**
+     * Retrieve quote object
+     *
+     * @param $reservedOrderId
+     *
+     * @return CartInterface|Quote
+     * @throws LocalizedException
+     */
+    private function getQuote($reservedOrderId)
+    {
+        $quote = $this->quoteLocator->get($reservedOrderId);
+        if (!$quote) {
+            throw new LocalizedException(__('Requested quote not found'));
+        }
+        return $quote;
     }
 }

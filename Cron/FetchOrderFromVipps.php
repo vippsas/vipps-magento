@@ -15,11 +15,11 @@
  */
 namespace Vipps\Payment\Cron;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Quote\Model\{Quote, ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
+use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
 use Vipps\Payment\{
-    Gateway\Command\PaymentDetailsProvider, Model\OrderManagement,
-    Gateway\Transaction\Transaction, Gateway\Transaction\TransactionBuilder
+    Gateway\Command\PaymentDetailsProvider,
+    Model\OrderPlace,
+    Gateway\Transaction\TransactionBuilder
 };
 use Psr\Log\LoggerInterface;
 
@@ -50,9 +50,9 @@ class FetchOrderFromVipps
     private $paymentDetailsProvider;
 
     /**
-     * @var OrderManagement
+     * @var OrderPlace
      */
-    private $orderManagement;
+    private $orderPlace;
 
     /**
      * @var TransactionBuilder
@@ -65,21 +65,21 @@ class FetchOrderFromVipps
      * @param CollectionFactory $quoteCollectionFactory
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param TransactionBuilder $transactionBuilder
-     * @param OrderManagement $orderManagement
+     * @param OrderPlace $orderManagement
      * @param LoggerInterface $logger
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
         PaymentDetailsProvider $paymentDetailsProvider,
         TransactionBuilder $transactionBuilder,
-        OrderManagement $orderManagement,
+        OrderPlace $orderManagement,
         LoggerInterface $logger
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
-        $this->logger = $logger;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->transactionBuilder = $transactionBuilder;
-        $this->orderManagement = $orderManagement;
+        $this->orderPlace = $orderManagement;
+        $this->logger = $logger;
     }
 
     /**
@@ -89,43 +89,42 @@ class FetchOrderFromVipps
     {
         $currentPage = 1;
         do {
-            /** @var Collection $quoteCollection */
-            $quoteCollection = $this->quoteCollectionFactory->create();
-
-            $quoteCollection->setPageSize(self::COLLECTION_PAGE_SIZE);
-            $quoteCollection->setCurPage($currentPage);
-            $quoteCollection->addFieldToSelect(['entity_id', 'reserved_order_id']);
-            $quoteCollection->join(
-                    ['p' => $quoteCollection->getTable('quote_payment')],
-                    'main_table.entity_id = p.quote_id',
-                    ['p.method']
-                );
-            $quoteCollection->addFieldToFilter('p.method', ['eq' => 'vipps']);
-            $quoteCollection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-            $quoteCollection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
-
-            /** @var Quote $order */
+            $quoteCollection = $this->createCollection($currentPage);
             foreach ($quoteCollection as $quote) {
                 try {
                     $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
-                    if (!$response) {
-                        throw new LocalizedException(__('An error occurred during order creation.'));
-                    }
                     $transaction = $this->transactionBuilder->setData($response)->build();
-                    $orderStatus = $transaction->getStatus();
-                    if (in_array(
-                        $orderStatus,
-                        [Transaction::TRANSACTION_OPERATION_CANCEL, Transaction::TRANSACTION_STATUS_AUTOCANCEL]
-                    )) {
-                        throw new LocalizedException(__('Your order was canceled in Vipps.'));
-                    }
-                    $this->orderManagement->place($quote->getReservedOrderId(), $transaction);
+                    $this->orderPlace->execute($quote, $transaction);
                 } catch (\Exception $e) {
                     $this->logger->critical($e->getMessage());
                 }
             }
-            $this->logger->debug('Processing Order From Vipps, page: ' . $currentPage);
+            $this->logger->debug('Fetch payment details, page: ' . $currentPage);
             $currentPage++;
         } while ($currentPage <= $quoteCollection->getLastPageNumber());
+    }
+
+    /**
+     * @param $currentPage
+     *
+     * @return Collection
+     */
+    private function createCollection($currentPage)
+    {
+        /** @var Collection $collection */
+        $collection = $this->quoteCollectionFactory->create();
+
+        $collection->setPageSize(self::COLLECTION_PAGE_SIZE);
+        $collection->setCurPage($currentPage);
+        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id']);
+        $collection->join(
+            ['p' => $collection->getTable('quote_payment')],
+            'main_table.entity_id = p.quote_id',
+            ['p.method']
+        );
+        $collection->addFieldToFilter('p.method', ['eq' => 'vipps']);
+        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
+        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
+        return $collection;
     }
 }

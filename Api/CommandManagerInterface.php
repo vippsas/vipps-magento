@@ -16,6 +16,7 @@
 namespace Vipps\Payment\Api;
 
 use Magento\Payment\{Gateway\Command\ResultInterface, Model\InfoInterface};
+use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
  * Interface CommandManagerInterface
@@ -40,6 +41,7 @@ interface CommandManagerInterface
      * @param array $arguments
      *
      * @return mixed
+     * @throws VippsException
      */
     public function getPaymentDetails($arguments = []);
 
@@ -49,6 +51,7 @@ interface CommandManagerInterface
      * @param string $orderId
      *
      * @return ResultInterface|null
+     * @throws VippsException
      */
     public function getOrderStatus($orderId);
 }

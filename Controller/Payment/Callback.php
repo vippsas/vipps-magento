@@ -16,14 +16,22 @@
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\{
-    Controller\ResultFactory, App\Action\Action, App\Action\Context, Serialize\Serializer\Json,
-    Session\SessionManagerInterface, Controller\ResultInterface, App\ResponseInterface
+    Controller\ResultFactory,
+    App\Action\Action,
+    App\Action\Context,
+    Controller\ResultInterface,
+    App\ResponseInterface,
+    Serialize\Serializer\Json
 };
 use Vipps\Payment\{
-    Api\CommandManagerInterface, Gateway\Request\Initiate\MerchantDataBuilder, Gateway\Transaction\TransactionBuilder,
-    Model\OrderManagement
+    Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\TransactionBuilder,
+    Model\OrderPlace,
+    Model\QuoteLocator
 };
-use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote};
+use Magento\Quote\{
+    Api\Data\CartInterface, Model\Quote
+};
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
@@ -35,24 +43,14 @@ use Psr\Log\LoggerInterface;
 class Callback extends Action
 {
     /**
-     * @var SessionManagerInterface
+     * @var OrderPlace
      */
-    private $checkoutSession;
+    private $orderPlace;
 
     /**
-     * @var CommandManagerInterface
+     * @var QuoteLocator
      */
-    private $commandManager;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * @var OrderManagement
-     */
-    private $orderManagement;
+    private $quoteLocator;
 
     /**
      * @var Json
@@ -70,32 +68,31 @@ class Callback extends Action
     private $logger;
 
     /**
+     * @var CartInterface
+     */
+    private $quote;
+
+    /**
      * Callback constructor.
      *
      * @param Context $context
-     * @param SessionManagerInterface $checkoutSession
-     * @param CommandManagerInterface $commandManager
-     * @param CartRepositoryInterface $cartRepository
-     * @param OrderManagement $orderManagement
+     * @param OrderPlace $orderManagement
+     * @param QuoteLocator $quoteLocator
      * @param Json $jsonDecoder
      * @param TransactionBuilder $transactionBuilder
      * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
-        SessionManagerInterface $checkoutSession,
-        CommandManagerInterface $commandManager,
-        CartRepositoryInterface $cartRepository,
-        OrderManagement $orderManagement,
+        OrderPlace $orderManagement,
+        QuoteLocator $quoteLocator,
         Json $jsonDecoder,
         TransactionBuilder $transactionBuilder,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
-        $this->checkoutSession = $checkoutSession;
-        $this->commandManager = $commandManager;
-        $this->cartRepository = $cartRepository;
-        $this->orderManagement = $orderManagement;
+        $this->orderPlace = $orderManagement;
+        $this->quoteLocator = $quoteLocator;
         $this->jsonDecoder = $jsonDecoder;
         $this->transactionBuilder = $transactionBuilder;
         $this->logger = $logger;
@@ -110,28 +107,16 @@ class Callback extends Action
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $requestContent = $this->getRequest()->getContent();
-            $requestData = $this->jsonDecoder->unserialize($requestContent);
+            $requestData = $this->jsonDecoder->unserialize($this->getRequest()->getContent());
 
-            if (!$this->isValid($requestData)) {
-                throw new \Exception(__('Invalid request parameters'), 400); //@codingStandardsIgnoreLine
-            }
+            $this->authorize($requestData);
 
-            if (!$this->isAuthorized($requestData)) {
-                throw new \Exception(__('Invalid request'), 401); //@codingStandardsIgnoreLine
-            }
-
-            // create transaction object
             $transaction = $this->transactionBuilder->setData($requestData)->build();
+            $this->orderPlace->execute($this->getQuote($requestData), $transaction);
 
-            // place order if not exist in Magento and update order status based on transaction info
-            $this->orderManagement->place($this->getOrderId($requestData), $transaction);
-
+            /** @var Json $result */
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
-            $result->setData([
-                'status' => ZendResponse::STATUS_CODE_200,
-                'message' => 'success'
-                ]);
+            $result->setData(['status' => ZendResponse::STATUS_CODE_200, 'message' => 'success']);
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
@@ -139,8 +124,27 @@ class Callback extends Action
                 'status' => ZendResponse::STATUS_CODE_500,
                 'message' => __('An error occurred during callback processing.')
             ]);
+        } finally {
+            $this->logger->debug((string)$this->getRequest());
         }
         return $result;
+    }
+
+    /**
+     * @param $requestData
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    private function authorize($requestData)
+    {
+        if (!$this->isValid($requestData)) {
+            throw new \Exception(__('Invalid request parameters'), 400); //@codingStandardsIgnoreLine
+        }
+        if (!$this->isAuthorized($requestData)) {
+            throw new \Exception(__('Invalid request'), 401); //@codingStandardsIgnoreLine
+        }
+        return true;
     }
 
     /**
@@ -175,19 +179,20 @@ class Callback extends Action
      *
      * @param $requestData
      *
-     * @return Quote|mixed
-     * @throws \Magento\Framework\Exception\NotFoundException
+     * @return bool|CartInterface|Quote
      */
     private function getQuote($requestData)
     {
-        return $this->orderManagement->getQuoteByReservedOrderId($this->getOrderId($requestData));
+        if (null === $this->quote) {
+            $this->quote = $this->quoteLocator->get($this->getOrderId($requestData)) ?: false;
+        }
+        return $this->quote;
     }
 
     /**
-     * @param $requestData
+     * @param array $requestData
      *
      * @return bool
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function isAuthorized($requestData): bool
     {
@@ -196,18 +201,10 @@ class Callback extends Action
             $additionalInfo = $quote->getPayment()->getAdditionalInformation();
             $authToken = $additionalInfo[MerchantDataBuilder::MERCHANT_AUTH_TOKEN] ?? null;
 
-            if ($authToken !== $this->getRequest()->getHeader('authorization')) {
-                return false;
+            if ($authToken === $this->getRequest()->getHeader('authorization')) {
+                return true;
             }
-
-            // clear merchant auth token when success
-            $additionalInfo[MerchantDataBuilder::MERCHANT_AUTH_TOKEN] = null;
-            $quote->getPayment()->setAdditionalInformation($additionalInfo);
-            $this->cartRepository->save($quote);
-
-            return true;
         }
-
         return false;
     }
 }

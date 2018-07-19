@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Controller\Payment\ShippingDetails;
-use Vipps\Payment\Model\OrderManagement;
+use Vipps\Payment\Model\OrderPlace;
 use Zend\Http\Response as ZendResponse;
 
 /**
@@ -89,7 +89,7 @@ class ShippingDetailsTest extends TestCase
     protected $request;  //@codingStandardsIgnoreLine
 
     /**
-     * @var OrderManagement|MockObject
+     * @var OrderPlace|MockObject
      */
     private $orderManagement;
 
@@ -114,7 +114,7 @@ class ShippingDetailsTest extends TestCase
             ->disableOriginalConstructor()
             ->setMethods(['getList', 'getItems'])
             ->getMockForAbstractClass();
-        $this->orderManagement = $this->getMockBuilder(OrderManagement::class)
+        $this->orderManagement = $this->getMockBuilder(OrderPlace::class)
             ->disableOriginalConstructor()
             ->setMethods(['getQuoteByReservedOrderId'])
             ->getMock();

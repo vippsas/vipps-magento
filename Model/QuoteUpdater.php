@@ -13,9 +13,8 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Model\Helper;
+namespace Vipps\Payment\Model;
 
-use Magento\Checkout\{Helper\Data, Model\Type\Onepage};
 use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote, Model\Quote\Address};
 use Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
 use Vipps\Payment\Gateway\Transaction\{ShippingDetails, Transaction};
@@ -29,25 +28,17 @@ class QuoteUpdater extends AbstractHelper
     /**
      * @var CartRepositoryInterface
      */
-    private $quoteRepository;
-
-    /**
-     * @var Data
-     */
-    private $checkoutHelper;
+    private $cartRepository;
 
     /**
      * QuoteUpdater constructor.
      *
-     * @param CartRepositoryInterface $quoteRepository
-     * @param Data $checkoutHelper
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
-        CartRepositoryInterface $quoteRepository,
-        Data $checkoutHelper
+        CartRepositoryInterface $cartRepository
     ) {
-        $this->quoteRepository = $quoteRepository;
-        $this->checkoutHelper = $checkoutHelper;
+        $this->cartRepository = $cartRepository;
     }
 
     /**
@@ -58,8 +49,6 @@ class QuoteUpdater extends AbstractHelper
      */
     public function execute(Quote $quote, Transaction $transaction)
     {
-        $this->updateCheckoutMethod($quote);
-
         if ($transaction->isExpressCheckout()) {
             $payment = $quote->getPayment();
             $payment->setMethod('vipps');
@@ -77,24 +66,7 @@ class QuoteUpdater extends AbstractHelper
             if ($quote->getExtensionAttributes()) {
                 $quote->getExtensionAttributes()->setShippingAssignments(null);
             }
-        }
-
-        $this->quoteRepository->save($quote);
-    }
-
-    /**
-     * Update checkout method
-     *
-     * @param Quote $quote
-     */
-    private function updateCheckoutMethod(Quote $quote)
-    {
-        if (!$quote->getCheckoutMethod()) {
-            if ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
-                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
-            } else {
-                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
-            }
+            $this->cartRepository->save($quote);
         }
     }
 

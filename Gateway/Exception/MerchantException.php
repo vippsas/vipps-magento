@@ -21,4 +21,5 @@ namespace Vipps\Payment\Gateway\Exception;
  */
 class MerchantException extends VippsException //@codingStandardsIgnoreLine
 {
+    const ERROR_CODE_REQUESTED_ORDER_NOT_FOUND = 35;
 }
