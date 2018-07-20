@@ -115,7 +115,7 @@ class FetchOrderFromVipps
                 }
             }
             $this->logger->debug(sprintf(
-                'Fetched payment details, page: "%1", quotes: "%s"',
+                'Fetched payment details, page: "%s", quotes: "%s"',
                 $currentPage,
                 $quoteCollection->count()
             ));
@@ -171,6 +171,8 @@ class FetchOrderFromVipps
                 $quote->getId(),
                 $quote->getReservedOrderId()
             ));
+        } else {
+            $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
         }
         return $order;
     }
