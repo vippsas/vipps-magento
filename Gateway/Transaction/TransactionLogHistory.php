@@ -47,19 +47,6 @@ class TransactionLogHistory extends DataObject
     }
 
     /**
-     * Method to get Last Order Status from Transaction History.
-     *
-     * @return string
-     */
-    public function getLastTransactionStatus()
-    {
-        if ($this->getLastItem()) {
-            $this->lastTransactionStatus = $this->getLastItem()->getOperation();
-        }
-        return $this->lastTransactionStatus;
-    }
-
-    /**
      * Method to get Last Transaction Id from Transaction History.
      *
      * @return null|string

@@ -99,6 +99,11 @@ class Transaction
     /**
      * @var string
      */
+    const TRANSACTION_OPERATION_RESERVE = 'reserve';
+
+    /**
+     * @var string
+     */
     const TRANSACTION_OPERATION_CAPTURE = 'capture';
 
     /**
@@ -210,17 +215,6 @@ class Transaction
     public function isExpressCheckout()
     {
         return $this->userDetails === null  ? false : true;
-    }
-
-    /**
-     * Method to retrieve Transaction Status.
-     *
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->getTransactionInfo()->getStatus() ?:
-            $this->getTransactionLogHistory()->getLastTransactionStatus();
     }
 
     /**

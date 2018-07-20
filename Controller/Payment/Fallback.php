@@ -151,7 +151,8 @@ class Fallback extends Action
             $order = $this->getOrder();
 
             if (!$order) {
-                $order = $this->placeOrder($quote);
+                $transaction = $this->getPaymentDetails();
+                $order = $this->placeOrder($quote, $transaction);
             }
 
             $this->updateCheckoutSession($quote, $order);
@@ -167,7 +168,7 @@ class Fallback extends Action
             $this->messageManager->addErrorMessage(__('An error occurred during payment status update.'));
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
-            $this->logger->debug((string)$this->getRequest());
+            $this->logger->debug($this->getRequest()->getRequestString());
         }
         return $resultRedirect;
     }
@@ -238,50 +239,62 @@ class Fallback extends Action
     }
 
     /**
-     * @param CartInterface $quote
+     * Get payment details from vipps
      *
-     * @return OrderInterface|null
-     * @throws CouldNotSaveException
+     * @return Transaction
      * @throws LocalizedException
      * @throws MerchantException
      * @throws NoSuchEntityException
      * @throws VippsException
-     * @throws \Magento\Framework\Exception\InputException
      */
-    private function placeOrder(CartInterface $quote)
+    private function getPaymentDetails()
     {
         try {
             $response = $this->commandManager
                 ->getPaymentDetails(['orderId' => $this->getRequest()->getParam('order_id')]);
-            $transaction = $this->transactionBuilder->setData($response)->build();
-            if (in_array($transaction->getStatus(), [
-                    Transaction::TRANSACTION_STATUS_CANCEL,
-                    Transaction::TRANSACTION_STATUS_AUTOCANCEL,
-                    Transaction::TRANSACTION_STATUS_CANCELLED,
-                    Transaction::TRANSACTION_STATUS_REJECTED
-                ])
-            ) {
-                $this->restoreQuote($quote);
-                throw new LocalizedException(__('Your order was canceled in Vipps.'));
-            }
+
+            return $this->transactionBuilder->setData($response)->build();
         } catch (MerchantException $e) {
-            //@todo workaround for vipps issue with order cancellation (delete this try-catch after fix)
+            //@todo workaround for vipps issue with order cancellation (delete this condition after fix)
             if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
-                $this->restoreQuote($quote);
+                $this->restoreQuote();
                 throw new LocalizedException(__('Your order was canceled in Vipps.'));
             }
             throw $e;
         }
-        return $this->orderPlace->execute($quote, $transaction);
     }
 
     /**
-     * Return quote back to customer
-     *
      * @param CartInterface $quote
+     * @param Transaction $transaction
+     *
+     * @return OrderInterface|null
+     * @throws CouldNotSaveException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\InputException
      */
-    private function restoreQuote(CartInterface $quote)
+    private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
+        $lastHistoryItem = $transaction->getTransactionLogHistory()->getLastItem();
+        if ($lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
+            $this->restoreQuote();
+            throw new LocalizedException(__('Your order was canceled in Vipps.'));
+        }
+        $order = $this->orderPlace->execute($quote, $transaction);
+        if (!$order) {
+            throw new LocalizedException(__('Couldn\'t get information about order status right now. Please contact a store administrator.'));
+        }
+        return $order;
+    }
+
+    /**
+     * @throws NoSuchEntityException
+     */
+    private function restoreQuote()
+    {
+        $quote = $this->getQuote();
+
         /** @var Quote $quote */
         $quote->setIsActive(true);
         $quote->setReservedOrderId(null);
@@ -300,8 +313,8 @@ class Fallback extends Action
     private function updateCheckoutSession(CartInterface $quote, OrderInterface $order = null)
     {
         $this->checkoutSession->setLastQuoteId($quote->getId());
-        $this->checkoutSession->setLastSuccessQuoteId($quote->getId());
         if ($order) {
+            $this->checkoutSession->setLastSuccessQuoteId($quote->getId());
             $this->checkoutSession->setLastOrderId($order->getEntityId());
             $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
             $this->checkoutSession->setLastOrderStatus($order->getStatus());

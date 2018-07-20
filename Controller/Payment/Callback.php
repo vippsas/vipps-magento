@@ -125,7 +125,7 @@ class Callback extends Action
                 'message' => __('An error occurred during callback processing.')
             ]);
         } finally {
-            $this->logger->debug((string)$this->getRequest());
+            $this->logger->debug($this->getRequest()->getContent());
         }
         return $result;
     }

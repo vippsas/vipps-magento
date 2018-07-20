@@ -139,22 +139,11 @@ class OrderPlace
             return null;
         }
         try {
-            $order = null;
-            switch ($transaction->getStatus()) {
-                case Transaction::TRANSACTION_STATUS_RESERVE:
-                case Transaction::TRANSACTION_STATUS_RESERVED:
-                    $order = $this->placeOrder($quote, $transaction);
-                    if ($order) {
-                        $this->authorize($order, $transaction);
-                    }
-                    break;
-                case Transaction::TRANSACTION_STATUS_SALE:
-                    $order = $this->placeOrder($quote, $transaction);
-                    if ($order) {
-                        $this->capture($order, $transaction);
-                    }
-                    break;
+            $order = $this->placeOrder($quote, $transaction);
+            if ($order) {
+                $this->authorize($order, $transaction);
             }
+
             return $order;
         } finally {
             $this->releaseLock($lockName);
@@ -191,6 +180,29 @@ class OrderPlace
     }
 
     /**
+     * Check can we place order or not based on transaction object
+     *
+     * @param Transaction $transaction
+     *
+     * @return bool
+     */
+    private function canPlaceOrder(Transaction $transaction)
+    {
+        if ($transaction->getTransactionInfo()->getStatus() == Transaction::TRANSACTION_STATUS_RESERVED) {
+            return true;
+        }
+
+        $lastHistoryItem = $transaction->getTransactionLogHistory()->getLastItem();
+        if ($lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_RESERVE
+            && $lastHistoryItem->isOperationSuccess()
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @param CartInterface|Quote $quote
      * @param Transaction $transaction
      *
@@ -200,6 +212,10 @@ class OrderPlace
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
+        if (!$this->canPlaceOrder($transaction)) {
+            return null;
+        }
+
         $reservedOrderId = $quote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
