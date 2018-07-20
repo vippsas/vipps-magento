@@ -121,6 +121,8 @@ class FallbackTestTest extends TestCase
 
     protected function setUp()
     {
+        $this->markTestSkipped('Skipped since deprecated, will be coveren in new patch release');
+
         $this->resultRedirect = $this->getMockBuilder(ResultInterface::class)
             ->setMethods(['setPath'])
             ->getMockForAbstractClass();

@@ -239,6 +239,9 @@ class OrderPlace
         $quote->collectTotals();
         $orderId = $this->cartManagement->placeOrder($quote->getId());
 
+        $quote->setReservedOrderId(null);
+        $this->cartRepository->save($quote);
+
         return $this->orderRepository->get($orderId);
     }
 

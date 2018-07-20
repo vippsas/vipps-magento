@@ -112,6 +112,8 @@ class FetchOrderFromVipps
                     $this->placeOrder($quote, $transaction);
                 } catch (\Exception $e) {
                     $this->logger->critical($e->getMessage());
+                } finally {
+                    usleep(1000000); //delay for 1 second
                 }
             }
             $this->logger->debug(sprintf(
