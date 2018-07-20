@@ -15,11 +15,19 @@
  */
 namespace Vipps\Payment\Cron;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Quote\Model\{Quote, ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
+use Magento\Sales\Api\Data\OrderInterface;
 use Vipps\Payment\{
-    Gateway\Command\PaymentDetailsProvider, Model\OrderManagement,
-    Gateway\Transaction\Transaction, Gateway\Transaction\TransactionBuilder
+    Api\CommandManagerInterface,
+    Gateway\Exception\MerchantException,
+    Gateway\Exception\VippsException,
+    Gateway\Transaction\Transaction,
+    Model\OrderPlace,
+    Gateway\Transaction\TransactionBuilder
 };
 use Psr\Log\LoggerInterface;
 
@@ -40,19 +48,9 @@ class FetchOrderFromVipps
     private $quoteCollectionFactory;
 
     /**
-     * @var LoggerInterface
+     * @var CommandManagerInterface
      */
-    private $logger;
-
-    /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
-
-    /**
-     * @var OrderManagement
-     */
-    private $orderManagement;
+    private $commandManager;
 
     /**
      * @var TransactionBuilder
@@ -60,26 +58,44 @@ class FetchOrderFromVipps
     private $transactionBuilder;
 
     /**
+     * @var OrderPlace
+     */
+    private $orderPlace;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
      * FetchOrderFromVipps constructor.
      *
      * @param CollectionFactory $quoteCollectionFactory
-     * @param PaymentDetailsProvider $paymentDetailsProvider
+     * @param CommandManagerInterface $commandManager
      * @param TransactionBuilder $transactionBuilder
-     * @param OrderManagement $orderManagement
+     * @param OrderPlace $orderManagement
+     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
-        PaymentDetailsProvider $paymentDetailsProvider,
+        CommandManagerInterface $commandManager,
         TransactionBuilder $transactionBuilder,
-        OrderManagement $orderManagement,
+        OrderPlace $orderManagement,
+        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
-        $this->logger = $logger;
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
+        $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
-        $this->orderManagement = $orderManagement;
+        $this->orderPlace = $orderManagement;
+        $this->cartRepository = $cartRepository;
+        $this->logger = $logger;
     }
 
     /**
@@ -89,43 +105,118 @@ class FetchOrderFromVipps
     {
         $currentPage = 1;
         do {
-            /** @var Collection $quoteCollection */
-            $quoteCollection = $this->quoteCollectionFactory->create();
-
-            $quoteCollection->setPageSize(self::COLLECTION_PAGE_SIZE);
-            $quoteCollection->setCurPage($currentPage);
-            $quoteCollection->addFieldToSelect(['entity_id', 'reserved_order_id']);
-            $quoteCollection->join(
-                    ['p' => $quoteCollection->getTable('quote_payment')],
-                    'main_table.entity_id = p.quote_id',
-                    ['p.method']
-                );
-            $quoteCollection->addFieldToFilter('p.method', ['eq' => 'vipps']);
-            $quoteCollection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-            $quoteCollection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
-
-            /** @var Quote $order */
+            $quoteCollection = $this->createCollection($currentPage);
             foreach ($quoteCollection as $quote) {
                 try {
-                    $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
-                    if (!$response) {
-                        throw new LocalizedException(__('An error occurred during order creation.'));
-                    }
-                    $transaction = $this->transactionBuilder->setData($response)->build();
-                    $orderStatus = $transaction->getStatus();
-                    if (in_array(
-                        $orderStatus,
-                        [Transaction::TRANSACTION_OPERATION_CANCEL, Transaction::TRANSACTION_STATUS_AUTOCANCEL]
-                    )) {
-                        throw new LocalizedException(__('Your order was canceled in Vipps.'));
-                    }
-                    $this->orderManagement->place($quote->getReservedOrderId(), $transaction);
+                    $transaction = $this->getPaymentDetails($quote);
+                    $this->placeOrder($quote, $transaction);
                 } catch (\Exception $e) {
                     $this->logger->critical($e->getMessage());
+                } finally {
+                    usleep(1000000); //delay for 1 second
                 }
             }
-            $this->logger->debug('Processing Order From Vipps, page: ' . $currentPage);
+            $this->logger->debug(sprintf(
+                'Fetched payment details, page: "%s", quotes: "%s"',
+                $currentPage,
+                $quoteCollection->count()
+            ));
             $currentPage++;
         } while ($currentPage <= $quoteCollection->getLastPageNumber());
+    }
+
+    /**
+     * Get payment details from vipps
+     *
+     * @param CartInterface $quote
+     *
+     * @return Transaction
+     * @throws MerchantException
+     * @throws VippsException
+     */
+    private function getPaymentDetails(CartInterface $quote)
+    {
+        try {
+            $response = $this->commandManager
+                ->getPaymentDetails(['orderId' => $quote->getReservedOrderId()]);
+
+            return $this->transactionBuilder->setData($response)->build();
+        } catch (MerchantException $e) {
+            //@todo workaround for vipps issue with order cancellation (delete this condition after fix)
+            if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
+                $this->cancelQuote($quote);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param CartInterface $quote
+     * @param Transaction $transaction
+     *
+     * @return OrderInterface|null
+     * @throws CouldNotSaveException
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\InputException
+     */
+    private function placeOrder(CartInterface $quote, Transaction $transaction)
+    {
+        if ($transaction->isTransactionCancelled()) {
+            $this->cancelQuote($quote);
+            return null;
+        }
+
+        $order = $this->orderPlace->execute($quote, $transaction);
+        if (!$order) {
+            $this->logger->critical(sprintf(
+                'Order has not been placed. Id: "%s", reserved_order_id: "%s"',
+                $quote->getId(),
+                $quote->getReservedOrderId()
+            ));
+        } else {
+            $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
+        }
+        return $order;
+    }
+
+    /**
+     * Cancel quote by setting reserved_order_id to null
+     *
+     * @param CartInterface $quote
+     */
+    private function cancelQuote(CartInterface $quote)
+    {
+        $quote->setReservedOrderId(null);
+        $this->cartRepository->save($quote);
+        $this->logger->debug(sprintf(
+            'Quote was canceled. Id: "%s", reserved_order_id: "%s"',
+            $quote->getId(),
+            $quote->getReservedOrderId()
+        ));
+    }
+
+    /**
+     * @param $currentPage
+     *
+     * @return Collection
+     */
+    private function createCollection($currentPage)
+    {
+        /** @var Collection $collection */
+        $collection = $this->quoteCollectionFactory->create();
+
+        $collection->setPageSize(self::COLLECTION_PAGE_SIZE);
+        $collection->setCurPage($currentPage);
+        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id']);
+        $collection->join(
+            ['p' => $collection->getTable('quote_payment')],
+            'main_table.entity_id = p.quote_id',
+            ['p.method']
+        );
+        $collection->addFieldToFilter('p.method', ['eq' => 'vipps']);
+        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
+        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 1800)]);
+        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
+        return $collection;
     }
 }

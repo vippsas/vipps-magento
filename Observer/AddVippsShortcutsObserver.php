@@ -16,7 +16,6 @@
 namespace Vipps\Payment\Observer;
 
 use Magento\Catalog\Block\ShortcutButtons;
-use Magento\Paypal\Helper\Shortcut\Factory as ShortcutFactory;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\Event\{ObserverInterface, Observer};
 use Vipps\Payment\Block\Express\Button;
@@ -28,11 +27,6 @@ use Vipps\Payment\Block\Express\Button;
 class AddVippsShortcutsObserver implements ObserverInterface
 {
     /**
-     * @var ShortcutFactory
-     */
-    private $shortcutFactory;
-
-    /**
      * @var ConfigInterface
      */
     private $config;
@@ -40,14 +34,11 @@ class AddVippsShortcutsObserver implements ObserverInterface
     /**
      * AddVippsShortcutsObserver constructor.
      *
-     * @param ShortcutFactory $shortcutFactory
      * @param ConfigInterface $config
      */
     public function __construct(
-        ShortcutFactory $shortcutFactory,
         ConfigInterface $config
     ) {
-        $this->shortcutFactory = $shortcutFactory;
         $this->config = $config;
     }
 

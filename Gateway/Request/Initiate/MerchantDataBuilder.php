@@ -38,7 +38,7 @@ class MerchantDataBuilder implements BuilderInterface
     const MERCHANT_AUTH_TOKEN = 'merchant_auth_token';
 
     /**
-     * Auth token for accessing to falllback controller
+     * Auth token for accessing to fallback controller
      *
      * @var string
      */
@@ -170,8 +170,8 @@ class MerchantDataBuilder implements BuilderInterface
                 self::$fallBack => $this->urlBuilder->getUrl(
                     'vipps/payment/fallback',
                     [
-                        'accessToken' => $fallBackAuthToken,
-                        'orderId' => $quote->getReservedOrderId()
+                        'access_token' => $fallBackAuthToken,
+                        'order_id' => $quote->getReservedOrderId()
                     ]
                 ),
                 self::$isApp => false,

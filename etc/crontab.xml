@@ -17,7 +17,8 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="default">
-        <job name="vipps_fetch_order_status" instance="Vipps\Payment\Cron\FetchOrderStatus" method="execute"/>
-        <job name="vipps_fetch_order_from_vipps" instance="Vipps\Payment\Cron\FetchOrderFromVipps" method="execute"/>
+        <job name="vipps_fetch_order_from_vipps" instance="Vipps\Payment\Cron\FetchOrderFromVipps" method="execute">
+            <schedule>*/10 * * * *</schedule>
+        </job>
     </group>
 </config>

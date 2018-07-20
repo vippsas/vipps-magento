@@ -16,6 +16,7 @@
 namespace Vipps\Payment\Model;
 
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
+use Magento\Framework\Exception\CouldNotSaveException;
 
 /**
  * Interface TokenProviderInterface
@@ -31,4 +32,12 @@ interface TokenProviderInterface
      * @throws AuthenticationException
      */
     public function get();
+
+    /**
+     * Method to regenerate access token from Vipps and save it to storage.
+     *
+     * @throws CouldNotSaveException
+     * @throws AuthenticationException
+     */
+    public function regenerate();
 }

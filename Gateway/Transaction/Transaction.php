@@ -99,6 +99,11 @@ class Transaction
     /**
      * @var string
      */
+    const TRANSACTION_OPERATION_RESERVE = 'reserve';
+
+    /**
+     * @var string
+     */
     const TRANSACTION_OPERATION_CAPTURE = 'capture';
 
     /**
@@ -213,14 +218,26 @@ class Transaction
     }
 
     /**
-     * Method to retrieve Transaction Status.
-     *
-     * @return string
+     * @return bool
      */
-    public function getStatus()
+    public function isTransactionCancelled()
     {
-        return $this->getTransactionInfo()->getStatus() ?:
-            $this->getTransactionLogHistory()->getLastTransactionStatus();
+        $lastHistoryItem = $this->getTransactionLogHistory()->getLastItem();
+        if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
+            return true;
+        }
+
+        $cancelledStatuses = [
+            Transaction::TRANSACTION_STATUS_CANCEL,
+            Transaction::TRANSACTION_STATUS_CANCELLED,
+            Transaction::TRANSACTION_STATUS_AUTOCANCEL,
+            Transaction::TRANSACTION_STATUS_REJECTED
+        ];
+        if (in_array($this->getTransactionInfo()->getStatus(), $cancelledStatuses)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
