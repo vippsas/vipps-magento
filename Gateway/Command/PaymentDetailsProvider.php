@@ -21,6 +21,7 @@ use Vipps\Payment\Gateway\Exception\VippsException;
 /**
  * Class PaymentDetailsProvider
  * @package Vipps\Payment\Gateway\Command
+ * @spi
  */
 class PaymentDetailsProvider
 {

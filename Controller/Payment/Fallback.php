@@ -276,8 +276,7 @@ class Fallback extends Action
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        $lastHistoryItem = $transaction->getTransactionLogHistory()->getLastItem();
-        if ($lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
+        if ($transaction->isTransactionCancelled()) {
             $this->restoreQuote();
             throw new LocalizedException(__('Your order was canceled in Vipps.'));
         }

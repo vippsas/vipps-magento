@@ -218,6 +218,29 @@ class Transaction
     }
 
     /**
+     * @return bool
+     */
+    public function isTransactionCancelled()
+    {
+        $lastHistoryItem = $this->getTransactionLogHistory()->getLastItem();
+        if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
+            return true;
+        }
+
+        $cancelledStatuses = [
+            Transaction::TRANSACTION_STATUS_CANCEL,
+            Transaction::TRANSACTION_STATUS_CANCELLED,
+            Transaction::TRANSACTION_STATUS_AUTOCANCEL,
+            Transaction::TRANSACTION_STATUS_REJECTED
+        ];
+        if (in_array($this->getTransactionInfo()->getStatus(), $cancelledStatuses)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Method to retrieve Transaction Id.
      *
      * @return null|string
