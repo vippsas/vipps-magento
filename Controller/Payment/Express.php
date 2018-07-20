@@ -19,7 +19,6 @@ use Magento\Framework\{
     Controller\ResultFactory, Controller\ResultInterface, App\Action\Context, App\Action\Action,
     Exception\LocalizedException, App\ResponseInterface, Session\SessionManagerInterface
 };
-use Magento\Quote\Model\QuoteRepository;
 use Magento\Payment\Gateway\ConfigInterface;
 use Vipps\Payment\{
     Api\CommandManagerInterface ,Gateway\Exception\VippsException, Gateway\Request\Initiate\MerchantDataBuilder
@@ -54,11 +53,6 @@ class Express extends Action
     private $config;
 
     /**
-     * @var QuoteRepository
-     */
-    private $quoteRepository;
-
-    /**
      * Express constructor.
      *
      * @param Context $context
@@ -66,22 +60,19 @@ class Express extends Action
      * @param SessionManagerInterface $session
      * @param LoggerInterface $logger
      * @param ConfigInterface $config
-     * @param QuoteRepository $quoteRepository
      */
     public function __construct(
         Context $context,
         CommandManagerInterface $commandManager,
         SessionManagerInterface $session,
         LoggerInterface $logger,
-        ConfigInterface $config,
-        QuoteRepository $quoteRepository
+        ConfigInterface $config
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
         $this->session = $session;
         $this->logger = $logger;
         $this->config = $config;
-        $this->quoteRepository = $quoteRepository;
     }
 
     /**

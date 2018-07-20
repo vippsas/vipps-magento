@@ -15,9 +15,15 @@
  */
 namespace Vipps\Payment\Gateway\Response;
 
+use Magento\Customer\Model\Session;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
-use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
+use Magento\Quote\{
+    Api\CartRepositoryInterface, Model\Quote, Model\Quote\Payment
+};
 use Vipps\Payment\Gateway\Request\SubjectReader;
+use Magento\Checkout\Model\Type\Onepage;
+use Magento\Checkout\Helper\Data as CheckoutHelper;
 
 /**
  * Class InitiateHandler
@@ -37,17 +43,33 @@ class InitiateHandler implements HandlerInterface
     private $subjectReader;
 
     /**
+     * @var CheckoutHelper
+     */
+    private $checkoutHelper;
+
+    /**
+     * @var SessionManagerInterface|Session
+     */
+    private $customerSession;
+
+    /**
      * InitiateHandler constructor.
      *
      * @param CartRepositoryInterface $cartRepository
      * @param SubjectReader $subjectReader
+     * @param CheckoutHelper $checkoutHelper
+     * @param SessionManagerInterface $customerSession
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
-        SubjectReader $subjectReader
+        SubjectReader $subjectReader,
+        CheckoutHelper $checkoutHelper,
+        SessionManagerInterface $customerSession
     ) {
         $this->cartRepository = $cartRepository;
         $this->subjectReader = $subjectReader;
+        $this->checkoutHelper = $checkoutHelper;
+        $this->customerSession = $customerSession;
     }
 
     /**
@@ -65,7 +87,18 @@ class InitiateHandler implements HandlerInterface
         /** @var Payment $payment */
         $payment = $paymentDO->getPayment();
         $quote = $payment->getQuote();
+
+        if (!$quote->getCheckoutMethod()) {
+            if ($this->customerSession->isLoggedIn()) {
+                $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
+            } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
+                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
+            } else {
+                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
+            }
+        }
         $quote->setIsActive(false);
+
         $this->cartRepository->save($quote);
     }
 }

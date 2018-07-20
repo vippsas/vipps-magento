@@ -147,7 +147,7 @@ class TokenProvider implements TokenProviderInterface
      * @throws CouldNotSaveException
      * @throws AuthenticationException
      */
-    private function regenerate()
+    public function regenerate()
     {
         $jwt = $this->readJwt();
         $this->refreshJwt($jwt);
