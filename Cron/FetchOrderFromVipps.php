@@ -140,7 +140,7 @@ class FetchOrderFromVipps
     {
         try {
             $response = $this->commandManager
-                ->getPaymentDetails(['orderId' => $quote->getReservedOrderId()]);
+                ->getOrderStatus($quote->getReservedOrderId());
 
             return $this->transactionBuilder->setData($response)->build();
         } catch (MerchantException $e) {
