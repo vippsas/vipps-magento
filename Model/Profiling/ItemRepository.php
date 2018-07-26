@@ -16,7 +16,13 @@
 namespace Vipps\Payment\Model\Profiling;
 
 use Magento\Framework\Api\SearchCriteriaInterface;
-use Vipps\Payment\Api\Profiling\{Data\ItemInterface, Data\ItemInterfaceFactory, ItemRepositoryInterface, Data\ItemSearchResultsInterfaceFactory, Data\ItemSearchResultsInterface};
+use Vipps\Payment\Api\Profiling\{
+    Data\ItemInterface,
+    Data\ItemInterfaceFactory,
+    ItemRepositoryInterface,
+    Data\ItemSearchResultsInterfaceFactory,
+    Data\ItemSearchResultsInterface
+};
 use Vipps\Payment\Model\ResourceModel\Profiling\{Item as ItemResource, Item\Collection, Item\CollectionFactory};
 use Magento\Framework\{
     Api\SortOrder, Api\DataObjectHelper, Reflection\DataObjectProcessor, Exception\CouldNotDeleteException,

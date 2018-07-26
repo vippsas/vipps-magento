@@ -89,7 +89,8 @@ class Express extends Action
             }
             $quote = $this->session->getQuote();
             $responseData = $this->commandManager->initiatePayment(
-                $quote->getPayment(), [
+                $quote->getPayment(),
+                [
                     'amount' => $quote->getGrandTotal(),
                     MerchantDataBuilder::PAYMENT_TYPE => MerchantDataBuilder::EXPRESS_CHECKOUT
                 ]
