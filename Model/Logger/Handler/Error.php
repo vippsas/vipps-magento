@@ -27,10 +27,10 @@ class Error extends Base
     /**
      * @var string
      */
-    protected $fileName = '/var/log/vipps_exception.log';
+    protected $fileName = '/var/log/vipps_exception.log'; //@codingStandardsIgnoreLine
 
     /**
      * @var int
      */
-    protected $loggerType = Logger::INFO;
+    protected $loggerType = Logger::INFO; //@codingStandardsIgnoreLine
 }

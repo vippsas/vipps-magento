@@ -84,16 +84,6 @@ class ShippingDetails extends DataObject
     const ADDRESS = 'address';
 
     /**
-     * ShippingDetails constructor.
-     *
-     * @param array $data
-     */
-    public function __construct(array $data = [])
-    {
-        parent::__construct($data);
-    }
-
-    /**
      * @return string
      */
     public function getShippingCost()

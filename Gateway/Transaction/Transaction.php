@@ -220,20 +220,21 @@ class Transaction
     /**
      * @return bool
      */
-    public function isTransactionCancelled()
+    public function isTransactionAborted()
     {
         $lastHistoryItem = $this->getTransactionLogHistory()->getLastItem();
         if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
             return true;
         }
 
-        $cancelledStatuses = [
+        $abortedStatuses = [
             Transaction::TRANSACTION_STATUS_CANCEL,
             Transaction::TRANSACTION_STATUS_CANCELLED,
             Transaction::TRANSACTION_STATUS_AUTOCANCEL,
-            Transaction::TRANSACTION_STATUS_REJECTED
+            Transaction::TRANSACTION_STATUS_REJECTED,
+            Transaction::TRANSACTION_STATUS_FAILED
         ];
-        if (in_array($this->getTransactionInfo()->getStatus(), $cancelledStatuses)) {
+        if (in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses)) {
             return true;
         }
 

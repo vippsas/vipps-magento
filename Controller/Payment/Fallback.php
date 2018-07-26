@@ -251,11 +251,11 @@ class Fallback extends Action
     {
         try {
             $response = $this->commandManager
-                ->getPaymentDetails(['orderId' => $this->getRequest()->getParam('order_id')]);
+                ->getOrderStatus($this->getRequest()->getParam('order_id'));
 
             return $this->transactionBuilder->setData($response)->build();
         } catch (MerchantException $e) {
-            //@todo workaround for vipps issue with order cancellation (delete this condition after fix)
+            //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
             if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
                 $this->restoreQuote();
                 throw new LocalizedException(__('Your order was canceled in Vipps.'));
@@ -276,13 +276,13 @@ class Fallback extends Action
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        if ($transaction->isTransactionCancelled()) {
+        if ($transaction->isTransactionAborted()) {
             $this->restoreQuote();
             throw new LocalizedException(__('Your order was canceled in Vipps.'));
         }
         $order = $this->orderPlace->execute($quote, $transaction);
         if (!$order) {
-            throw new LocalizedException(__('Couldn\'t get information about order status right now. Please contact a store administrator.'));
+            throw new LocalizedException(__('Couldn\'t get information about order status right now. Please contact a store administrator.')); //@codingStandardsIgnoreLine
         }
         return $order;
     }

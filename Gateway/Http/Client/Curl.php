@@ -16,7 +16,7 @@
 namespace Vipps\Payment\Gateway\Http\Client;
 
 use Magento\Framework\{
-    HTTP\Adapter\Curl as MagentoCurl, 
+    HTTP\Adapter\Curl as MagentoCurl,
     HTTP\Adapter\CurlFactory, Json\EncoderInterface
 };
 use Magento\Payment\Gateway\{ConfigInterface, Http\TransferInterface};
