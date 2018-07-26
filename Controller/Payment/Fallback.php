@@ -251,7 +251,7 @@ class Fallback extends Action
     {
         try {
             $response = $this->commandManager
-                ->getPaymentDetails(['orderId' => $this->getRequest()->getParam('order_id')]);
+                ->getOrderStatus($this->getRequest()->getParam('order_id'));
 
             return $this->transactionBuilder->setData($response)->build();
         } catch (MerchantException $e) {
@@ -276,7 +276,7 @@ class Fallback extends Action
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        if ($transaction->isTransactionCancelled()) {
+        if ($transaction->isTransactionAborted()) {
             $this->restoreQuote();
             throw new LocalizedException(__('Your order was canceled in Vipps.'));
         }

@@ -27,11 +27,6 @@ class TransactionLogHistory extends DataObject
     /**
      * @var string
      */
-    private $lastTransactionStatus = Transaction::TRANSACTION_OPERATION_CANCEL;
-
-    /**
-     * @var string
-     */
     const ITEMS = 'items';
     /**
      * @var Item
