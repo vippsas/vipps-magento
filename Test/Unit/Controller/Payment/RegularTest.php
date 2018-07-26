@@ -180,7 +180,9 @@ class RegularTest extends TestCase
         $errorMessage = __('Couldn\'t process this request. Please try again later or contact a store administrator.');
         $responseData = ['errorMessage' => $errorMessage];
         $exception = new VippsException(
-            $errorMessage, null, 35
+            $errorMessage,
+            null,
+            35
         );
         $this->commandManager->method('initiatePayment')
             ->willThrowException($exception);

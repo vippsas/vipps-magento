@@ -326,11 +326,9 @@ class FallbackTestTest extends TestCase
             ->getMock();
         $factory->expects($this->any())
             ->method('create')
-            ->will($this->returnCallback(function($args) use ($instanceName, $objectManager) {
+            ->will($this->returnCallback(function ($args) use ($instanceName, $objectManager) {
                 return $objectManager->getObject($instanceName, $args);
             }));
         return $factory;
     }
 }
-
-

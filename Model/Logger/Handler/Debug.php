@@ -28,12 +28,12 @@ class Debug extends Base
     /**
      * @var string
      */
-    protected $fileName = '/var/log/vipps_debug.log';
+    protected $fileName = '/var/log/vipps_debug.log'; //@codingStandardsIgnoreLine
 
     /**
      * @var int
      */
-    protected $loggerType = Logger::DEBUG;
+    protected $loggerType = Logger::DEBUG; //@codingStandardsIgnoreLine
 
     /**
      * @var ConfigInterface

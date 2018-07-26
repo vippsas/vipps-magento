@@ -123,20 +123,27 @@ class GatewayCommandTest extends TestCase
             ->setMethods(['handle'])
             ->getMockForAbstractClass();
         $this->objectManagerHelper = new ObjectManager($this);
-        $this->jsonDecoder = $this->objectManagerHelper->getObject(\Magento\Framework\Json\Decoder::class,[]);
-        $localizedExceptionFactory = $this->getMockBuilder(\Magento\Framework\Exception\LocalizedExceptionFactory::class)
+        $this->jsonDecoder = $this->objectManagerHelper->getObject(\Magento\Framework\Json\Decoder::class, []);
+        $localizedExceptionFactory = $this
+            ->getMockBuilder(\Magento\Framework\Exception\LocalizedExceptionFactory::class)
             ->disableOriginalConstructor()
             ->setMethods(['create'])
             ->getMock();
-        $localizedException = $this->objectManagerHelper->getObject(LocalizedException::class,[
-            'phrase' => __('Some error phrase here')
-        ]);
+        $localizedException = $this->objectManagerHelper->getObject(
+            LocalizedException::class,
+            [
+                'phrase' => __('Some error phrase here')
+            ]
+        );
         $localizedExceptionFactory->expects($this->any())
             ->method('create')
             ->willReturn($localizedException);
-        $this->exceptionFactory = $this->objectManagerHelper->getObject(ExceptionFactory::class,[
-            'localizedExceptionFactory' => $localizedExceptionFactory
-        ]);
+        $this->exceptionFactory = $this->objectManagerHelper->getObject(
+            ExceptionFactory::class,
+            [
+                'localizedExceptionFactory' => $localizedExceptionFactory
+            ]
+        );
         $this->action = $this->objectManagerHelper->getObject(GatewayCommand::class, [
             'requestBuilder' => $this->requestBuilder,
             'transferFactory' => $this->transferFactory,
@@ -211,10 +218,13 @@ class GatewayCommandTest extends TestCase
         $resultSuccess = [
             'response' => ZendResponse::fromString($responseStrOk)
         ];
-        $validationResultOk = $this->objectManagerHelper->getObject(Result::class, [
-            'isValid' => true,
-            'failsDescription' => []
-        ]);
+        $validationResultOk = $this->objectManagerHelper->getObject(
+            Result::class,
+            [
+                'isValid' => true,
+                'failsDescription' => []
+            ]
+        );
         return [
             [$resultFailed, true, MerchantException::class],
             [$resultSuccess, false, null, $validationResultOk],

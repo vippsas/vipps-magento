@@ -188,7 +188,13 @@ class OrderPlace
      */
     private function canPlaceOrder(Transaction $transaction)
     {
-        if ($transaction->getTransactionInfo()->getStatus() == Transaction::TRANSACTION_STATUS_RESERVED) {
+        if (in_array(
+            $transaction->getTransactionInfo()->getStatus(),
+            [
+                Transaction::TRANSACTION_STATUS_RESERVE,
+                Transaction::TRANSACTION_STATUS_RESERVED
+            ]
+        )) {
             return true;
         }
 

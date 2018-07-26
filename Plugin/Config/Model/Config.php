@@ -110,7 +110,7 @@ class Config
     private function areCredentialsChanged($requiredFields): bool
     {
         $hasChanged = false;
-        foreach(self::$encryptedFields as $fieldKey) {
+        foreach (self::$encryptedFields as $fieldKey) {
             $value = (string)$requiredFields[$fieldKey]['value'];
             if (!preg_match('/^\*+$/', $value)) {
                 $hasChanged = true;
