@@ -77,7 +77,8 @@ class Regular extends Action
         try {
             $quote = $this->session->getQuote();
             $responseData = $this->commandManager->initiatePayment(
-                $quote->getPayment(), [
+                $quote->getPayment(),
+                [
                     'amount' => $quote->getGrandTotal(),
                     MerchantDataBuilder::PAYMENT_TYPE => MerchantDataBuilder::REGULAR_PAYMENT
                 ]

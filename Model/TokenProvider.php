@@ -182,10 +182,10 @@ class TokenProvider implements TokenProviderInterface
             $response = $client->request();
             $jwt = $this->serializer->unserialize($response->getBody());
             if (!$response->isSuccessful()) {
-                throw new \Exception($response->getBody());
+                throw new \Exception($response->getBody()); //@codingStandardsIgnoreLine
             }
             if (!$this->isJwtValid($jwt)) {
-                throw new \Exception('Not valid JWT data returned from Vipps. Response: '. $response);
+                throw new \Exception('Not valid JWT data returned from Vipps. Response: '. $response); //@codingStandardsIgnoreLine
             }
             $this->logger->debug($response);
         } catch (\Exception $e) {
@@ -204,12 +204,12 @@ class TokenProvider implements TokenProviderInterface
     {
         if (!$this->jwtRecord) {
             $connection = $this->resourceConnection->getConnection();
-            $select = $connection->select();
-            $select->from($connection->getTableName('vipps_payment_jwt'))
-                ->where('scope_id = ' . $this->getScopeId())
-                ->limit(1)
-                ->order("token_id DESC");
-            $this->jwtRecord = $connection->fetchRow($select) ?: [];
+            $select = $connection->select(); //@codingStandardsIgnoreLine
+            $select->from($connection->getTableName('vipps_payment_jwt')) //@codingStandardsIgnoreLine
+                ->where('scope_id = ' . $this->getScopeId()) //@codingStandardsIgnoreLine
+                ->limit(1) //@codingStandardsIgnoreLine
+                ->order("token_id DESC"); //@codingStandardsIgnoreLine
+            $this->jwtRecord = $connection->fetchRow($select) ?: []; //@codingStandardsIgnoreLine
         }
         return $this->jwtRecord;
     }
@@ -236,7 +236,7 @@ class TokenProvider implements TokenProviderInterface
                 );
             } else {
                 $this->jwtRecord['scope_id'] = $this->getScopeId();
-                $connection->insert(
+                $connection->insert( //@codingStandardsIgnoreLine
                     $connection->getTableName('vipps_payment_jwt'),
                     $this->jwtRecord
                 );

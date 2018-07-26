@@ -20,7 +20,7 @@
  * @return \Magento\Framework\Phrase
  * @SuppressWarnings(PHPMD.ShortMethodName)
  */
-function __()
+function __() // @codingStandardsIgnoreLine
 {
     $argc = func_get_args();
 

@@ -204,7 +204,9 @@ class ExpressTest extends TestCase
             ->willReturn(true);
         $errorMessage = __('Couldn\'t process this request. Please try again later or contact a store administrator.');
         $exception = new VippsException(
-            $errorMessage, null, 35
+            $errorMessage,
+            null,
+            35
         );
         $redirectUrl = 'checkout/cart';
         $this->commandManager->method('initiatePayment')

@@ -119,7 +119,7 @@ class FetchOrderFromVipps
             $this->logger->debug(sprintf(
                 'Fetched payment details, page: "%s", quotes: "%s"',
                 $currentPage,
-                $quoteCollection->count()
+                $quoteCollection->count() //@codingStandardsIgnoreLine
             ));
             $currentPage++;
         } while ($currentPage <= $quoteCollection->getLastPageNumber());
@@ -142,7 +142,7 @@ class FetchOrderFromVipps
 
             return $this->transactionBuilder->setData($response)->build();
         } catch (MerchantException $e) {
-            //@todo workaround for vipps issue with order cancellation (delete this condition after fix)
+            //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
             if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
                 $this->cancelQuote($quote);
             }
@@ -207,7 +207,7 @@ class FetchOrderFromVipps
 
         $collection->setPageSize(self::COLLECTION_PAGE_SIZE);
         $collection->setCurPage($currentPage);
-        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id']);
+        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id']); //@codingStandardsIgnoreLine
         $collection->join(
             ['p' => $collection->getTable('quote_payment')],
             'main_table.entity_id = p.quote_id',
