@@ -106,6 +106,13 @@ class FetchOrderFromVipps
         $currentPage = 1;
         do {
             $quoteCollection = $this->createCollection($currentPage);
+
+            $this->logger->debug(sprintf(
+                'Fetched payment details, page: "%s", quotes: "%s"',
+                $currentPage,
+                $quoteCollection->count() //@codingStandardsIgnoreLine
+            ));
+
             foreach ($quoteCollection as $quote) {
                 try {
                     $transaction = $this->getPaymentDetails($quote);
@@ -116,11 +123,6 @@ class FetchOrderFromVipps
                     usleep(1000000); //delay for 1 second
                 }
             }
-            $this->logger->debug(sprintf(
-                'Fetched payment details, page: "%s", quotes: "%s"',
-                $currentPage,
-                $quoteCollection->count() //@codingStandardsIgnoreLine
-            ));
             $currentPage++;
         } while ($currentPage <= $quoteCollection->getLastPageNumber());
     }
@@ -145,9 +147,11 @@ class FetchOrderFromVipps
             //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
             if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
                 $this->cancelQuote($quote);
+            } else {
+                throw $e;
             }
-            throw $e;
         }
+        return null;
     }
 
     /**
@@ -161,7 +165,7 @@ class FetchOrderFromVipps
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        if ($transaction->isTransactionCancelled()) {
+        if ($transaction->isTransactionAborted()) {
             $this->cancelQuote($quote);
             return null;
         }
@@ -169,7 +173,7 @@ class FetchOrderFromVipps
         $order = $this->orderPlace->execute($quote, $transaction);
         if (!$order) {
             $this->logger->critical(sprintf(
-                'Order has not been placed. Id: "%s", reserved_order_id: "%s"',
+                'Order has not been placed, quote id: "%s", reserved_order_id: "%s"',
                 $quote->getId(),
                 $quote->getReservedOrderId()
             ));
@@ -186,12 +190,15 @@ class FetchOrderFromVipps
      */
     private function cancelQuote(CartInterface $quote)
     {
+        $reservedOrderId = $quote->getReservedOrderId();
+
         $quote->setReservedOrderId(null);
         $this->cartRepository->save($quote);
+
         $this->logger->debug(sprintf(
-            'Quote was canceled. Id: "%s", reserved_order_id: "%s"',
+            'Quote was canceled, id: "%s", reserved_order_id: "%s"',
             $quote->getId(),
-            $quote->getReservedOrderId()
+            $reservedOrderId
         ));
     }
 
