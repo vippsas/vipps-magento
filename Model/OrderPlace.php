@@ -32,7 +32,6 @@ use Magento\Quote\Model\Quote;
 use Vipps\Payment\{
     Gateway\Transaction\Transaction
 };
-use Magento\Framework\Lock\Backend\Database;
 
 /**
  * Class OrderManagement
@@ -82,7 +81,7 @@ class OrderPlace
     private $quoteUpdater;
 
     /**
-     * @var Database
+     * @var LockManager
      */
     private $lockManager;
 
@@ -97,7 +96,7 @@ class OrderPlace
      * @param QuoteLocator $quoteLocator
      * @param Processor $processor
      * @param QuoteUpdater $quoteUpdater
-     * @param Database $lockManager
+     * @param LockManager $lockManager
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -108,7 +107,7 @@ class OrderPlace
         QuoteLocator $quoteLocator,
         Processor $processor,
         QuoteUpdater $quoteUpdater,
-        Database $lockManager
+        LockManager $lockManager
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
