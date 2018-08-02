@@ -50,7 +50,6 @@ define(
 
             /** Redirect to vipps */
             continueToVipps: function () {
-                event.preventDefault();
                 if (additionalValidators.validate()) {
                     //update payment method information if additional data was changed
                     this.selectPaymentMethod();
@@ -86,7 +85,7 @@ define(
                         }.bind(this)
                     )
                 }
-                return true;
+                return false;
             }
         });
     }
