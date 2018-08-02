@@ -160,7 +160,7 @@ class OrderPlace
         $reservedOrderId = $quote->getReservedOrderId();
         if ($reservedOrderId) {
             $lockName = 'vipps_place_order_' . $reservedOrderId;
-            if ($this->lockManager->acquireLock($lockName, 10)) {
+            if ($this->lockManager->lock($lockName, 10)) {
                 return $lockName;
             }
         }
@@ -175,7 +175,7 @@ class OrderPlace
      */
     private function releaseLock($lockName)
     {
-        return $this->lockManager->releaseLock($lockName);
+        return $this->lockManager->unlock($lockName);
     }
 
     /**
