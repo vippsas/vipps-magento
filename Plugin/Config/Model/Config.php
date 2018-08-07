@@ -111,8 +111,8 @@ class Config
     {
         $hasChanged = false;
         foreach (self::$encryptedFields as $fieldKey) {
-            $value = (string)$requiredFields[$fieldKey]['value'];
-            if (!preg_match('/^\*+$/', $value)) {
+            $value = $requiredFields[$fieldKey]['value'] ?? false;
+            if ($value && !preg_match('/^\*+$/', (string)$value)) {
                 $hasChanged = true;
                 break;
             }
