@@ -15,8 +15,8 @@
  */
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\{
-    Exception\CouldNotSaveException, Exception\NoSuchEntityException
+use Magento\Framework\Exception\{
+    CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException
 };
 use Magento\Sales\Api\{
     OrderManagementInterface, Data\OrderInterface, OrderRepositoryInterface
@@ -121,15 +121,14 @@ class OrderPlace
     }
 
     /**
-     * Place order
-     *
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\InputException
+     * @throws AlreadyExistsException
+     * @throws InputException
      */
     public function execute(CartInterface $quote, Transaction $transaction)
     {
@@ -153,7 +152,8 @@ class OrderPlace
      * @param CartInterface $quote
      *
      * @return bool|string
-     * @throws \Magento\Framework\Exception\InputException
+     * @throws AlreadyExistsException
+     * @throws InputException
      */
     private function acquireLock(CartInterface $quote)
     {
@@ -171,7 +171,7 @@ class OrderPlace
      * @param $lockName
      *
      * @return bool
-     * @throws \Magento\Framework\Exception\InputException
+     * @throws InputException
      */
     private function releaseLock($lockName)
     {
@@ -198,7 +198,7 @@ class OrderPlace
         }
 
         $lastHistoryItem = $transaction->getTransactionLogHistory()->getLastItem();
-        if ($lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_RESERVE
+        if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_RESERVE
             && $lastHistoryItem->isOperationSuccess()
         ) {
             return true;
@@ -280,41 +280,6 @@ class OrderPlace
         $this->processor->authorize($payment, false, $baseTotalDue);
         // base amount will be set inside
         $payment->setAmountAuthorized($totalDue);
-        $this->orderRepository->save($order);
-
-        $this->notify($order);
-    }
-
-    /**
-     * Capture
-     *
-     * @param OrderInterface $order
-     * @param Transaction $transaction
-     */
-    private function capture(OrderInterface $order, Transaction $transaction)
-    {
-        if ($order->getState() !== Order::STATE_NEW) {
-            return;
-        }
-
-        // preconditions
-        $totalDue = $order->getTotalDue();
-        $baseTotalDue = $order->getBaseTotalDue();
-
-        /** @var Payment $payment */
-        $payment = $order->getPayment();
-        $payment->setAmountAuthorized($totalDue);
-        $payment->setBaseAmountAuthorized($baseTotalDue);
-
-        $transactionId = $transaction->getTransactionId();
-        $payment->setTransactionId($transactionId);
-        $payment->setTransactionAdditionalInfo(
-            PaymentTransaction::RAW_DETAILS,
-            $transaction->getTransactionInfo()->getData()
-        );
-
-        // do capture
-        $this->processor->registerCaptureNotification($payment, $baseTotalDue);
         $this->orderRepository->save($order);
 
         $this->notify($order);
