@@ -129,7 +129,6 @@ class Fallback extends Action
      */
     public function execute()
     {
-        die;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
