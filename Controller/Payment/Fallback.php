@@ -16,27 +16,14 @@
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\{
-    Controller\ResultFactory,
-    Controller\ResultInterface,
-    Exception\CouldNotSaveException,
-    Exception\LocalizedException,
-    Exception\NoSuchEntityException,
-    Session\SessionManagerInterface,
-    Controller\Result\Redirect,
-    App\Action\Action,
-    App\Action\Context,
+    Controller\ResultFactory, Controller\ResultInterface, Exception\CouldNotSaveException,
+    Exception\LocalizedException, Exception\NoSuchEntityException, Exception\InputException,
+    Session\SessionManagerInterface, Controller\Result\Redirect, App\Action\Action, App\Action\Context,
     App\ResponseInterface
 };
 use Vipps\Payment\{
-    Api\CommandManagerInterface,
-    Gateway\Exception\MerchantException,
-    Gateway\Request\Initiate\MerchantDataBuilder,
-    Model\OrderLocator,
-    Model\OrderPlace,
-    Gateway\Exception\VippsException,
-    Gateway\Transaction\TransactionBuilder,
-    Gateway\Transaction\Transaction,
-    Model\QuoteLocator
+    Api\CommandManagerInterface, Gateway\Exception\MerchantException, Gateway\Request\Initiate\MerchantDataBuilder,
+    Model\OrderLocator, Model\OrderPlace, Gateway\Transaction\TransactionBuilder, Model\QuoteLocator
 };
 use Magento\Quote\{
     Api\Data\CartInterface, Api\CartRepositoryInterface, Model\Quote
@@ -151,12 +138,10 @@ class Fallback extends Action
             $order = $this->getOrder();
 
             if (!$order) {
-                $transaction = $this->getPaymentDetails();
-                $order = $this->placeOrder($quote, $transaction);
+                $order = $this->placeOrder($quote);
             }
 
             $this->updateCheckoutSession($quote, $order);
-
             /** @var ZendResponse $result */
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } catch (LocalizedException $e) {
@@ -239,55 +224,43 @@ class Fallback extends Action
     }
 
     /**
-     * Get payment details from vipps
-     *
-     * @return Transaction
-     * @throws LocalizedException
-     * @throws MerchantException
-     * @throws NoSuchEntityException
-     * @throws VippsException
-     */
-    private function getPaymentDetails()
-    {
-        try {
-            $response = $this->commandManager
-                ->getOrderStatus($this->getRequest()->getParam('order_id'));
-
-            return $this->transactionBuilder->setData($response)->build();
-        } catch (MerchantException $e) {
-            //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
-            if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
-                $this->restoreQuote();
-                throw new LocalizedException(__('Your order was canceled in Vipps.'));
-            }
-            throw $e;
-        }
-    }
-
-    /**
      * @param CartInterface $quote
-     * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\InputException
+     * @throws InputException
      */
-    private function placeOrder(CartInterface $quote, Transaction $transaction)
+    private function placeOrder(CartInterface $quote)
     {
-        if ($transaction->isTransactionAborted()) {
-            $this->restoreQuote();
-            throw new LocalizedException(__('Your order was canceled in Vipps.'));
+        try {
+            $response = $this->commandManager->getOrderStatus(
+                $this->getRequest()->getParam('order_id')
+            );
+            $transaction = $this->transactionBuilder->setData($response)->build();
+            if ($transaction->isTransactionAborted()) {
+                $this->restoreQuote();
+            }
+            $order = $this->orderPlace->execute($quote, $transaction);
+            if (!$order) {
+                throw new LocalizedException(
+                    __('Couldn\'t get information about order status right now. Please contact a store administrator.')
+                );
+            }
+            return $order;
+        } catch (MerchantException $e) {
+            //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
+            if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
+                $this->restoreQuote();
+            } else {
+                throw $e;
+            }
         }
-        $order = $this->orderPlace->execute($quote, $transaction);
-        if (!$order) {
-            throw new LocalizedException(__('Couldn\'t get information about order status right now. Please contact a store administrator.')); //@codingStandardsIgnoreLine
-        }
-        return $order;
     }
 
     /**
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      */
     private function restoreQuote()
@@ -301,6 +274,7 @@ class Fallback extends Action
 
         $this->checkoutSession->setLastQuoteId($quote->getId());
         $this->checkoutSession->replaceQuote($quote);
+        throw new LocalizedException(__('Your order was canceled in Vipps.'));
     }
 
     /**

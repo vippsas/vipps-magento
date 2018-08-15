@@ -51,6 +51,8 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
      * @param array $arguments
      *
      * @return ResultInterface|null
+     * @throws CommandException
+     * @throws NotFoundException
      */
     public function initiatePayment(InfoInterface $payment, $arguments)
     {
@@ -107,6 +109,8 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
      * @param array $arguments
      *
      * @return ResultInterface|null
+     * @throws CommandException
+     * @throws NotFoundException
      */
     public function executeByCode($commandCode, InfoInterface $payment = null, array $arguments = [])
     {

@@ -29,8 +29,8 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, CartManagementInterface, Data\CartInterface
 };
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\{
-    Gateway\Transaction\Transaction
+use Vipps\Payment\Gateway\{
+    Transaction\Transaction, Exception\VippsException
 };
 
 /**
@@ -125,19 +125,25 @@ class OrderPlace
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
-     * @throws CouldNotSaveException
-     * @throws NoSuchEntityException
      * @throws AlreadyExistsException
+     * @throws CouldNotSaveException
      * @throws InputException
+     * @throws NoSuchEntityException
+     * @throws VippsException
      */
     public function execute(CartInterface $quote, Transaction $transaction)
     {
+        if (!$this->canPlaceOrder($transaction)) {
+            return null;
+        }
+
         $lockName = $this->acquireLock($quote);
         if (!$lockName) {
             return null;
         }
+
         try {
-            $order = $this->placeOrder($quote, $transaction);
+            $order = $this->placeOrder($quote);
             if ($order) {
                 $this->authorize($order, $transaction);
             }
@@ -196,31 +202,20 @@ class OrderPlace
         )) {
             return true;
         }
-
-        $lastHistoryItem = $transaction->getTransactionLogHistory()->getLastItem();
-        if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_RESERVE
-            && $lastHistoryItem->isOperationSuccess()
-        ) {
-            return true;
-        }
-
+      
         return false;
     }
 
     /**
      * @param CartInterface|Quote $quote
-     * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws NoSuchEntityException
+     * @throws VippsException
      */
-    private function placeOrder(CartInterface $quote, Transaction $transaction)
+    private function placeOrder(CartInterface $quote)
     {
-        if (!$this->canPlaceOrder($transaction)) {
-            return null;
-        }
-
         $reservedOrderId = $quote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
@@ -231,7 +226,8 @@ class OrderPlace
             return $order;
         }
 
-        $this->quoteUpdater->execute($quote, $transaction);
+        //this is used only for express checkout
+        $this->quoteUpdater->execute($quote);
 
         /** @var Quote $quote */
         $quote = $this->cartRepository->get($quote->getId());
