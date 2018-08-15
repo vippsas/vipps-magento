@@ -222,11 +222,6 @@ class Transaction
      */
     public function isTransactionAborted()
     {
-        $lastHistoryItem = $this->getTransactionLogHistory()->getLastItem();
-        if ($lastHistoryItem && $lastHistoryItem->getOperation() == Transaction::TRANSACTION_OPERATION_CANCEL) {
-            return true;
-        }
-
         $abortedStatuses = [
             Transaction::TRANSACTION_STATUS_CANCEL,
             Transaction::TRANSACTION_STATUS_CANCELLED,

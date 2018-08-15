@@ -15,10 +15,8 @@
  */
 namespace Vipps\Payment\Cron;
 
-use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Api\Data\CartInterface;
+use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
+use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
 use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
 use Magento\Sales\Api\Data\OrderInterface;
 use Vipps\Payment\{
@@ -115,9 +113,17 @@ class FetchOrderFromVipps
 
             foreach ($quoteCollection as $quote) {
                 try {
-                    $transaction = $this->getPaymentDetails($quote);
+                    $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
+                    $transaction = $this->transactionBuilder->setData($response)->build();
                     $this->placeOrder($quote, $transaction);
-                } catch (\Exception $e) {
+                } catch (MerchantException $e) {
+                    //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
+                    if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
+                        $this->cancelQuote($quote);
+                    } else {
+                        $this->logger->critical($e->getMessage());
+                    }
+                } catch (\Throwable $e) {
                     $this->logger->critical($e->getMessage());
                 } finally {
                     usleep(1000000); //delay for 1 second
@@ -128,40 +134,15 @@ class FetchOrderFromVipps
     }
 
     /**
-     * Get payment details from vipps
-     *
-     * @param CartInterface $quote
-     *
-     * @return Transaction
-     * @throws MerchantException
-     * @throws VippsException
-     */
-    private function getPaymentDetails(CartInterface $quote)
-    {
-        try {
-            $response = $this->commandManager
-                ->getOrderStatus($quote->getReservedOrderId());
-
-            return $this->transactionBuilder->setData($response)->build();
-        } catch (MerchantException $e) {
-            //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
-            if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
-                $this->cancelQuote($quote);
-            } else {
-                throw $e;
-            }
-        }
-        return null;
-    }
-
-    /**
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\InputException
+     * @throws VippsException
+     * @throws AlreadyExistsException
+     * @throws InputException
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {

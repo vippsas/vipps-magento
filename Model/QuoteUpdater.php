@@ -15,9 +15,15 @@
  */
 namespace Vipps\Payment\Model;
 
-use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote, Model\Quote\Address};
+use Magento\Quote\{
+    Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote, Model\Quote\Address
+};
 use Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
-use Vipps\Payment\Gateway\Transaction\{ShippingDetails, Transaction};
+use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Transaction\{
+    ShippingDetails, Transaction, TransactionBuilder
+};
 
 /**
  * Class QuoteUpdater
@@ -31,43 +37,63 @@ class QuoteUpdater extends AbstractHelper
     private $cartRepository;
 
     /**
+     * @var PaymentDetailsProvider
+     */
+    private $paymentDetailsProvider;
+
+    /**
+     * @var TransactionBuilder
+     */
+    private $transactionBuilder;
+
+    /**
      * QuoteUpdater constructor.
      *
      * @param CartRepositoryInterface $cartRepository
+     * @param PaymentDetailsProvider $paymentDetailsProvider
+     * @param TransactionBuilder $transactionBuilder
      */
     public function __construct(
-        CartRepositoryInterface $cartRepository
+        CartRepositoryInterface $cartRepository,
+        PaymentDetailsProvider $paymentDetailsProvider,
+        TransactionBuilder $transactionBuilder
     ) {
         $this->cartRepository = $cartRepository;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
+        $this->transactionBuilder = $transactionBuilder;
     }
 
     /**
-     * Method to update Quote data.
+     * @param CartInterface $quote
      *
-     * @param Quote $quote
-     * @param Transaction $transaction
+     * @return bool|CartInterface|Quote
+     * @throws VippsException
      */
-    public function execute(Quote $quote, Transaction $transaction)
+    public function execute(CartInterface $quote)
     {
-        if ($transaction->isExpressCheckout()) {
-            $payment = $quote->getPayment();
-            $payment->setMethod('vipps');
-
-            $quote->setMayEditShippingAddress(false);
-            $quote->setMayEditShippingMethod(true);
-
-            $this->updateQuoteAddress($quote, $transaction);
-            $this->disabledQuoteAddressValidation($quote);
-
-            /**
-             * Unset shipping assignment to prevent from saving / applying outdated data
-             * @see \Magento\Quote\Model\QuoteRepository\SaveHandler::processShippingAssignment
-             */
-            if ($quote->getExtensionAttributes()) {
-                $quote->getExtensionAttributes()->setShippingAssignments(null);
-            }
-            $this->cartRepository->save($quote);
+        $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
+        $transaction = $this->transactionBuilder->setData($response)->build();
+        if (!$transaction->isExpressCheckout()) {
+            return false;
         }
+        $payment = $quote->getPayment();
+        $payment->setMethod('vipps');
+
+        $quote->setMayEditShippingAddress(false);
+        $quote->setMayEditShippingMethod(true);
+
+        $this->updateQuoteAddress($quote, $transaction);
+        $this->disabledQuoteAddressValidation($quote);
+
+        /**
+         * Unset shipping assignment to prevent from saving / applying outdated data
+         * @see \Magento\Quote\Model\QuoteRepository\SaveHandler::processShippingAssignment
+         */
+        if ($quote->getExtensionAttributes()) {
+            $quote->getExtensionAttributes()->setShippingAssignments(null);
+        }
+        $this->cartRepository->save($quote);
+        return $quote;
     }
 
     /**
