@@ -15,6 +15,7 @@
  */
 namespace Vipps\Payment\Cron;
 
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
 use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
@@ -71,6 +72,11 @@ class FetchOrderFromVipps
     private $cartRepository;
 
     /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
      * FetchOrderFromVipps constructor.
      *
      * @param CollectionFactory $quoteCollectionFactory
@@ -79,6 +85,7 @@ class FetchOrderFromVipps
      * @param OrderPlace $orderManagement
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
@@ -86,7 +93,8 @@ class FetchOrderFromVipps
         TransactionBuilder $transactionBuilder,
         OrderPlace $orderManagement,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        StoreManagerInterface $storeManager
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
@@ -94,6 +102,7 @@ class FetchOrderFromVipps
         $this->orderPlace = $orderManagement;
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -113,6 +122,7 @@ class FetchOrderFromVipps
 
             foreach ($quoteCollection as $quote) {
                 try {
+                    $this->storeManager->setCurrentStore($quote->getStore()->getId());
                     $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
                     $transaction = $this->transactionBuilder->setData($response)->build();
                     $this->placeOrder($quote, $transaction);
@@ -124,7 +134,7 @@ class FetchOrderFromVipps
                         $this->logger->critical($e->getMessage());
                     }
                 } catch (\Throwable $e) {
-                    $this->logger->critical($e->getMessage());
+                    $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                 } finally {
                     usleep(1000000); //delay for 1 second
                 }
