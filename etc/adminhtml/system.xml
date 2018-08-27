@@ -18,13 +18,14 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="payment">
-            <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Vipps</label>
+                <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Vipps</label>
                 <comment><![CDATA[Vipps payment method]]></comment>
                 <fieldset_css>complex vipps-section</fieldset_css>
                 <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
                 <attribute type="activity_path">payment/vipps/active</attribute>
-                <attribute type="displayIn">recommended_solutions</attribute>
                 <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enable this Solution</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -91,6 +92,7 @@
                     </field>
                 </group>
                 <include path="Vipps_Payment::system/express_checkout.xml"/>
+            </group>
             </group>
         </section>
     </system>
