@@ -19,80 +19,80 @@
     <system>
         <section id="payment">
             <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
-            <label>Vipps</label>
-                <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Vipps</label>
-                <comment><![CDATA[Vipps payment method]]></comment>
-                <fieldset_css>complex vipps-section</fieldset_css>
-                <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
-                <attribute type="activity_path">payment/vipps/active</attribute>
-                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable this Solution</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <config_path>payment/vipps/active</config_path>
-                    <requires>
-                        <group id="vipps_required"/>
-                    </requires>
-                </field>
-                <group id="configuration_details" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
-                    <comment>Link to documentation with vipps configuration details</comment>
-                    <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
-                </group>
-                <group id="vipps_required" translate="label" showInDefault="1" showInWebsite="1" sortOrder="5">
-                    <label>Basic Vipps Settings</label>
-                    <attribute type="expanded">1</attribute>
-                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="environment" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Environment</label>
-                        <source_model>Vipps\Payment\Model\Adminhtml\Source\Environment</source_model>
-                        <config_path>payment/vipps/environment</config_path>
-                    </field>
-                    <field id="debug" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Debug</label>
+                <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Vipps</label>
+                    <comment><![CDATA[Vipps payment method]]></comment>
+                    <fieldset_css>complex vipps-section</fieldset_css>
+                    <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
+                    <attribute type="activity_path">payment/vipps/active</attribute>
+                    <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable this Solution</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/vipps/debug</config_path>
+                        <config_path>payment/vipps/active</config_path>
+                        <requires>
+                            <group id="vipps_required"/>
+                        </requires>
                     </field>
-                    <field id="profiling" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Request/Response Profiling</label>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/vipps/profiling</config_path>
-                    </field>
-                    <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Saleunit Serial Number</label>
-                        <config_path>payment/vipps/merchant_serial_number</config_path>
-                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                    </field>
-                    <field id="client_id" translate="label" type="obscure" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Client ID</label>
-                        <config_path>payment/vipps/client_id</config_path>
-                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                    </field>
-                    <field id="client_secret" translate="label" type="obscure" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Client Secret</label>
-                        <config_path>payment/vipps/client_secret</config_path>
-                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                    </field>
-                    <field id="subscription_key1" translate="label" type="obscure" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Subscription Key 1</label>
-                        <comment>
-                            <![CDATA[Ocp-Apim-Subscription-Key for DEFAULT product.]]>
-                        </comment>
-                        <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
-                        <config_path>payment/vipps/subscription_key1</config_path>
-                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                    </field>
-                    <field id="subscription_key2" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Subscription Key 2</label>
-                        <comment>
-                            <![CDATA[Ocp-Apim-Subscription-Key for eCommerce product.]]>
-                        </comment>
-                        <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
-                        <config_path>payment/vipps/subscription_key2</config_path>
-                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                    </field>
+                    <group id="configuration_details" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+                        <comment>Link to documentation with vipps configuration details</comment>
+                        <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
+                    </group>
+                    <group id="vipps_required" translate="label" showInDefault="1" showInWebsite="1" sortOrder="5">
+                        <label>Basic Vipps Settings</label>
+                        <attribute type="expanded">1</attribute>
+                        <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                        <field id="environment" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Environment</label>
+                            <source_model>Vipps\Payment\Model\Adminhtml\Source\Environment</source_model>
+                            <config_path>payment/vipps/environment</config_path>
+                        </field>
+                        <field id="debug" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Debug</label>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <config_path>payment/vipps/debug</config_path>
+                        </field>
+                        <field id="profiling" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Request/Response Profiling</label>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <config_path>payment/vipps/profiling</config_path>
+                        </field>
+                        <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Saleunit Serial Number</label>
+                            <config_path>payment/vipps/merchant_serial_number</config_path>
+                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        </field>
+                        <field id="client_id" translate="label" type="obscure" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Client ID</label>
+                            <config_path>payment/vipps/client_id</config_path>
+                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        </field>
+                        <field id="client_secret" translate="label" type="obscure" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Client Secret</label>
+                            <config_path>payment/vipps/client_secret</config_path>
+                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        </field>
+                        <field id="subscription_key1" translate="label" type="obscure" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Subscription Key 1</label>
+                            <comment>
+                                <![CDATA[Ocp-Apim-Subscription-Key for DEFAULT product.]]>
+                            </comment>
+                            <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
+                            <config_path>payment/vipps/subscription_key1</config_path>
+                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        </field>
+                        <field id="subscription_key2" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Subscription Key 2</label>
+                            <comment>
+                                <![CDATA[Ocp-Apim-Subscription-Key for eCommerce product.]]>
+                            </comment>
+                            <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
+                            <config_path>payment/vipps/subscription_key2</config_path>
+                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        </field>
+                    </group>
+                    <include path="Vipps_Payment::system/express_checkout.xml"/>
                 </group>
-                <include path="Vipps_Payment::system/express_checkout.xml"/>
-            </group>
             </group>
         </section>
     </system>
