@@ -296,7 +296,7 @@ class OrderPlace
     }
 
     /**
-     * Check if reserved Order amount in vipps is he same as in Magento.
+     * Check if reserved Order amount in vipps is the same as in Magento.
      *
      * @param CartInterface|Quote $quote
      * @param Transaction $transaction
@@ -304,7 +304,7 @@ class OrderPlace
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
         if ($quote->getGrandTotal() != $transaction->getTransactionInfo()->getAmount()) {
-            throw new LocalizedException(__("Reserved amount in Vipps is not  equal to order amount."));
+            throw new LocalizedException(__("Reserved amount in Vipps is not equal to order amount."));
         }
     }
 }
