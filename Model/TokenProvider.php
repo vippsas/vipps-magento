@@ -205,7 +205,7 @@ class TokenProvider implements TokenProviderInterface
         if (!$this->jwtRecord) {
             $connection = $this->resourceConnection->getConnection();
             $select = $connection->select(); //@codingStandardsIgnoreLine
-            $select->from($connection->getTableName('vipps_payment_jwt')) //@codingStandardsIgnoreLine
+            $select->from($this->resourceConnection->getTableName('vipps_payment_jwt')) //@codingStandardsIgnoreLine
                 ->where('scope_id = ' . $this->getScopeId()) //@codingStandardsIgnoreLine
                 ->limit(1) //@codingStandardsIgnoreLine
                 ->order("token_id DESC"); //@codingStandardsIgnoreLine
@@ -230,14 +230,14 @@ class TokenProvider implements TokenProviderInterface
             $this->jwtRecord = array_merge($this->jwtRecord, $jwt);
             if (isset($this->jwtRecord['token_id'])) {
                 $connection->update(
-                    $connection->getTableName('vipps_payment_jwt'),
+                    $this->resourceConnection->getTableName('vipps_payment_jwt'),
                     $this->jwtRecord,
                     'token_id = ' . $this->jwtRecord['token_id']
                 );
             } else {
                 $this->jwtRecord['scope_id'] = $this->getScopeId();
                 $connection->insert( //@codingStandardsIgnoreLine
-                    $connection->getTableName('vipps_payment_jwt'),
+                    $this->resourceConnection->getTableName('vipps_payment_jwt'),
                     $this->jwtRecord
                 );
             }
