@@ -15,6 +15,7 @@
  */
 namespace Vipps\Payment\Cron;
 
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
 use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
@@ -71,6 +72,11 @@ class FetchOrderFromVipps
     private $cartRepository;
 
     /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
      * FetchOrderFromVipps constructor.
      *
      * @param CollectionFactory $quoteCollectionFactory
@@ -79,6 +85,7 @@ class FetchOrderFromVipps
      * @param OrderPlace $orderManagement
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
@@ -86,7 +93,8 @@ class FetchOrderFromVipps
         TransactionBuilder $transactionBuilder,
         OrderPlace $orderManagement,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        StoreManagerInterface $storeManager
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
@@ -94,43 +102,50 @@ class FetchOrderFromVipps
         $this->orderPlace = $orderManagement;
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
+        $this->storeManager = $storeManager;
     }
 
     /**
      * Create orders from Vipps that are not created in Magento yet
+     *
+     * @throws NoSuchEntityException
      */
     public function execute()
     {
-        $currentPage = 1;
-        do {
-            $quoteCollection = $this->createCollection($currentPage);
-
-            $this->logger->debug(sprintf(
-                'Fetched payment details, page: "%s", quotes: "%s"',
-                $currentPage,
-                $quoteCollection->count() //@codingStandardsIgnoreLine
-            ));
-
-            foreach ($quoteCollection as $quote) {
-                try {
-                    $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
-                    $transaction = $this->transactionBuilder->setData($response)->build();
-                    $this->placeOrder($quote, $transaction);
-                } catch (MerchantException $e) {
-                    //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
-                    if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
-                        $this->cancelQuote($quote);
-                    } else {
-                        $this->logger->critical($e->getMessage());
+        try {
+            $currentStore = $this->storeManager->getStore()->getId();
+            $currentPage = 1;
+            do {
+                $quoteCollection = $this->createCollection($currentPage);
+                $this->logger->debug(sprintf(
+                    'Fetched payment details, page: "%s", quotes: "%s"',
+                    $currentPage,
+                    $quoteCollection->count() //@codingStandardsIgnoreLine
+                ));
+                foreach ($quoteCollection as $quote) {
+                    try {
+                        $this->storeManager->setCurrentStore($quote->getStore()->getId());
+                        $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
+                        $transaction = $this->transactionBuilder->setData($response)->build();
+                        $this->placeOrder($quote, $transaction);
+                    } catch (MerchantException $e) {
+                        //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
+                        if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
+                            $this->cancelQuote($quote);
+                        } else {
+                            $this->logger->critical($e->getMessage());
+                        }
+                    } catch (\Throwable $e) {
+                        $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
+                    } finally {
+                        usleep(1000000); //delay for 1 second
                     }
-                } catch (\Throwable $e) {
-                    $this->logger->critical($e->getMessage());
-                } finally {
-                    usleep(1000000); //delay for 1 second
                 }
-            }
-            $currentPage++;
-        } while ($currentPage <= $quoteCollection->getLastPageNumber());
+                $currentPage++;
+            } while ($currentPage <= $quoteCollection->getLastPageNumber());
+        } finally {
+            $this->storeManager->setCurrentStore($currentStore);
+        }
     }
 
     /**

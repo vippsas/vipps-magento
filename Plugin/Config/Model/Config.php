@@ -147,7 +147,7 @@ class Config
         $connection = $this->resourceConnection->getConnection();
         try {
             $where = 'scope_id = ' . $this->getScopeId();
-            $number = $connection->delete($connection->getTableName('vipps_payment_jwt'), $where);
+            $number = $connection->delete($this->resourceConnection->getTableName('vipps_payment_jwt'), $where);
             if ($number) {
                 $this->logger->debug(__('Deleted JWT data from database.'));
             }

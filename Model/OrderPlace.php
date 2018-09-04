@@ -143,7 +143,7 @@ class OrderPlace
         }
 
         try {
-            $order = $this->placeOrder($quote);
+            $order = $this->placeOrder($quote, $transaction);
             if ($order) {
                 $this->authorize($order, $transaction);
             }
@@ -202,19 +202,20 @@ class OrderPlace
         )) {
             return true;
         }
-      
+
         return false;
     }
 
     /**
      * @param CartInterface|Quote $quote
+     * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws NoSuchEntityException
      * @throws VippsException
      */
-    private function placeOrder(CartInterface $quote)
+    private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
         $reservedOrderId = $quote->getReservedOrderId();
         if (!$reservedOrderId) {
@@ -238,6 +239,7 @@ class OrderPlace
         // set quote active, collect totals and place order
         $quote->setIsActive(true);
         $quote->collectTotals();
+        $this->validateAmount($quote, $transaction);
         $orderId = $this->cartManagement->placeOrder($quote->getId());
 
         $quote->setReservedOrderId(null);
@@ -290,6 +292,19 @@ class OrderPlace
     {
         if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
             $this->orderManagement->notify($order->getEntityId());
+        }
+    }
+
+    /**
+     * Check if reserved Order amount in vipps is the same as in Magento.
+     *
+     * @param CartInterface|Quote $quote
+     * @param Transaction $transaction
+     */
+    private function validateAmount(CartInterface $quote, Transaction $transaction)
+    {
+        if ($quote->getGrandTotal() != $transaction->getTransactionInfo()->getAmount()) {
+            throw new LocalizedException(__("Reserved amount in Vipps is not equal to order amount."));
         }
     }
 }
