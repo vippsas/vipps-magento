@@ -18,6 +18,8 @@ namespace Vipps\Payment\Model;
 use Magento\Framework\Exception\{
     CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException
 };
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Helper\Formatter;
 use Magento\Sales\Api\{
     OrderManagementInterface, Data\OrderInterface, OrderRepositoryInterface
 };
@@ -40,6 +42,8 @@ use Vipps\Payment\Gateway\{
  */
 class OrderPlace
 {
+    use Formatter;
+
     /**
      * @var OrderRepositoryInterface
      */
@@ -303,8 +307,13 @@ class OrderPlace
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
-        if ($quote->getGrandTotal() != $transaction->getTransactionInfo()->getAmount()) {
-            throw new LocalizedException(__("Reserved amount in Vipps is not equal to order amount."));
+        $quoteAmount = $this->formatPrice($quote->getGrandTotal()) * 100;
+        $vippsAmount = $transaction->getTransactionInfo()->getAmount();
+
+        if ($quoteAmount != $vippsAmount) {
+            throw new LocalizedException(
+                __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $quoteAmount, $vippsAmount)
+            );
         }
     }
 }
