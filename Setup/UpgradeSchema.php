@@ -33,8 +33,9 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         $installer->startSetup();
 
         if (version_compare($context->getVersion(), '1.1.0', '<')) {
+            $tableName = $installer->getTable('vipps_payment_jwt');
             $table = $installer->getConnection()->addColumn(
-                $installer->getTable('vipps_payment_jwt'),
+                $tableName,
                 'scope',
                 [
                     'type' => Table::TYPE_TEXT,
@@ -45,6 +46,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                     'comment' => 'Scope'
                 ]
             );
+            $installer->getConnection()->truncateTable($tableName);
         }
 
         $installer->endSetup();

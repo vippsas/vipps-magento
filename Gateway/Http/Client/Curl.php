@@ -58,6 +58,12 @@ class Curl implements ClientInterface
     private $logger;
 
     /**
+     * HTTP Unauthorized Error Response code.
+     * @var string
+     */
+    const HTTP_UNAUTHORIZED = 401;
+
+    /**
      * Curl constructor.
      *
      * @param ConfigInterface $config
@@ -89,39 +95,56 @@ class Curl implements ClientInterface
     public function placeRequest(TransferInterface $transfer)
     {
         try {
-            $adapter = null;
-            /** @var MagentoCurl $adapter */
-            $adapter = $this->adapterFactory->create();
-            $options = $this->getBasicOptions();
-
-            if ($transfer->getMethod() === Request::METHOD_PUT) {
-                $options = $options +
-                    [
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_CUSTOMREQUEST => Request::METHOD_PUT,
-                        CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($transfer->getBody())
-                    ];
+            $response = $this->place($transfer);
+            if ($response->getStatusCode() == self::HTTP_UNAUTHORIZED) {
+                $this->tokenProvider->regenerate();
+                $response = $this->place($transfer);
             }
-            $adapter->setOptions($options);
 
-            // send request
-            $adapter->write(
-                $transfer->getMethod(),
-                $transfer->getUri(),
-                '1.1',
-                $this->getHeaders($transfer->getHeaders()),
-                $this->jsonEncoder->encode($transfer->getBody())
-            );
-
-            $responseSting = $adapter->read();
-            $response = ZendResponse::fromString($responseSting);
             return ['response' => $response];
         } catch (\Throwable $t) {
             $this->logger->critical($t->__toString());
             throw new \Exception($t->getMessage(), $t->getCode(), $t); //@codingStandardsIgnoreLine
-        } finally {
-            $adapter ? $adapter->close() : null;
         }
+    }
+
+    /**
+     * @param TransferInterface $transfer
+     *
+     * @return ZendResponse
+     * @throws AuthenticationException
+     */
+    private function place(TransferInterface $transfer)
+    {
+        $adapter = null;
+        /** @var MagentoCurl $adapter */
+        $adapter = $this->adapterFactory->create();
+        $options = $this->getBasicOptions();
+
+        if ($transfer->getMethod() === Request::METHOD_PUT) {
+            $options = $options +
+                [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => Request::METHOD_PUT,
+                    CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($transfer->getBody())
+                ];
+        }
+        $adapter->setOptions($options);
+
+        // send request
+        $adapter->write(
+            $transfer->getMethod(),
+            $transfer->getUri(),
+            '1.1',
+            $this->getHeaders($transfer->getHeaders()),
+            $this->jsonEncoder->encode($transfer->getBody())
+        );
+
+        $responseSting = $adapter->read();
+        $adapter ? $adapter->close() : null;
+        $response = ZendResponse::fromString($responseSting);
+
+        return $response;
     }
 
     /**
