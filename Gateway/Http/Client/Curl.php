@@ -32,6 +32,13 @@ use Psr\Log\LoggerInterface;
  */
 class Curl implements ClientInterface
 {
+
+    /**
+     * HTTP Unauthorized Error Response code.
+     * @var string
+     */
+    const HTTP_UNAUTHORIZED = 401;
+
     /**
      * @var ConfigInterface
      */
@@ -56,12 +63,6 @@ class Curl implements ClientInterface
      * @var LoggerInterface
      */
     private $logger;
-
-    /**
-     * HTTP Unauthorized Error Response code.
-     * @var string
-     */
-    const HTTP_UNAUTHORIZED = 401;
 
     /**
      * Curl constructor.
