@@ -110,6 +110,15 @@ class MerchantDataBuilder implements BuilderInterface
     private static $shippingDetailsPrefix = 'shippingDetailsPrefix';
 
     /**
+     * Allows Vipps to send consent removal request to merchant.
+     * After this merchant is obliged to remove the user details from merchant system permanently,
+     * as per the GDPR guidelines.
+     *
+     * @var string
+     */
+    private static $consentRemovalPrefix = 'consentRemovalPrefix';
+
+    /**
      * @var UrlInterface
      */
     private $urlBuilder;
@@ -174,6 +183,7 @@ class MerchantDataBuilder implements BuilderInterface
                         'order_id' => $quote->getReservedOrderId()
                     ]
                 ),
+                self::$consentRemovalPrefix => $this->urlBuilder->getUrl('vipps/payment/consentRemoval'),
                 self::$isApp => false,
                 self::PAYMENT_TYPE => $buildSubject[self::PAYMENT_TYPE],
             ]
