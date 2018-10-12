@@ -310,7 +310,7 @@ class OrderPlace
         $quoteAmount = $this->formatPrice($quote->getGrandTotal()) * 100;
         $vippsAmount = $transaction->getTransactionInfo()->getAmount();
 
-        if ($quoteAmount != $vippsAmount) {
+        if ((int)$quoteAmount != (int)$vippsAmount) {
             throw new LocalizedException(
                 __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $quoteAmount, $vippsAmount)
             );

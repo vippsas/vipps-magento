@@ -206,7 +206,8 @@ class TokenProvider implements TokenProviderInterface
             $connection = $this->resourceConnection->getConnection();
             $select = $connection->select(); //@codingStandardsIgnoreLine
             $select->from($this->resourceConnection->getTableName('vipps_payment_jwt')) //@codingStandardsIgnoreLine
-                ->where('scope_id = ' . $this->getScopeId()) //@codingStandardsIgnoreLine
+                ->where('scope = ?', $this->getScopeType()) // @codingStandardsIgnoreLine
+                ->where('scope_id = ?', $this->getScopeId()) //@codingStandardsIgnoreLine
                 ->limit(1) //@codingStandardsIgnoreLine
                 ->order("token_id DESC"); //@codingStandardsIgnoreLine
             $this->jwtRecord = $connection->fetchRow($select) ?: []; //@codingStandardsIgnoreLine
@@ -235,6 +236,7 @@ class TokenProvider implements TokenProviderInterface
                     'token_id = ' . $this->jwtRecord['token_id']
                 );
             } else {
+                $this->jwtRecord['scope'] = $this->getScopeType();
                 $this->jwtRecord['scope_id'] = $this->getScopeId();
                 $connection->insert( //@codingStandardsIgnoreLine
                     $this->resourceConnection->getTableName('vipps_payment_jwt'),
@@ -256,6 +258,16 @@ class TokenProvider implements TokenProviderInterface
     private function getScopeId()
     {
         return $this->scopeResolver->getScope()->getId();
+    }
+
+    /**
+     * Return current scope type.
+     *
+     * @return string
+     */
+    private function getScopeType()
+    {
+        return $this->scopeResolver->getScope()->getScopeType();
     }
 
     /**

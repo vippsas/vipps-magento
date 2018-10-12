@@ -90,7 +90,7 @@ class Config
             return $subject;
         }
         $groups = $subject->getGroups();
-        $fields = $groups['vipps']['groups']['vipps_required']['fields'] ?? null;
+        $fields = $groups['vipps_section']['groups']['vipps']['groups']['vipps_required']['fields'] ?? null;
         if (!$fields) {
             return $subject;
         }
@@ -146,7 +146,10 @@ class Config
     {
         $connection = $this->resourceConnection->getConnection();
         try {
-            $where = 'scope_id = ' . $this->getScopeId();
+            $where = [
+                'scope = ?' => $this->getScopeType(),
+                'scope_id = ?' => $this->getScopeId()
+            ];
             $number = $connection->delete($this->resourceConnection->getTableName('vipps_payment_jwt'), $where);
             if ($number) {
                 $this->logger->debug(__('Deleted JWT data from database.'));
@@ -165,5 +168,15 @@ class Config
     private function getScopeId()
     {
         return $this->scopeResolver->getScope()->getId();
+    }
+
+    /**
+     * Return current scope type.
+     *
+     * @return string
+     */
+    private function getScopeType()
+    {
+        return $this->scopeResolver->getScope()->getScopeType();
     }
 }
