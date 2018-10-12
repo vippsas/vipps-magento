@@ -32,13 +32,6 @@ use Psr\Log\LoggerInterface;
  */
 class Curl implements ClientInterface
 {
-
-    /**
-     * HTTP Unauthorized Error Response code.
-     * @var string
-     */
-    const HTTP_UNAUTHORIZED = 401;
-
     /**
      * @var ConfigInterface
      */
@@ -97,7 +90,7 @@ class Curl implements ClientInterface
     {
         try {
             $response = $this->place($transfer);
-            if ($response->getStatusCode() == self::HTTP_UNAUTHORIZED) {
+            if ($response->getStatusCode() == ZendResponse::STATUS_CODE_401) {
                 $this->tokenProvider->regenerate();
                 $response = $this->place($transfer);
             }
@@ -117,35 +110,35 @@ class Curl implements ClientInterface
      */
     private function place(TransferInterface $transfer)
     {
-        $adapter = null;
-        /** @var MagentoCurl $adapter */
-        $adapter = $this->adapterFactory->create();
-        $options = $this->getBasicOptions();
+        try {
+            $adapter = null;
+            /** @var MagentoCurl $adapter */
+            $adapter = $this->adapterFactory->create();
+            $options = $this->getBasicOptions();
+            if ($transfer->getMethod() === Request::METHOD_PUT) {
+                $options = $options +
+                    [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_CUSTOMREQUEST => Request::METHOD_PUT,
+                        CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($transfer->getBody())
+                    ];
+            }
+            $adapter->setOptions($options);
+            // send request
+            $adapter->write(
+                $transfer->getMethod(),
+                $transfer->getUri(),
+                '1.1',
+                $this->getHeaders($transfer->getHeaders()),
+                $this->jsonEncoder->encode($transfer->getBody())
+            );
+            $responseSting = $adapter->read();
+            $response = ZendResponse::fromString($responseSting);
 
-        if ($transfer->getMethod() === Request::METHOD_PUT) {
-            $options = $options +
-                [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_CUSTOMREQUEST => Request::METHOD_PUT,
-                    CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($transfer->getBody())
-                ];
+            return $response;
+        } finally {
+            $adapter ? $adapter->close() : null;
         }
-        $adapter->setOptions($options);
-
-        // send request
-        $adapter->write(
-            $transfer->getMethod(),
-            $transfer->getUri(),
-            '1.1',
-            $this->getHeaders($transfer->getHeaders()),
-            $this->jsonEncoder->encode($transfer->getBody())
-        );
-
-        $responseSting = $adapter->read();
-        $adapter ? $adapter->close() : null;
-        $response = ZendResponse::fromString($responseSting);
-
-        return $response;
     }
 
     /**
