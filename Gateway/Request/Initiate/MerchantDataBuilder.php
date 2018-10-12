@@ -110,6 +110,13 @@ class MerchantDataBuilder implements BuilderInterface
     private static $shippingDetailsPrefix = 'shippingDetailsPrefix';
 
     /**
+     * This is to delete Customer data according to GDPR.
+     *
+     * @var string
+     */
+    private static $consentRemovalPrefix = 'consentRemovalPrefix';
+
+    /**
      * @var UrlInterface
      */
     private $urlBuilder;
@@ -174,6 +181,7 @@ class MerchantDataBuilder implements BuilderInterface
                         'order_id' => $quote->getReservedOrderId()
                     ]
                 ),
+                self::$consentRemovalPrefix => $this->urlBuilder->getUrl('vipps/payment/consentRemoval'),
                 self::$isApp => false,
                 self::PAYMENT_TYPE => $buildSubject[self::PAYMENT_TYPE],
             ]
