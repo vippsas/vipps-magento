@@ -17,6 +17,8 @@
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\Controller\ResultFactory;
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class ConsentRemoval
