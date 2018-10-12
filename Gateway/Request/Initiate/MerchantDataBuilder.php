@@ -110,7 +110,9 @@ class MerchantDataBuilder implements BuilderInterface
     private static $shippingDetailsPrefix = 'shippingDetailsPrefix';
 
     /**
-     * This is to delete Customer data according to GDPR.
+     * Allows Vipps to send consent removal request to merchant.
+     * After this merchant is obliged to remove the user details from merchant system permanently,
+     * as per the GDPR guidelines.
      *
      * @var string
      */
