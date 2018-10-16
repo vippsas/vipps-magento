@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<!--
+<?php
 /**
  * Copyright 2018 Vipps
  *
@@ -14,13 +13,30 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
--->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Vipps_Payment" setup_version="1.1.0">
-        <sequence>
-            <module name="Magento_Sales" />
-            <module name="Magento_Payment" />
-            <module name="Magento_Checkout" />
-        </sequence>
-    </module>
-</config>
+
+namespace Vipps\Payment\Controller\Payment;
+
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\Controller\ResultFactory;
+use Zend\Http\Response as ZendResponse;
+
+/**
+ * Class ConsentRemoval
+ * @package Vipps\Payment\Controller\Payment
+ */
+class ConsentRemoval extends Action
+{
+    /**
+     * {@inheritdoc}
+     *
+     * @return ResponseInterface|ResultInterface
+     */
+    public function execute()
+    {
+        $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        /** @var Json $result */
+        $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
+
+        return $result;
+    }
+}

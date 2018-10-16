@@ -95,7 +95,7 @@ class ExceptionFactory
                 return $groupName;
             }
         }
-        return false;
+        return VippsException::class;
     }
 
     /**

@@ -89,11 +89,32 @@ class Curl implements ClientInterface
     public function placeRequest(TransferInterface $transfer)
     {
         try {
+            $response = $this->place($transfer);
+            if ($response->getStatusCode() == ZendResponse::STATUS_CODE_401) {
+                $this->tokenProvider->regenerate();
+                $response = $this->place($transfer);
+            }
+
+            return ['response' => $response];
+        } catch (\Throwable $t) {
+            $this->logger->critical($t->__toString());
+            throw new \Exception($t->getMessage(), $t->getCode(), $t); //@codingStandardsIgnoreLine
+        }
+    }
+
+    /**
+     * @param TransferInterface $transfer
+     *
+     * @return ZendResponse
+     * @throws AuthenticationException
+     */
+    private function place(TransferInterface $transfer)
+    {
+        try {
             $adapter = null;
             /** @var MagentoCurl $adapter */
             $adapter = $this->adapterFactory->create();
             $options = $this->getBasicOptions();
-
             if ($transfer->getMethod() === Request::METHOD_PUT) {
                 $options = $options +
                     [
@@ -103,7 +124,6 @@ class Curl implements ClientInterface
                     ];
             }
             $adapter->setOptions($options);
-
             // send request
             $adapter->write(
                 $transfer->getMethod(),
@@ -112,13 +132,10 @@ class Curl implements ClientInterface
                 $this->getHeaders($transfer->getHeaders()),
                 $this->jsonEncoder->encode($transfer->getBody())
             );
-
             $responseSting = $adapter->read();
             $response = ZendResponse::fromString($responseSting);
-            return ['response' => $response];
-        } catch (\Throwable $t) {
-            $this->logger->critical($t->__toString());
-            throw new \Exception($t->getMessage(), $t->getCode(), $t); //@codingStandardsIgnoreLine
+
+            return $response;
         } finally {
             $adapter ? $adapter->close() : null;
         }

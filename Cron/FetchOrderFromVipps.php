@@ -18,11 +18,10 @@ namespace Vipps\Payment\Cron;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
-use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
+use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory, Quote, Quote\Payment};
 use Magento\Sales\Api\Data\OrderInterface;
 use Vipps\Payment\{
     Api\CommandManagerInterface,
-    Gateway\Exception\MerchantException,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Model\OrderPlace,
@@ -109,6 +108,7 @@ class FetchOrderFromVipps
      * Create orders from Vipps that are not created in Magento yet
      *
      * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function execute()
     {
@@ -123,18 +123,20 @@ class FetchOrderFromVipps
                     $quoteCollection->count() //@codingStandardsIgnoreLine
                 ));
                 foreach ($quoteCollection as $quote) {
+                    /** @var Quote $quote */
                     try {
                         $this->storeManager->setCurrentStore($quote->getStore()->getId());
                         $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
                         $transaction = $this->transactionBuilder->setData($response)->build();
                         $this->placeOrder($quote, $transaction);
-                    } catch (MerchantException $e) {
-                        //@todo workaround for vipps issue with order cancellation (delete this condition after fix) //@codingStandardsIgnoreLine
-                        if ($e->getCode() == MerchantException::ERROR_CODE_REQUESTED_ORDER_NOT_FOUND) {
-                            $this->cancelQuote($quote);
-                        } else {
-                            $this->logger->critical($e->getMessage());
-                        }
+                    } catch (VippsException $e) {
+                        /** @var Payment $payment */
+                        $payment = $quote->getPayment();
+                        $payment->setAdditionalInformation('reserved_order_id', $quote->getReservedOrderId());
+                        $payment->setAdditionalInformation('cancel_reason_code', $e->getCode());
+                        $payment->setAdditionalInformation('cancel_reason_phrase', $e->getMessage());
+                        $this->cancelQuote($quote);
+                        $this->logger->critical($e->getMessage());
                     } catch (\Throwable $e) {
                         $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                     } finally {
