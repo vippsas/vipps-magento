@@ -307,10 +307,10 @@ class OrderPlace
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
-        $quoteAmount = $this->formatPrice($quote->getGrandTotal()) * 100;
-        $vippsAmount = $transaction->getTransactionInfo()->getAmount();
+        $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
+        $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
-        if ((int)$quoteAmount != (int)$vippsAmount) {
+        if ($quoteAmount != $vippsAmount) {
             throw new LocalizedException(
                 __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $quoteAmount, $vippsAmount)
             );

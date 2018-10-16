@@ -183,7 +183,7 @@ class CaptureCommand extends GatewayCommand
     public function execute(array $commandSubject)
     {
         $amount = $this->subjectReader->readAmount($commandSubject);
-        $amount = $this->formatPrice($amount) * 100;
+        $amount = (int)($this->formatPrice($amount) * 100);
 
         $response = $this->paymentDetailsProvider->get($commandSubject);
         $transaction = $this->transactionBuilder->setData($response)->build();
@@ -219,14 +219,14 @@ class CaptureCommand extends GatewayCommand
     {
         $payment = $this->subjectReader->readPayment($commandSubject);
         $amount = $this->subjectReader->readAmount($commandSubject);
-        $amount = $this->formatPrice($amount) * 100;
+        $amount = (int)($this->formatPrice($amount) * 100);
 
         $orderAdapter = $payment->getOrder();
         $orderIncrementId = $orderAdapter->getOrderIncrementId();
 
         $order = $this->orderRepository->get($orderAdapter->getId());
 
-        $magentoTotalDue = $this->formatPrice($order->getTotalDue()) * 100;
+        $magentoTotalDue = (int)($this->formatPrice($order->getTotalDue()) * 100);
         $vippsTotalDue = $transaction->getTransactionSummary()->getRemainingAmountToCapture();
 
         $deltaTotalDue = $magentoTotalDue - $vippsTotalDue;
