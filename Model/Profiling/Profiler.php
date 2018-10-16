@@ -17,6 +17,7 @@ namespace Vipps\Payment\Model\Profiling;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Store\Model\ScopeInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
 use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
@@ -159,7 +160,7 @@ class Profiler implements ProfilerInterface
      */
     private function isProfilingEnabled()
     {
-        return (bool)$this->config->getValue('payment/vipps/profiling');
+        return (bool)$this->config->getValue('payment/vipps/profiling', ScopeInterface::SCOPE_STORE);
     }
 
     /**

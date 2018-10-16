@@ -18,7 +18,7 @@ Please follow the instructions in [INSTALL.md](INSTALL.md)
 
 # Magento
 
-Magento is an open-source e-commerce platform written in PHP: https://magento.com 
+Magento is an open-source e-commerce platform written in PHP: https://magento.com
 
 For Magento support, please see the Magento Help Center: https://support.magento.com/hc/en-us
 
@@ -28,6 +28,4 @@ Magento Inc is an Adobe company: https://magento.com/about
 
 The Magento team at Vipps can be reached at magento@vipps.no
 
-See the main GitHub page for Vipps contact information, etc: https://github.com/vippsas
-
-
+See the Vipps Developers repository for Vipps contact information, etc: https://github.com/vippsas/vipps-developers
