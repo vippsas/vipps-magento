@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+Copyright © 2009-2017 Vaimo Group. All rights reserved.
+See LICENSE.txt for license details.
+@author Simen Thorsrud <simen.thorsrud@vaimo.com>
+-->
+<ruleset name="Verktoy_PengVinIntegration">
+    <description>Code Sniffer Configuration for Verktoy_PengVinIntegration</description>
+    <arg name="extensions" value="php"/>
+    <rule ref="MEQP2" />
+</ruleset>
