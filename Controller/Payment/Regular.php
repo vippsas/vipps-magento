@@ -20,7 +20,9 @@ use Magento\Framework\{
     Exception\LocalizedException,App\ResponseInterface,Session\SessionManagerInterface
 };
 use Vipps\Payment\{
-    Api\CommandManagerInterface, Gateway\Exception\VippsException, Gateway\Request\Initiate\MerchantDataBuilder
+    Api\CommandManagerInterface,
+    Gateway\Exception\VippsException,
+    Gateway\Request\Initiate\InitiateBuilderInterface
 };
 use Psr\Log\LoggerInterface;
 
@@ -80,7 +82,8 @@ class Regular extends Action
                 $quote->getPayment(),
                 [
                     'amount' => $quote->getGrandTotal(),
-                    MerchantDataBuilder::PAYMENT_TYPE => MerchantDataBuilder::REGULAR_PAYMENT
+                    InitiateBuilderInterface::PAYMENT_TYPE_KEY
+                        => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
                 ]
             );
             $this->session->clearStorage();

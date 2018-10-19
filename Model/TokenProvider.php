@@ -112,10 +112,11 @@ class TokenProvider implements TokenProviderInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
-     * @return string
+     * @return mixed|string
      * @throws AuthenticationException
+     * @throws CouldNotSaveException
      */
     public function get()
     {
@@ -169,7 +170,6 @@ class TokenProvider implements TokenProviderInterface
         ];
         /** @var ZendClient $client */
         $client = $this->httpClientFactory->create();
-        $jwt = [];
         try {
             $client->setConfig(['strict' => false]);
             $client->setUri($this->urlResolver->getUrl(self::$endpointUrl));
@@ -187,7 +187,7 @@ class TokenProvider implements TokenProviderInterface
             if (!$this->isJwtValid($jwt)) {
                 throw new \Exception('Not valid JWT data returned from Vipps. Response: '. $response); //@codingStandardsIgnoreLine
             }
-            $this->logger->debug($response);
+            $this->logger->debug('Token fetched from Vipps');
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
             throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'));
@@ -246,7 +246,7 @@ class TokenProvider implements TokenProviderInterface
             $this->logger->debug(__('Refreshed Jwt data.'));
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
-            throw new CouldNotSaveException(__('Can\'t save jwt data to database.'));
+            throw new CouldNotSaveException(__('Can\'t save jwt data to database.' . $e->getMessage()));
         }
     }
 

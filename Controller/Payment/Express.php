@@ -21,7 +21,9 @@ use Magento\Framework\{
 };
 use Magento\Payment\Gateway\ConfigInterface;
 use Vipps\Payment\{
-    Api\CommandManagerInterface ,Gateway\Exception\VippsException, Gateway\Request\Initiate\MerchantDataBuilder
+    Api\CommandManagerInterface,
+    Gateway\Exception\VippsException,
+    Gateway\Request\Initiate\InitiateBuilderInterface
 };
 use Psr\Log\LoggerInterface;
 
@@ -92,7 +94,8 @@ class Express extends Action
                 $quote->getPayment(),
                 [
                     'amount' => $quote->getGrandTotal(),
-                    MerchantDataBuilder::PAYMENT_TYPE => MerchantDataBuilder::EXPRESS_CHECKOUT
+                    InitiateBuilderInterface::PAYMENT_TYPE_KEY
+                        => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT
                 ]
             );
             $this->session->clearStorage();
