@@ -15,7 +15,7 @@
  */
 namespace Vipps\Payment\Gateway\Request\Initiate;
 
-use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Helper\Formatter;
 use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
@@ -24,8 +24,10 @@ use Vipps\Payment\Gateway\Request\SubjectReader;
  * @package Vipps\Payment\Gateway\Request\InitiateData
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
-class TransactionDataBuilder implements BuilderInterface
+class TransactionDataBuilder implements InitiateBuilderInterface
 {
+    use Formatter;
+
     /**
      * Transaction block name
      *
@@ -39,6 +41,13 @@ class TransactionDataBuilder implements BuilderInterface
      * @var string
      */
     private static $orderId = 'orderId';
+
+    /**
+     * Amount in order. 32 Bit Integer (2147483647)
+     *
+     * @var string
+     */
+    private static $amount = 'amount';
 
     /**
      * @var SubjectReader
@@ -67,9 +76,23 @@ class TransactionDataBuilder implements BuilderInterface
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         /** @var Payment $payment */
         $payment = $paymentDO->getPayment();
+        $quote = $payment->getQuote();
+
+        $amount = $this->subjectReader->readAmount($buildSubject);
+        $amount = (int)($this->formatPrice($amount) * 100);
+
+        if ($buildSubject[self::PAYMENT_TYPE_KEY] == self::PAYMENT_TYPE_EXPRESS_CHECKOUT) {
+            $shippingAddress = $quote->getShippingAddress();
+            $shippingAddress->setShippingMethod(null);
+            $quote->collectTotals();
+
+            $amount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
+        }
+
         return [
             self::$transaction => [
-                self::$orderId => $payment->getQuote()->getReservedOrderId()
+                self::$orderId => $quote->getReservedOrderId(),
+                self::$amount => $amount
             ]
         ];
     }

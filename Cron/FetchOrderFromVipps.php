@@ -27,6 +27,7 @@ use Vipps\Payment\{
     Model\OrderPlace,
     Gateway\Transaction\TransactionBuilder
 };
+use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -125,17 +126,19 @@ class FetchOrderFromVipps
                 foreach ($quoteCollection as $quote) {
                     /** @var Quote $quote */
                     try {
+                        // set quote store as current store
                         $this->storeManager->setCurrentStore($quote->getStore()->getId());
-                        $response = $this->commandManager->getOrderStatus($quote->getReservedOrderId());
-                        $transaction = $this->transactionBuilder->setData($response)->build();
-                        $this->placeOrder($quote, $transaction);
+
+                        // fetch order status from vipps
+                        $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+
+                        if ($transaction->isTransactionAborted()) {
+                            $this->cancelQuote($quote);
+                        } else {
+                            $this->processQuote($quote, $transaction);
+                        }
                     } catch (VippsException $e) {
-                        /** @var Payment $payment */
-                        $payment = $quote->getPayment();
-                        $payment->setAdditionalInformation('reserved_order_id', $quote->getReservedOrderId());
-                        $payment->setAdditionalInformation('cancel_reason_code', $e->getCode());
-                        $payment->setAdditionalInformation('cancel_reason_phrase', $e->getMessage());
-                        $this->cancelQuote($quote);
+                        $this->processVippsException($quote, $e);
                         $this->logger->critical($e->getMessage());
                     } catch (\Throwable $e) {
                         $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
@@ -151,6 +154,18 @@ class FetchOrderFromVipps
     }
 
     /**
+     * @param $orderId
+     *
+     * @return Transaction
+     * @throws VippsException
+     */
+    private function fetchOrderStatus($orderId)
+    {
+        $response = $this->commandManager->getOrderStatus($orderId);
+        return $this->transactionBuilder->setData($response)->build();
+    }
+
+    /**
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
@@ -161,13 +176,8 @@ class FetchOrderFromVipps
      * @throws AlreadyExistsException
      * @throws InputException
      */
-    private function placeOrder(CartInterface $quote, Transaction $transaction)
+    private function processQuote(CartInterface $quote, Transaction $transaction)
     {
-        if ($transaction->isTransactionAborted()) {
-            $this->cancelQuote($quote);
-            return null;
-        }
-
         $order = $this->orderPlace->execute($quote, $transaction);
         if (!$order) {
             $this->logger->critical(sprintf(
@@ -179,6 +189,24 @@ class FetchOrderFromVipps
             $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
         }
         return $order;
+    }
+
+    /**
+     * @param CartInterface $quote
+     * @param VippsException $e
+     *
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    private function processVippsException(CartInterface $quote, VippsException $e)
+    {
+        if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
+            /** @var Payment $payment */
+            $payment = $quote->getPayment();
+            $payment->setAdditionalInformation('reserved_order_id', $quote->getReservedOrderId());
+            $payment->setAdditionalInformation('cancel_reason_code', $e->getCode());
+            $payment->setAdditionalInformation('cancel_reason_phrase', $e->getMessage());
+            $this->cancelQuote($quote);
+        }
     }
 
     /**

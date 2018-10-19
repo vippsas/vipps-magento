@@ -74,7 +74,8 @@ class ExceptionFactory
             ]);
         }
         $errorMessage = $this->getMessageByErrorCode($errorCode, $errorMessage);
-        return new $groupName(__($errorMessage), null, $errorCode); //@codingStandardsIgnoreLine
+        $exceptionObject = new $groupName(__($errorMessage), null, (int)$errorCode); //@codingStandardsIgnoreLine
+        return $exceptionObject;
     }
 
     /**

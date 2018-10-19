@@ -302,8 +302,10 @@ class OrderPlace
     /**
      * Check if reserved Order amount in vipps is the same as in Magento.
      *
-     * @param CartInterface|Quote $quote
+     * @param CartInterface $quote
      * @param Transaction $transaction
+     *
+     * @throws LocalizedException
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
@@ -312,7 +314,7 @@ class OrderPlace
 
         if ($quoteAmount !== $vippsAmount) {
             throw new LocalizedException(
-                __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $quoteAmount, $vippsAmount)
+                __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $vippsAmount, $quoteAmount)
             );
         }
     }
