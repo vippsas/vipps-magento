@@ -246,7 +246,7 @@ class TokenProvider implements TokenProviderInterface
             $this->logger->debug(__('Refreshed Jwt data.'));
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
-            throw new CouldNotSaveException(__('Can\'t save jwt data to database.'));
+            throw new CouldNotSaveException(__('Can\'t save jwt data to database.' . $e->getMessage()));
         }
     }
 
