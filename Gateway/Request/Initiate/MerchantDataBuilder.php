@@ -15,9 +15,7 @@
  */
 namespace Vipps\Payment\Gateway\Request\Initiate;
 
-use Magento\Payment\Gateway\{
-    Data\PaymentDataObjectInterface, Request\BuilderInterface
-};
+use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\{Quote, Quote\Payment};
 use Magento\Framework\UrlInterface;
@@ -28,39 +26,8 @@ use Vipps\Payment\Gateway\Request\SubjectReader;
  * @package Vipps\Payment\Gateway\Request\InitiateData
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
-class MerchantDataBuilder implements BuilderInterface
+class MerchantDataBuilder implements InitiateBuilderInterface
 {
-    /**
-     * Merchant auth token identifier
-     *
-     * @var string
-     */
-    const MERCHANT_AUTH_TOKEN = 'merchant_auth_token';
-
-    /**
-     * Auth token for accessing to fallback controller
-     *
-     * @var string
-     */
-    const FALLBACK_AUTH_TOKEN = 'fallback_auth_token';
-
-    /**
-     * @var string
-     */
-    const EXPRESS_CHECKOUT = "eComm Express Payment";
-
-    /**
-     * @var string
-     */
-    const REGULAR_PAYMENT = "eComm Regular Payment";
-
-    /**
-     * This parameter will identify difference between ecomm payment and ecomm express payment.
-     *
-     * @var string
-     */
-    const PAYMENT_TYPE = 'paymentType';
-
     /**
      * Merchant info block name
      *
@@ -185,11 +152,11 @@ class MerchantDataBuilder implements BuilderInterface
                 ),
                 self::$consentRemovalPrefix => $this->urlBuilder->getUrl('vipps/payment/consentRemoval'),
                 self::$isApp => false,
-                self::PAYMENT_TYPE => $buildSubject[self::PAYMENT_TYPE],
+                self::PAYMENT_TYPE_KEY => $buildSubject[self::PAYMENT_TYPE_KEY],
             ]
         ];
 
-        if ($buildSubject[self::PAYMENT_TYPE] == self::EXPRESS_CHECKOUT) {
+        if ($buildSubject[self::PAYMENT_TYPE_KEY] == self::PAYMENT_TYPE_EXPRESS_CHECKOUT) {
             $merchantInfo[self::$merchantInfo][self::$shippingDetailsPrefix] =  $this->urlBuilder->getUrl(
                 'vipps/payment/shippingDetails'
             );

@@ -15,51 +15,42 @@
  */
 namespace Vipps\Payment\Gateway\Request\Initiate;
 
-use Vipps\Payment\Gateway\Request\SubjectReader;
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
- * Class CustomerInfo
- * @package Vipps\Payment\Gateway\Request\InitiateData
+ * Interface InitiateBuilderInterface
+ * @package Vipps\Payment\Gateway\Request\Initiate
  */
-class CustomerDataBuilder implements InitiateBuilderInterface
+interface InitiateBuilderInterface extends BuilderInterface
 {
     /**
-     * Customer info block name
+     * Merchant auth token identifier
      *
      * @var string
      */
-    private static $customerInfo = 'customerInfo';
+    const MERCHANT_AUTH_TOKEN = 'merchant_auth_token';
 
     /**
-     * Mobile number of the user who has to pay for the transaction from Vipps. Allowed format: xxxxxxxx. OPTIONAL.
+     * Auth token for accessing to fallback controller
      *
      * @var string
      */
-    private static $mobileNumber = 'mobileNumber';
+    const FALLBACK_AUTH_TOKEN = 'fallback_auth_token';
 
     /**
-     * @var SubjectReader
+     * @var string
      */
-    private $subjectReader;
-
-    public function __construct(
-        SubjectReader $subjectReader
-    ) {
-        $this->subjectReader = $subjectReader;
-    }
+    const PAYMENT_TYPE_EXPRESS_CHECKOUT = "eComm Express Payment";
 
     /**
-     * Get customer related data for Initiate payment request.
+     * @var string
+     */
+    const PAYMENT_TYPE_REGULAR_PAYMENT = "eComm Regular Payment";
+
+    /**
+     * This parameter will identify difference between ecomm payment and ecomm express payment.
      *
-     * @param array $buildSubject
-     * @return array
+     * @var string
      */
-    public function build(array $buildSubject)
-    {
-        return [
-            self::$customerInfo => [
-                self::$mobileNumber => $this->subjectReader->readTelephone($buildSubject)
-            ]
-        ];
-    }
+    const PAYMENT_TYPE_KEY = 'paymentType';
 }

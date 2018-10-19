@@ -104,11 +104,11 @@ class TokenProviderTest extends TestCase
     {
         $this->resourceConnection = $this->getMockBuilder(ResourceConnection::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getConnection'])
+            ->setMethods(['getConnection', 'getTableName'])
             ->getMock();
         $this->connection = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['select', 'fetchRow'])
+            ->setMethods(['select', 'fetchRow', 'insert', 'update'])
             ->getMockForAbstractClass();
         $this->select = $this->getMockBuilder(Select::class)
             ->disableOriginalConstructor()
@@ -188,7 +188,7 @@ class TokenProviderTest extends TestCase
             "access_token" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImlCakwxUmNx"
         ];
 
-        $this->scopeResolver->expects($this->once())
+        $this->scopeResolver->expects($this->any())
             ->method('getScope')
             ->willReturn($this->scope);
 
@@ -199,6 +199,10 @@ class TokenProviderTest extends TestCase
         $this->resourceConnection->expects(self::once())
             ->method('getConnection')
             ->willReturn($this->connection);
+
+        $this->resourceConnection->expects(self::once())
+            ->method('getTableName')
+            ->willReturn('vipps_payment_jwt');
 
         $this->connection->expects($this->once())
             ->method('fetchRow')
@@ -225,13 +229,17 @@ class TokenProviderTest extends TestCase
             ->method('create')
             ->willReturn($this->httpClient);
 
-        $this->scopeResolver->expects($this->exactly(2))
+        $this->scopeResolver->expects($this->any())
             ->method('getScope')
             ->willReturn($this->scope);
 
-        $this->resourceConnection->expects($this->exactly(2))
+        $this->resourceConnection->expects($this->any())
             ->method('getConnection')
             ->willReturn($this->connection);
+
+        $this->resourceConnection->expects(self::any())
+            ->method('getTableName')
+            ->willReturn('vipps_payment_jwt');
 
         $this->connection->expects($this->once())
             ->method('select')
@@ -240,6 +248,10 @@ class TokenProviderTest extends TestCase
         $this->connection->expects($this->once())
             ->method('fetchRow')
             ->willReturn($jwtRecord);
+
+        $this->connection->expects($this->once())
+            ->method('insert')
+            ->willReturnSelf();
 
         $this->httpClient->expects($this->once())
             ->method('request')
@@ -278,7 +290,7 @@ class TokenProviderTest extends TestCase
             ->method('select')
             ->willReturn($this->select);
 
-        $this->scopeResolver->expects($this->once())
+        $this->scopeResolver->expects($this->any())
             ->method('getScope')
             ->willReturn($this->scope);
 

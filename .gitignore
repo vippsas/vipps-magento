@@ -2,8 +2,5 @@
 vendor/
 .idea/
 .hg/
-phpcs.xml
-phpmd.xml
-phpunit.xml
 composer.lock
 Jenkinsfile
