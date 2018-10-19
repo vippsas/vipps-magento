@@ -33,6 +33,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class FetchOrderStatus
  * @package Vipps\Payment\Cron
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class FetchOrderFromVipps
 {

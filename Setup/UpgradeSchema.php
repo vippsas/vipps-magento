@@ -32,7 +32,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
 
         if (version_compare($context->getVersion(), '1.1.0', '<')) {
             $tableName = $installer->getTable('vipps_payment_jwt');
-            $table = $installer->getConnection()->addColumn(
+            $installer->getConnection()->addColumn(
                 $tableName,
                 'scope',
                 [
