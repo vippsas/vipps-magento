@@ -36,6 +36,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class Fallback
  * @package Vipps\Payment\Controller\Payment
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Fallback extends Action
 {

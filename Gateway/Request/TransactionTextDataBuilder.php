@@ -16,29 +16,27 @@
 namespace Vipps\Payment\Gateway\Request;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Payment\{Gateway\Request\BuilderInterface, Helper\Formatter};
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
- * Class Transaction
- * @package Vipps\Payment\Gateway\Request\InitiateData
+ * Class TransactionTextDataBuilder
+ * @package Vipps\Payment\Gateway\Request
  */
-class TransactionDataBuilder implements BuilderInterface
+class TransactionTextDataBuilder implements BuilderInterface
 {
-    use Formatter;
-
-    /**
-     * Amount in order. 32 Bit Integer (2147483647)
-     *
-     * @var string
-     */
-    private static $amount = 'amount';
-
     /**
      * Transaction block name
      *
      * @var string
      */
     private static $transaction = 'transaction';
+
+    /**
+     * Transaction text that can be displayed to end user. Value must be less than or equal to 100 characters.
+     *
+     * @var string
+     */
+    private static $transactionText = 'transactionText';
 
     /**
      * @var ScopeConfigInterface
@@ -72,13 +70,43 @@ class TransactionDataBuilder implements BuilderInterface
      */
     public function build(array $buildSubject)
     {
-        $transactionData = [];
+        $transactionData[self::$transaction][self::$transactionText] = $this->getTransactionText($buildSubject);
+        return $transactionData;
+    }
 
-        $amount = $this->subjectReader->readAmount($buildSubject);
-        if ($amount) {
-            $transactionData[self::$transaction][self::$amount] = (int)($this->formatPrice($amount) * 100);
+    /**
+     * @param $buildSubject
+     * @return string
+     */
+    private function getTransactionText($buildSubject)
+    {
+        $paymentDO = $this->subjectReader->readPayment($buildSubject);
+
+        $storeName = $this->getStoreName();
+        $text = $storeName ? __(
+            'Thank you for shopping at %1.',
+            $storeName
+        ) : __(
+            'Thank you for shopping.',
+            $storeName
+        );
+        $transactionText[] = $text->render();
+
+        if ($paymentDO) {
+            $text = __('Order Id: %1', $paymentDO->getOrder()->getOrderIncrementId());
+            $transactionText[] = $text->render();
         }
 
-        return $transactionData;
+        return implode(' ', $transactionText);
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getStoreName()
+    {
+        return $this->scopeConfig->getValue(
+            'general/store_information/name'
+        );
     }
 }
