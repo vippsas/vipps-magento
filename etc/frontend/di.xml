@@ -36,7 +36,7 @@
         <arguments>
             <argument name="session" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 
@@ -48,7 +48,7 @@
 
     <type name="Vipps\Payment\Controller\Payment\Callback">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
@@ -62,13 +62,13 @@
 
     <type name="Vipps\Payment\Block\Express\Button">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 
     <type name="Vipps\Payment\Observer\AddVippsShortcutsObserver">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 </config>
