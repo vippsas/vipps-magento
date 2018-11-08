@@ -15,10 +15,10 @@
  */
 namespace Vipps\Payment\Gateway\Config;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Config\Config as OriginConfig;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class Config
