@@ -30,7 +30,7 @@
 
     <type name="Vipps\Payment\Plugin\Config\Model\Config">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
