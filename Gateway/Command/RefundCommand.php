@@ -194,7 +194,7 @@ class RefundCommand extends GatewayCommand
             return true;
         }
 
-        // try to refund based on capture servise itself
+        // try to refund based on refund service itself
         if ($transaction->getTransactionSummary()->getRemainingAmountToRefund() < $amount) {
             throw new LocalizedException(__('Refund amount is higher then remaining amount to refund'));
         }
@@ -236,7 +236,7 @@ class RefundCommand extends GatewayCommand
             // It can happened if previous operation was successful in vipps
             // but for some reason Magento didn't get response
 
-            // Check that we are trying to refund the same amount as has been already captured in Vipps
+            // Check that we are trying to refund the same amount as has been already refunded in Vipps
             // otherwise - show an error about desync
             if ((int)$amount === (int)$deltaTotalRefunded) {
                 //prepare refund response based on data from getPaymentDetails service
