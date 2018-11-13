@@ -34,32 +34,32 @@
 
     <type name="Vipps\Payment\Model\TokenProvider">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 
     <type name="Vipps\Payment\Model\UrlResolver">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 
     <type name="Vipps\Payment\Gateway\Http\Client\Curl">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 
     <type name="Vipps\Payment\Gateway\Request\MerchantDataBuilder">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
     <type name="Vipps\Payment\Gateway\Request\Initiate\MerchantDataBuilder">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 
@@ -96,13 +96,7 @@
 
     <virtualType name="VippsConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="configInterface" xsi:type="object">VippsGatewayConfig</argument>
-        </arguments>
-    </virtualType>
-    
-    <virtualType name="VippsGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
-        <arguments>
-            <argument name="methodCode" xsi:type="string">vipps</argument>
+            <argument name="configInterface" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </virtualType>
 
@@ -358,7 +352,7 @@
     <!-- Passing Vipps Config to log data when debug mode is enabled -->
     <type name="Vipps\Payment\Model\Logger\Handler\Debug">
         <arguments>
-            <argument name="config" xsi:type="object">VippsGatewayConfig</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 
