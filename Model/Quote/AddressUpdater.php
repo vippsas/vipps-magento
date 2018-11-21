@@ -16,10 +16,10 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
+use \Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
 
 use Magento\Quote\{
-    Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote, Model\Quote\Address
+    Api\CartRepositoryInterface, Model\Quote, Model\Quote\Address
 };
 
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
@@ -68,21 +68,29 @@ class AddressUpdater extends AbstractHelper
     }
 
     /**
+     * Update quote addresses from source address.
+     *
      * @param Quote $quote
-     * @param Address $address
+     * @param Address $sourceAddress
      */
-    private function updateQuoteAddresses(Quote $quote, Address $address)
+    private function updateQuoteAddresses(Quote $quote, Address $sourceAddress)
     {
         if (!$quote->getIsVirtual()) {
             $shippingAddress = $quote->getShippingAddress();
-            $this->updateAddress($shippingAddress, $address);
+            $this->updateAddress($shippingAddress, $sourceAddress);
         }
 
         $billingAddress = $quote->getBillingAddress();
-        $this->updateAddress($billingAddress, $address);
+        $this->updateAddress($billingAddress, $sourceAddress);
         $billingAddress->setSameAsBilling(false);
     }
 
+    /**
+     * Update destination address from source.
+     *
+     * @param Address $destAddress
+     * @param Address $sourceAddress
+     */
     private function updateAddress(Address $destAddress, Address $sourceAddress)
     {
         $destAddress
