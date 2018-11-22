@@ -110,6 +110,8 @@ class OrderPlace
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
      * @param ConfigInterface $config
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
