@@ -57,6 +57,12 @@
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                             <config_path>payment/vipps/profiling</config_path>
                         </field>
+                        <field id="payment_action" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Payment Action</label>
+                            <config_path>payment/vipps/vipps_payment_action</config_path>
+                            <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
+                            <attribute type="shared">1</attribute>
+                        </field>
                         <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Saleunit Serial Number</label>
                             <config_path>payment/vipps/merchant_serial_number</config_path>
