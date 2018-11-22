@@ -64,6 +64,10 @@ class ShippingDetails extends Action
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var \Vipps\Model\Gdpr\Compliance
+     */
+    private $gdprCompliance;
 
     /**
      * ShippingDetails constructor.
@@ -82,6 +86,7 @@ class ShippingDetails extends Action
         QuoteLocator $quoteLocator,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
+        \Vipps\Model\Gdpr\Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
     ) {
@@ -92,6 +97,7 @@ class ShippingDetails extends Action
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
         $this->logger = $logger;
+        $this->gdprCompliance = $compliance;
     }
 
     /**
@@ -151,7 +157,8 @@ class ShippingDetails extends Action
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
         } finally {
-            $this->logger->debug($this->getRequest()->getContent());
+            $compliantString = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $this->logger->debug($compliantString);
         }
         return $result;
     }
