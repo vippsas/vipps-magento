@@ -24,7 +24,9 @@ use Magento\Quote\Api\{
 };
 use Magento\Quote\Model\Quote;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\{
+    QuoteLocator, Quote\AddressUpdater
+};
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
@@ -64,6 +66,10 @@ class ShippingDetails extends Action
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var AddressUpdater
+     */
+    private $addressUpdater;
 
     /**
      * ShippingDetails constructor.
@@ -73,6 +79,7 @@ class ShippingDetails extends Action
      * @param QuoteLocator $quoteLocator
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
+     * @param AddressUpdater $addressUpdater
      * @param Json $serializer
      * @param LoggerInterface $logger
      */
@@ -82,6 +89,7 @@ class ShippingDetails extends Action
         QuoteLocator $quoteLocator,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
+        AddressUpdater $addressUpdater,
         Json $serializer,
         LoggerInterface $logger
     ) {
@@ -92,6 +100,7 @@ class ShippingDetails extends Action
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
         $this->logger = $logger;
+        $this->addressUpdater = $addressUpdater;
     }
 
     /**
@@ -119,6 +128,7 @@ class ShippingDetails extends Action
              * As Quote is deactivated, so we need to activate it for estimating shipping methods
              */
             $quote = $this->cartRepository->get($quote->getId());
+            $this->addressUpdater->fromSourceAddress($quote, $address);
             $quote->setIsActive(true);
             $shippingMethods = $this->shipmentEstimation->estimateByExtendedAddress($quote->getId(), $address);
             $responseData = [
