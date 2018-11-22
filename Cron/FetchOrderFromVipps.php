@@ -135,6 +135,17 @@ class FetchOrderFromVipps
 
                         if ($transaction->isTransactionAborted()) {
                             $this->cancelQuote($quote);
+                        } else if ($transaction->getTransactionInfo()->getStatus()
+                            == Transaction::TRANSACTION_STATUS_INITIATE) {
+                            // we process quotes that have last update 15 min passed
+                            // vipps cancel if order not approved within 5 min
+                            // so if quote is still initiated we can 'bravely' :) cancel it
+                            $this->cancelQuote(
+                                $quote,
+                                [
+                                    'cancel_reason_phrase' => 'expired'
+                                ]
+                            );
                         } else {
                             $this->processQuote($quote, $transaction);
                         }
@@ -171,11 +182,12 @@ class FetchOrderFromVipps
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
+     * @throws AlreadyExistsException
      * @throws CouldNotSaveException
+     * @throws InputException
      * @throws NoSuchEntityException
      * @throws VippsException
-     * @throws AlreadyExistsException
-     * @throws InputException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function processQuote(CartInterface $quote, Transaction $transaction)
     {
@@ -202,11 +214,13 @@ class FetchOrderFromVipps
     {
         if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
             /** @var Payment $payment */
-            $payment = $quote->getPayment();
-            $payment->setAdditionalInformation('reserved_order_id', $quote->getReservedOrderId());
-            $payment->setAdditionalInformation('cancel_reason_code', $e->getCode());
-            $payment->setAdditionalInformation('cancel_reason_phrase', $e->getMessage());
-            $this->cancelQuote($quote);
+            $this->cancelQuote(
+                $quote,
+                [
+                    'cancel_reason_code' => $e->getCode(),
+                    'cancel_reason_phrase', $e->getMessage()
+                ]
+            );
         }
     }
 
@@ -214,12 +228,22 @@ class FetchOrderFromVipps
      * Cancel quote by setting reserved_order_id to null
      *
      * @param CartInterface $quote
+     * @param array $additionalInformation
      */
-    private function cancelQuote(CartInterface $quote)
+    private function cancelQuote(CartInterface $quote, $additionalInformation = [])
     {
         $reservedOrderId = $quote->getReservedOrderId();
-
         $quote->setReservedOrderId(null);
+
+        $additionalInformation = array_merge(
+            $additionalInformation,
+            [
+                'reserved_order_id' => $reservedOrderId
+            ]
+        );
+        $payment = $quote->getPayment();
+        $payment->setAdditionalInformation('vipps', $additionalInformation);
+
         $this->cartRepository->save($quote);
 
         $this->logger->debug(sprintf(
@@ -249,7 +273,7 @@ class FetchOrderFromVipps
         );
         $collection->addFieldToFilter('p.method', ['eq' => 'vipps']);
         $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 1800)]);
+        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 900)]);
         $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
         return $collection;
     }
