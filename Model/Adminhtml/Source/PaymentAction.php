@@ -25,12 +25,12 @@ class PaymentAction implements ArrayInterface
     /**
      * @var string
      */
-    const ACTION_CAPTURE = 'capture';
+    const ACTION_AUTHORIZE = 'authorize';
 
     /**
      * @var string
      */
-    const ACTION_DIRECT_CAPTURE = 'direct_capture';
+    const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
 
     /**
      * Possible actions on order place
@@ -41,12 +41,12 @@ class PaymentAction implements ArrayInterface
     {
         return [
             [
-                'value' => self::ACTION_CAPTURE,
-                'label' => __('Capture'),
+                'value' => self::ACTION_AUTHORIZE,
+                'label' => __('Authorize'),
             ],
             [
-                'value' => self::ACTION_DIRECT_CAPTURE,
-                'label' => __('Direct Capture'),
+                'value' => self::ACTION_AUTHORIZE_CAPTURE,
+                'label' => __('Authorize and Capture'),
             ]
         ];
     }

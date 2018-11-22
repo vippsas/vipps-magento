@@ -20,6 +20,7 @@ use Magento\Framework\Exception\{
 };
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Helper\Formatter;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Sales\Api\{
     OrderManagementInterface, Data\OrderInterface, OrderRepositoryInterface
 };
@@ -31,9 +32,11 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, CartManagementInterface, Data\CartInterface
 };
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\ScopeInterface;
 use Vipps\Payment\Gateway\{
     Transaction\Transaction, Exception\VippsException
 };
+use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 
 /**
  * Class OrderManagement
@@ -90,6 +93,11 @@ class OrderPlace
     private $lockManager;
 
     /**
+     * @var ConfigInterface
+     */
+    private $config;
+
+    /**
      * OrderPlace constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -101,6 +109,9 @@ class OrderPlace
      * @param Processor $processor
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
+     * @param ConfigInterface $config
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -111,7 +122,8 @@ class OrderPlace
         QuoteLocator $quoteLocator,
         Processor $processor,
         QuoteUpdater $quoteUpdater,
-        LockManager $lockManager
+        LockManager $lockManager,
+        ConfigInterface $config
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -122,6 +134,7 @@ class OrderPlace
         $this->processor = $processor;
         $this->quoteUpdater = $quoteUpdater;
         $this->lockManager = $lockManager;
+        $this->config = $config;
     }
 
     /**
@@ -132,6 +145,7 @@ class OrderPlace
      * @throws AlreadyExistsException
      * @throws CouldNotSaveException
      * @throws InputException
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws VippsException
      */
@@ -149,7 +163,14 @@ class OrderPlace
         try {
             $order = $this->placeOrder($quote, $transaction);
             if ($order) {
-                $this->authorize($order, $transaction);
+                $paymentAction = $this->config->getValue('vipps_payment_action');
+                switch ($paymentAction) {
+                    case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
+                        $this->capture($order, $transaction);
+                        break;
+                    default:
+                        $this->authorize($order, $transaction);
+                }
             }
 
             return $order;
@@ -211,11 +232,12 @@ class OrderPlace
     }
 
     /**
-     * @param CartInterface|Quote $quote
+     * @param CartInterface $quote
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws VippsException
      */
@@ -282,6 +304,43 @@ class OrderPlace
         $this->processor->authorize($payment, false, $baseTotalDue);
         // base amount will be set inside
         $payment->setAmountAuthorized($totalDue);
+        $this->orderRepository->save($order);
+
+        $this->notify($order);
+    }
+
+    /**
+     * Capture
+     *
+     * @param OrderInterface $order
+     * @param Transaction $transaction
+     *
+     * @throws LocalizedException
+     */
+    private function capture(OrderInterface $order, Transaction $transaction)
+    {
+        if ($order->getState() !== Order::STATE_NEW) {
+            return;
+        }
+
+        // preconditions
+        $totalDue = $order->getTotalDue();
+        $baseTotalDue = $order->getBaseTotalDue();
+
+        /** @var Payment $payment */
+        $payment = $order->getPayment();
+        $payment->setAmountAuthorized($totalDue);
+        $payment->setBaseAmountAuthorized($baseTotalDue);
+
+        $transactionId = $transaction->getTransactionId();
+        $payment->setTransactionId($transactionId);
+        $payment->setTransactionAdditionalInfo(
+            PaymentTransaction::RAW_DETAILS,
+            $transaction->getTransactionInfo()->getData()
+        );
+
+        // do capture
+        $this->processor->capture($payment, null);
         $this->orderRepository->save($order);
 
         $this->notify($order);
