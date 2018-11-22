@@ -14,15 +14,14 @@
  * IN THE SOFTWARE.
  */
 
-namespace Vipps\Model\Gdpr;
+namespace Vipps\Payment\Model\Gdpr;
 
+use Magento\Framework\Exception\SerializationException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 
 class Compliance
 {
-    const MODIFIER = 'gdprcompliance';
-
     /**
      * @var Json
      */
@@ -39,51 +38,59 @@ class Compliance
     }
 
     /**
+     * Fields that require masking.
+     *
      * @return array
      */
     private function getReplacementSchema(): array
     {
         $schema = [
-            'addressId' => self::MODIFIER,
-            'addressLine1' => self::MODIFIER,
-            'addressLine2' => self::MODIFIER,
-            'city' => self::MODIFIER,
-            'country' => self::MODIFIER,
-            'postCode' => self::MODIFIER,
-            'shippingDetails' => [
-                'address' => [
-                    'addressLine1' => self::MODIFIER,
-                    'addressLine2' => self::MODIFIER,
-                    'city' => self::MODIFIER,
-                    'country' => self::MODIFIER,
-                    'zipCode' => self::MODIFIER
-                ]
-            ],
-            'userDetails' => [
-                'email' => self::MODIFIER,
-                'firstName' => self::MODIFIER,
-                'lastName' => self::MODIFIER,
-                'mobileNumber' => self::MODIFIER,
-                'userId' => self::MODIFIER]
+            'addressLine1' => 1,
+            'addressLine2' => 1,
+            'email' => 1,
+            'firstName' => 1,
+            'lastName' => 1,
+            'mobileNumber' => 1,
         ];
 
         return $schema;
     }
 
-    public function process($string)
+    /**
+     * Mask response fields.
+     *
+     * @param array|string $responseData
+     *
+     * @return array|string
+     */
+    public function process($responseData)
     {
+        $wasPacked = false;
+
         try {
-            $data = $this->serializer->unserialize($string);
+            if (\is_string($responseData)) {
+                $responseData = $this->serializer->unserialize($responseData);
+                $wasPacked = true;
+            }
 
-            $replacementSchema = $this->getReplacementSchema();
+            if (!\is_array($responseData)) {
+                throw new SerializationException(__('Unserialization result is not an array'));
+            }
 
-            $data = array_replace_recursive($data, array_intersect_key($data, $replacementSchema));
+            array_walk_recursive($responseData, function (&$item, $key, $schema) {
+                if (isset($schema[$key])) {
+                    $item = str_repeat('x', \strlen($item));
+                }
+            }, $this->getReplacementSchema());
 
-            $string = $this->serializer->serialize($data);
+            if ($wasPacked) {
+                $responseData = $this->serializer->serialize($responseData);
+            }
         } catch (\Exception $e) {
+            $this->logger->critical('Gdpr compliance failed');
             $this->logger->critical($e->getMessage());
         }
 
-        return $string;
+        return $responseData;
     }
 }

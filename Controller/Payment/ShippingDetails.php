@@ -23,6 +23,7 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
 };
 use Magento\Quote\Model\Quote;
+use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
 use Vipps\Payment\Model\QuoteLocator;
 use Zend\Http\Response as ZendResponse;
@@ -65,7 +66,7 @@ class ShippingDetails extends Action
      */
     private $logger;
     /**
-     * @var \Vipps\Model\Gdpr\Compliance
+     * @var Compliance
      */
     private $gdprCompliance;
 
@@ -77,6 +78,7 @@ class ShippingDetails extends Action
      * @param QuoteLocator $quoteLocator
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
+     * @param Compliance $compliance
      * @param Json $serializer
      * @param LoggerInterface $logger
      */
@@ -86,7 +88,7 @@ class ShippingDetails extends Action
         QuoteLocator $quoteLocator,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
-        \Vipps\Model\Gdpr\Compliance $compliance,
+        Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
     ) {

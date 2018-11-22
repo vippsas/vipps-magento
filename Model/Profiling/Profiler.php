@@ -18,11 +18,13 @@ namespace Vipps\Payment\Model\Profiling;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Store\Model\ScopeInterface;
-use Vipps\Payment\Api\Profiling\Data\ItemInterface;
-use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
-use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
+use Vipps\Payment\Api\Profiling\ {
+    Data\ItemInterface, Data\ItemInterfaceFactory, ItemRepositoryInterface
+};
+
 use Zend\Http\Response;
 use Magento\Framework\Json\DecoderInterface;
+use Vipps\Payment\Model\Gdpr\Compliance;
 
 class Profiler implements ProfilerInterface
 {
@@ -47,6 +49,11 @@ class Profiler implements ProfilerInterface
     private $jsonDecoder;
 
     /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
+    /**
      * Profiler constructor.
      *
      * @param ScopeConfigInterface $config
@@ -58,12 +65,14 @@ class Profiler implements ProfilerInterface
         ScopeConfigInterface $config,
         ItemInterfaceFactory $dataItemFactory,
         ItemRepositoryInterface $itemRepository,
-        DecoderInterface $jsonDecoder
+        DecoderInterface $jsonDecoder,
+        Compliance $gdprCompliance
     ) {
         $this->config = $config;
         $this->dataItemFactory = $dataItemFactory;
         $this->itemRepository = $itemRepository;
         $this->jsonDecoder = $jsonDecoder;
+        $this->gdprCompliance = $gdprCompliance;
     }
 
     /**
@@ -150,7 +159,8 @@ class Profiler implements ProfilerInterface
     private function depersonalizedResponse($response)
     {
         unset($response['url']);
-        return $response;
+
+        return $this->gdprCompliance->process($response);
     }
 
     /**
