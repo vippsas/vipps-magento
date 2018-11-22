@@ -139,7 +139,7 @@ class FetchOrderFromVipps
                             == Transaction::TRANSACTION_STATUS_INITIATE) {
                             // we process quotes that have last update 15 min passed
                             // vipps cancel if order not approved within 5 min
-                            // so if quote is still initiated we can 'bravely' :) cancel it
+                            // so if quote is still initiated we can cancel it
                             $this->cancelQuote(
                                 $quote,
                                 [
