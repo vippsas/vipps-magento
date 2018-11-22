@@ -218,7 +218,7 @@ class FetchOrderFromVipps
                 $quote,
                 [
                     'cancel_reason_code' => $e->getCode(),
-                    'cancel_reason_phrase', $e->getMessage()
+                    'cancel_reason_phrase' => $e->getMessage()
                 ]
             );
         }
