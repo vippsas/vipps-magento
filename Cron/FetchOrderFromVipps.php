@@ -29,6 +29,7 @@ use Vipps\Payment\{
 };
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Class FetchOrderStatus
@@ -110,7 +111,7 @@ class FetchOrderFromVipps
      * Create orders from Vipps that are not created in Magento yet
      *
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function execute()
     {
@@ -135,7 +136,7 @@ class FetchOrderFromVipps
 
                         if ($transaction->isTransactionAborted()) {
                             $this->cancelQuote($quote);
-                        } else if ($transaction->getTransactionInfo()->getStatus()
+                        } elseif ($transaction->getTransactionInfo()->getStatus()
                             == Transaction::TRANSACTION_STATUS_INITIATE) {
                             // we process quotes that have last update 15 min passed
                             // vipps cancel if order not approved within 5 min
@@ -187,7 +188,7 @@ class FetchOrderFromVipps
      * @throws InputException
      * @throws NoSuchEntityException
      * @throws VippsException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     private function processQuote(CartInterface $quote, Transaction $transaction)
     {
@@ -207,8 +208,6 @@ class FetchOrderFromVipps
     /**
      * @param CartInterface $quote
      * @param VippsException $e
-     *
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function processVippsException(CartInterface $quote, VippsException $e)
     {
