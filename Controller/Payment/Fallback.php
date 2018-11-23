@@ -109,6 +109,8 @@ class Fallback extends Action
      * @param OrderLocator $orderLocator
      * @param Compliance $compliance
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,
