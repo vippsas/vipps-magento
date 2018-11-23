@@ -76,9 +76,6 @@ class QuoteUpdater extends AbstractHelper
         if (!$transaction->isExpressCheckout()) {
             return false;
         }
-        $payment = $quote->getPayment();
-        $payment->setMethod('vipps');
-
         $quote->setMayEditShippingAddress(false);
         $quote->setMayEditShippingMethod(true);
 
