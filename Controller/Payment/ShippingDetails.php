@@ -67,10 +67,12 @@ class ShippingDetails extends Action
      * @var LoggerInterface
      */
     private $logger;
+
     /**
      * @var Compliance
      */
     private $gdprCompliance;
+
     /**
      * @var AddressUpdater
      */

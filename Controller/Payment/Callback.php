@@ -72,6 +72,7 @@ class Callback extends Action
      * @var CartInterface
      */
     private $quote;
+
     /**
      * @var Compliance
      */

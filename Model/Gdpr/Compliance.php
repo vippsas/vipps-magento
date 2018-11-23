@@ -20,17 +20,29 @@ use Magento\Framework\Exception\SerializationException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Applies Gdpr compliance.
+ *
+ * Class Compliance
+ * @package Vipps\Payment\Model\Gdpr
+ */
 class Compliance
 {
     /**
      * @var Json
      */
     private $serializer;
+
     /**
      * @var LoggerInterface
      */
     private $logger;
 
+    /**
+     * Compliance constructor.
+     * @param Json $serializer
+     * @param LoggerInterface $logger
+     */
     public function __construct(Json $serializer, LoggerInterface $logger)
     {
         $this->serializer = $serializer;

@@ -60,6 +60,7 @@ class Profiler implements ProfilerInterface
      * @param ItemInterfaceFactory $dataItemFactory
      * @param ItemRepositoryInterface $itemRepository
      * @param DecoderInterface $jsonDecoder
+     * @param Compliance $gdprCompliance
      */
     public function __construct(
         ScopeConfigInterface $config,

@@ -90,6 +90,7 @@ class Fallback extends Action
      * @var LoggerInterface
      */
     private $logger;
+
     /**
      * @var Compliance
      */
