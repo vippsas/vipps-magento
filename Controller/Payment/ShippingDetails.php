@@ -23,6 +23,7 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
 };
 use Magento\Quote\Model\Quote;
+use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
 use Vipps\Payment\Model\{
     QuoteLocator, Quote\AddressUpdater
@@ -66,6 +67,12 @@ class ShippingDetails extends Action
      * @var LoggerInterface
      */
     private $logger;
+
+    /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
     /**
      * @var AddressUpdater
      */
@@ -80,6 +87,7 @@ class ShippingDetails extends Action
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
      * @param AddressUpdater $addressUpdater
+     * @param Compliance $compliance
      * @param Json $serializer
      * @param LoggerInterface $logger
      */
@@ -90,6 +98,7 @@ class ShippingDetails extends Action
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         AddressUpdater $addressUpdater,
+        Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
     ) {
@@ -101,6 +110,7 @@ class ShippingDetails extends Action
         $this->addressFactory = $addressFactory;
         $this->logger = $logger;
         $this->addressUpdater = $addressUpdater;
+        $this->gdprCompliance = $compliance;
     }
 
     /**
@@ -161,7 +171,8 @@ class ShippingDetails extends Action
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
         } finally {
-            $this->logger->debug($this->getRequest()->getContent());
+            $compliantString = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $this->logger->debug($compliantString);
         }
         return $result;
     }
