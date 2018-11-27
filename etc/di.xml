@@ -45,6 +45,12 @@
         </arguments>
     </type>
 
+    <type name="Vipps\Payment\Model\OrderPlace">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Gateway\Http\Client\Curl">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>

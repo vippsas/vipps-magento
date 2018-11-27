@@ -97,6 +97,7 @@ class InitiateHandler implements HandlerInterface
                 $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
             }
         }
+        $payment->setMethod('vipps');
         $quote->setIsActive(false);
 
         $this->cartRepository->save($quote);

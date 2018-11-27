@@ -73,7 +73,7 @@ class ExceptionFactory
                 'code' => $errorCode
             ]);
         }
-        $errorMessage = $this->getMessageByErrorCode($errorCode, $errorMessage);
+//        $errorMessage = $this->getMessageByErrorCode($errorCode, $errorMessage);
         $exceptionObject = new $groupName(__($errorMessage), null, (int)$errorCode); //@codingStandardsIgnoreLine
         return $exceptionObject;
     }
