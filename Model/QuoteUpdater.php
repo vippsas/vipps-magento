@@ -71,6 +71,7 @@ class QuoteUpdater extends AbstractHelper
      */
     public function execute(CartInterface $quote)
     {
+        /** @var Quote $quote */
         $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
         $transaction = $this->transactionBuilder->setData($response)->build();
         if (!$transaction->isExpressCheckout()) {
@@ -119,7 +120,6 @@ class QuoteUpdater extends AbstractHelper
         $shippingAddress->setFirstname($userDetails->getFirstName());
         $shippingAddress->setEmail($userDetails->getEmail());
         $shippingAddress->setTelephone($userDetails->getMobileNumber());
-        $shippingAddress->setCollectShippingRates(true);
         $shippingAddress->setShippingMethod($shippingDetails->getShippingMethodId());
         $shippingAddress->setShippingAmount($shippingDetails->getShippingCost());
 
@@ -127,6 +127,9 @@ class QuoteUpdater extends AbstractHelper
         $shippingAddress->setSaveInAddressBook(false);
         $shippingAddress->setSameAsBilling(true);
         $shippingAddress->unsCustomerAddressId();
+
+        // initiate collect totals again because we have made changes
+        $shippingAddress->setCollectShippingRates(true);
     }
 
     /**

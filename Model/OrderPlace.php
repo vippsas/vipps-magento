@@ -246,7 +246,9 @@ class OrderPlace
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        $reservedOrderId = $quote->getReservedOrderId();
+        $clonedQuote = clone $quote;
+
+        $reservedOrderId = $clonedQuote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
         }
@@ -257,24 +259,39 @@ class OrderPlace
         }
 
         //this is used only for express checkout
-        $this->quoteUpdater->execute($quote);
+        $this->quoteUpdater->execute($clonedQuote);
 
-        /** @var Quote $quote */
-        $quote = $this->cartRepository->get($quote->getId());
-        if ($quote->getReservedOrderId() !== $reservedOrderId) {
+        /** @var Quote $clonedQuote */
+        $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
+        if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
             return null;
         }
 
-        // set quote active, collect totals and place order
-        $quote->setIsActive(true);
-        $quote->collectTotals();
-        $this->validateAmount($quote, $transaction);
-        $orderId = $this->cartManagement->placeOrder($quote->getId());
+        $this->prepareQuote($clonedQuote);
 
-        $quote->setReservedOrderId(null);
-        $this->cartRepository->save($quote);
+        // set quote active, collect totals and place order
+        $clonedQuote->collectTotals();
+        $this->validateAmount($clonedQuote, $transaction);
+
+        $clonedQuote->setIsActive(true);
+        $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+
+        $clonedQuote->setReservedOrderId(null);
+        $this->cartRepository->save($clonedQuote);
 
         return $this->orderRepository->get($orderId);
+    }
+
+    /**
+     * @param CartInterface|Quote $quote
+     */
+    private function prepareQuote($quote)
+    {
+        $websiteId = $quote->getStore()->getWebsiteId();
+        foreach ($quote->getAllItems() as $item) {
+            /** @var Quote\Item $item */
+            $item->getProduct()->setWebsiteId($websiteId);
+        }
     }
 
     /**
@@ -367,7 +384,7 @@ class OrderPlace
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
-     * @throws WrongAmountException
+     * @throws LocalizedException
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
@@ -375,7 +392,7 @@ class OrderPlace
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
         if ($quoteAmount !== $vippsAmount) {
-            throw new WrongAmountException(
+            throw new LocalizedException(
                 __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $vippsAmount, $quoteAmount)
             );
         }

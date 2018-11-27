@@ -131,6 +131,7 @@ class FetchOrderFromVipps
                     try {
                         // set quote store as current store
                         $this->storeManager->setCurrentStore($quote->getStore()->getId());
+
                         // fetch order status from vipps
                         $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
                         if ($transaction->isTransactionAborted()) {
@@ -145,7 +146,7 @@ class FetchOrderFromVipps
                         $this->processQuote($quote, $transaction);
                     } catch (VippsException $e) {
                         $this->processVippsException($quote, $e);
-                        $this->logger->critical($e->getMessage());
+                        $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                     } catch (\Throwable $e) {
                         $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                     } finally {
