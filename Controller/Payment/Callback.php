@@ -27,7 +27,8 @@ use Vipps\Payment\{
     Gateway\Request\Initiate\MerchantDataBuilder,
     Gateway\Transaction\TransactionBuilder,
     Model\OrderPlace,
-    Model\QuoteLocator
+    Model\QuoteLocator,
+    Model\Gdpr\Compliance
 };
 use Magento\Quote\{
     Api\Data\CartInterface, Model\Quote
@@ -73,6 +74,11 @@ class Callback extends Action
     private $quote;
 
     /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
+    /**
      * Callback constructor.
      *
      * @param Context $context
@@ -88,6 +94,7 @@ class Callback extends Action
         QuoteLocator $quoteLocator,
         Json $jsonDecoder,
         TransactionBuilder $transactionBuilder,
+        Compliance $compliance,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
@@ -96,6 +103,7 @@ class Callback extends Action
         $this->jsonDecoder = $jsonDecoder;
         $this->transactionBuilder = $transactionBuilder;
         $this->logger = $logger;
+        $this->gdprCompliance = $compliance;
     }
 
     /**
@@ -125,7 +133,8 @@ class Callback extends Action
                 'message' => __('An error occurred during callback processing.')
             ]);
         } finally {
-            $this->logger->debug($this->getRequest()->getContent());
+            $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $this->logger->debug($compliant);
         }
         return $result;
     }

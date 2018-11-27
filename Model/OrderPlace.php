@@ -20,6 +20,7 @@ use Magento\Framework\Exception\{
 };
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Helper\Formatter;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Sales\Api\{
     OrderManagementInterface, Data\OrderInterface, OrderRepositoryInterface
 };
@@ -31,9 +32,12 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, CartManagementInterface, Data\CartInterface
 };
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\ScopeInterface;
+use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Gateway\{
     Transaction\Transaction, Exception\VippsException
 };
+use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 
 /**
  * Class OrderManagement
@@ -90,6 +94,11 @@ class OrderPlace
     private $lockManager;
 
     /**
+     * @var ConfigInterface
+     */
+    private $config;
+
+    /**
      * OrderPlace constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -101,6 +110,9 @@ class OrderPlace
      * @param Processor $processor
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
+     * @param ConfigInterface $config
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -111,7 +123,8 @@ class OrderPlace
         QuoteLocator $quoteLocator,
         Processor $processor,
         QuoteUpdater $quoteUpdater,
-        LockManager $lockManager
+        LockManager $lockManager,
+        ConfigInterface $config
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -122,6 +135,7 @@ class OrderPlace
         $this->processor = $processor;
         $this->quoteUpdater = $quoteUpdater;
         $this->lockManager = $lockManager;
+        $this->config = $config;
     }
 
     /**
@@ -132,8 +146,10 @@ class OrderPlace
      * @throws AlreadyExistsException
      * @throws CouldNotSaveException
      * @throws InputException
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws VippsException
+     * @throws WrongAmountException
      */
     public function execute(CartInterface $quote, Transaction $transaction)
     {
@@ -149,7 +165,14 @@ class OrderPlace
         try {
             $order = $this->placeOrder($quote, $transaction);
             if ($order) {
-                $this->authorize($order, $transaction);
+                $paymentAction = $this->config->getValue('vipps_payment_action');
+                switch ($paymentAction) {
+                    case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
+                        $this->capture($order, $transaction);
+                        break;
+                    default:
+                        $this->authorize($order, $transaction);
+                }
             }
 
             return $order;
@@ -211,17 +234,21 @@ class OrderPlace
     }
 
     /**
-     * @param CartInterface|Quote $quote
+     * @param CartInterface $quote
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws VippsException
+     * @throws WrongAmountException
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        $reservedOrderId = $quote->getReservedOrderId();
+        $clonedQuote = clone $quote;
+
+        $reservedOrderId = $clonedQuote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
         }
@@ -232,24 +259,39 @@ class OrderPlace
         }
 
         //this is used only for express checkout
-        $this->quoteUpdater->execute($quote);
+        $this->quoteUpdater->execute($clonedQuote);
 
-        /** @var Quote $quote */
-        $quote = $this->cartRepository->get($quote->getId());
-        if ($quote->getReservedOrderId() !== $reservedOrderId) {
+        /** @var Quote $clonedQuote */
+        $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
+        if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
             return null;
         }
 
-        // set quote active, collect totals and place order
-        $quote->setIsActive(true);
-        $quote->collectTotals();
-        $this->validateAmount($quote, $transaction);
-        $orderId = $this->cartManagement->placeOrder($quote->getId());
+        $this->prepareQuote($clonedQuote);
 
-        $quote->setReservedOrderId(null);
-        $this->cartRepository->save($quote);
+        // set quote active, collect totals and place order
+        $clonedQuote->collectTotals();
+        $this->validateAmount($clonedQuote, $transaction);
+
+        $clonedQuote->setIsActive(true);
+        $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+
+        $clonedQuote->setReservedOrderId(null);
+        $this->cartRepository->save($clonedQuote);
 
         return $this->orderRepository->get($orderId);
+    }
+
+    /**
+     * @param CartInterface|Quote $quote
+     */
+    private function prepareQuote($quote)
+    {
+        $websiteId = $quote->getStore()->getWebsiteId();
+        foreach ($quote->getAllItems() as $item) {
+            /** @var Quote\Item $item */
+            $item->getProduct()->setWebsiteId($websiteId);
+        }
     }
 
     /**
@@ -288,6 +330,43 @@ class OrderPlace
     }
 
     /**
+     * Capture
+     *
+     * @param OrderInterface $order
+     * @param Transaction $transaction
+     *
+     * @throws LocalizedException
+     */
+    private function capture(OrderInterface $order, Transaction $transaction)
+    {
+        if ($order->getState() !== Order::STATE_NEW) {
+            return;
+        }
+
+        // preconditions
+        $totalDue = $order->getTotalDue();
+        $baseTotalDue = $order->getBaseTotalDue();
+
+        /** @var Payment $payment */
+        $payment = $order->getPayment();
+        $payment->setAmountAuthorized($totalDue);
+        $payment->setBaseAmountAuthorized($baseTotalDue);
+
+        $transactionId = $transaction->getTransactionId();
+        $payment->setTransactionId($transactionId);
+        $payment->setTransactionAdditionalInfo(
+            PaymentTransaction::RAW_DETAILS,
+            $transaction->getTransactionInfo()->getData()
+        );
+
+        // do capture
+        $this->processor->capture($payment, null);
+        $this->orderRepository->save($order);
+
+        $this->notify($order);
+    }
+
+    /**
      * Send order conformation email if not sent
      *
      * @param Order|OrderInterface $order
@@ -305,7 +384,7 @@ class OrderPlace
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
-     * @throws LocalizedException
+     * @throws WrongAmountException
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
@@ -313,7 +392,7 @@ class OrderPlace
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
         if ($quoteAmount !== $vippsAmount) {
-            throw new LocalizedException(
+            throw new WrongAmountException(
                 __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $vippsAmount, $quoteAmount)
             );
         }

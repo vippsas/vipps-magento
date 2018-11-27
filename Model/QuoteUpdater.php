@@ -71,14 +71,12 @@ class QuoteUpdater extends AbstractHelper
      */
     public function execute(CartInterface $quote)
     {
+        /** @var Quote $quote */
         $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
         $transaction = $this->transactionBuilder->setData($response)->build();
         if (!$transaction->isExpressCheckout()) {
             return false;
         }
-        $payment = $quote->getPayment();
-        $payment->setMethod('vipps');
-
         $quote->setMayEditShippingAddress(false);
         $quote->setMayEditShippingMethod(true);
 
@@ -122,15 +120,16 @@ class QuoteUpdater extends AbstractHelper
         $shippingAddress->setFirstname($userDetails->getFirstName());
         $shippingAddress->setEmail($userDetails->getEmail());
         $shippingAddress->setTelephone($userDetails->getMobileNumber());
-        $shippingAddress->setCollectShippingRates(true);
         $shippingAddress->setShippingMethod($shippingDetails->getShippingMethodId());
         $shippingAddress->setShippingAmount($shippingDetails->getShippingCost());
-        $this->updateAddressData($shippingAddress, $shippingDetails);
 
         //We do not save user address from vipps in Magento
         $shippingAddress->setSaveInAddressBook(false);
         $shippingAddress->setSameAsBilling(true);
         $shippingAddress->unsCustomerAddressId();
+
+        // initiate collect totals again because we have made changes
+        $shippingAddress->setCollectShippingRates(true);
     }
 
     /**
@@ -141,7 +140,6 @@ class QuoteUpdater extends AbstractHelper
     {
         $userDetails = $transaction->getUserDetails();
         $billingAddress = $quote->getBillingAddress();
-        $this->updateAddressData($billingAddress, $transaction->getShippingDetails());
 
         $billingAddress->setLastname($userDetails->getLastName());
         $billingAddress->setFirstname($userDetails->getFirstName());
@@ -151,21 +149,5 @@ class QuoteUpdater extends AbstractHelper
         $billingAddress->setSaveInAddressBook(false);
         $billingAddress->setSameAsBilling(false);
         $billingAddress->unsCustomerAddressId();
-    }
-
-    /**
-     * @param Address $address
-     * @param ShippingDetails $shippingDetails
-     */
-    private function updateAddressData(Address $address, ShippingDetails $shippingDetails)
-    {
-        $address->setStreet($shippingDetails->getStreet());
-        $address->setCity($shippingDetails->getCity());
-        $address->setCountryId(ShippingDetails::NORWEGIAN_COUNTRY_ID);
-        $address->setPostcode($shippingDetails->getPostCode());
-
-        $address->setSaveInAddressBook(false);
-        $address->setSameAsBilling(true);
-        $address->setCustomerAddressId(null);
     }
 }
