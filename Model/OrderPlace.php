@@ -254,32 +254,31 @@ class OrderPlace
         }
 
         $order = $this->orderLocator->get($reservedOrderId);
-        if ($order) {
-            return $order;
+        if (!$order) {
+            //this is used only for express checkout
+            $this->quoteUpdater->execute($clonedQuote);
+            /** @var Quote $clonedQuote */
+            $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
+            if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
+                return null;
+            }
+
+            $this->prepareQuote($clonedQuote);
+            $clonedQuote->collectTotals();
+
+            $this->validateAmount($clonedQuote, $transaction);
+
+            // set quote active, collect totals and place order
+            $clonedQuote->setIsActive(true);
+            $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+
+            $order = $this->orderRepository->get($orderId);
         }
-
-        //this is used only for express checkout
-        $this->quoteUpdater->execute($clonedQuote);
-
-        /** @var Quote $clonedQuote */
-        $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
-        if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
-            return null;
-        }
-
-        $this->prepareQuote($clonedQuote);
-
-        // set quote active, collect totals and place order
-        $clonedQuote->collectTotals();
-        $this->validateAmount($clonedQuote, $transaction);
-
-        $clonedQuote->setIsActive(true);
-        $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
 
         $clonedQuote->setReservedOrderId(null);
         $this->cartRepository->save($clonedQuote);
 
-        return $this->orderRepository->get($orderId);
+        return $order;
     }
 
     /**
