@@ -13,41 +13,12 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Model\Adminhtml\Source;
-
-use Magento\Framework\Option\ArrayInterface;
+namespace Vipps\Payment\Gateway\Exception;
 
 /**
- * Class PaymentAction
+ * Class WrongAmountException
+ * @package Vipps\Payment\Gateway\Exception
  */
-class PaymentAction implements ArrayInterface
+class WrongAmountException extends VippsException //@codingStandardsIgnoreLine
 {
-    /**
-     * @var string
-     */
-    const ACTION_AUTHORIZE = 'authorize';
-
-    /**
-     * @var string
-     */
-    const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
-
-    /**
-     * Possible actions on order place
-     *
-     * @return array
-     */
-    public function toOptionArray()
-    {
-        return [
-            [
-                'value' => self::ACTION_AUTHORIZE,
-                'label' => __('Authorize'),
-            ],
-            [
-                'value' => self::ACTION_AUTHORIZE_CAPTURE,
-                'label' => __('Authorize and Capture'),
-            ]
-        ];
-    }
 }

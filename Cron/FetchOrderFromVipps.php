@@ -27,8 +27,10 @@ use Vipps\Payment\{
     Model\OrderPlace,
     Gateway\Transaction\TransactionBuilder
 };
+use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Class FetchOrderStatus
@@ -110,7 +112,7 @@ class FetchOrderFromVipps
      * Create orders from Vipps that are not created in Magento yet
      *
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function execute()
     {
@@ -132,15 +134,19 @@ class FetchOrderFromVipps
 
                         // fetch order status from vipps
                         $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
-
                         if ($transaction->isTransactionAborted()) {
                             $this->cancelQuote($quote);
-                        } else {
-                            $this->processQuote($quote, $transaction);
+                            continue;
                         }
+                        if ($this->shouldCancelExpiredQuote($quote, $transaction)) {
+                            $this->cancelQuote($quote, 'expired');
+                            continue;
+                        }
+                        // process quote
+                        $this->processQuote($quote, $transaction);
                     } catch (VippsException $e) {
                         $this->processVippsException($quote, $e);
-                        $this->logger->critical($e->getMessage());
+                        $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                     } catch (\Throwable $e) {
                         $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
                     } finally {
@@ -152,6 +158,23 @@ class FetchOrderFromVipps
         } finally {
             $this->storeManager->setCurrentStore($currentStore);
         }
+    }
+
+    /**
+     * @param Quote $quote
+     * @param Transaction $transaction
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    private function shouldCancelExpiredQuote(Quote $quote, Transaction $transaction)
+    {
+        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add(new \DateInterval('PT5M')); //@codingStandardsIgnoreLine
+        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
+
+        return $isQuoteExpired
+            && ($transaction->getTransactionInfo()->getStatus() == Transaction::TRANSACTION_STATUS_INITIATE);
+
     }
 
     /**
@@ -171,11 +194,13 @@ class FetchOrderFromVipps
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
+     * @throws AlreadyExistsException
      * @throws CouldNotSaveException
+     * @throws InputException
      * @throws NoSuchEntityException
      * @throws VippsException
-     * @throws AlreadyExistsException
-     * @throws InputException
+     * @throws LocalizedException
+     * @throws WrongAmountException
      */
     private function processQuote(CartInterface $quote, Transaction $transaction)
     {
@@ -195,18 +220,12 @@ class FetchOrderFromVipps
     /**
      * @param CartInterface $quote
      * @param VippsException $e
-     *
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function processVippsException(CartInterface $quote, VippsException $e)
     {
         if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
             /** @var Payment $payment */
-            $payment = $quote->getPayment();
-            $payment->setAdditionalInformation('reserved_order_id', $quote->getReservedOrderId());
-            $payment->setAdditionalInformation('cancel_reason_code', $e->getCode());
-            $payment->setAdditionalInformation('cancel_reason_phrase', $e->getMessage());
-            $this->cancelQuote($quote);
+            $this->cancelQuote($quote, $e);
         }
     }
 
@@ -214,12 +233,32 @@ class FetchOrderFromVipps
      * Cancel quote by setting reserved_order_id to null
      *
      * @param CartInterface $quote
+     * @param \Exception|string $info
      */
-    private function cancelQuote(CartInterface $quote)
+    private function cancelQuote(CartInterface $quote, $info = null)
     {
         $reservedOrderId = $quote->getReservedOrderId();
-
         $quote->setReservedOrderId(null);
+
+        $additionalInformation = [];
+        if ($info instanceof \Exception) {
+            $additionalInformation = [
+                'cancel_reason_code' => $info->getCode(),
+                'cancel_reason_phrase' => $info->getMessage()
+            ];
+        } elseif (\is_string($info)) {
+            $additionalInformation['cancel_reason_phrase'] = $info;
+        }
+
+        $additionalInformation = array_merge(
+            $additionalInformation,
+            [
+                'reserved_order_id' => $reservedOrderId
+            ]
+        );
+        $payment = $quote->getPayment();
+        $payment->setAdditionalInformation('vipps', $additionalInformation);
+
         $this->cartRepository->save($quote);
 
         $this->logger->debug(sprintf(
@@ -241,7 +280,7 @@ class FetchOrderFromVipps
 
         $collection->setPageSize(self::COLLECTION_PAGE_SIZE);
         $collection->setCurPage($currentPage);
-        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id']); //@codingStandardsIgnoreLine
+        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id', 'updated_at']); //@codingStandardsIgnoreLine
         $collection->join(
             ['p' => $collection->getTable('quote_payment')],
             'main_table.entity_id = p.quote_id',
@@ -249,7 +288,7 @@ class FetchOrderFromVipps
         );
         $collection->addFieldToFilter('p.method', ['eq' => 'vipps']);
         $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 1800)]);
+        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)]); // 5min
         $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
         return $collection;
     }

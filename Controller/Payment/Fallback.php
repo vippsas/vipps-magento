@@ -23,7 +23,8 @@ use Magento\Framework\{
 };
 use Vipps\Payment\{
     Api\CommandManagerInterface, Gateway\Exception\MerchantException, Gateway\Request\Initiate\MerchantDataBuilder,
-    Model\OrderLocator, Model\OrderPlace, Gateway\Transaction\TransactionBuilder, Model\QuoteLocator
+    Model\OrderLocator, Model\OrderPlace, Gateway\Transaction\TransactionBuilder, Model\QuoteLocator,
+    Model\Gdpr\Compliance
 };
 use Magento\Quote\{
     Api\Data\CartInterface, Api\CartRepositoryInterface, Model\Quote
@@ -91,6 +92,11 @@ class Fallback extends Action
     private $logger;
 
     /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
+    /**
      * Fallback constructor.
      *
      * @param Context $context
@@ -101,7 +107,10 @@ class Fallback extends Action
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteLocator $quoteLocator
      * @param OrderLocator $orderLocator
+     * @param Compliance $compliance
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,
@@ -112,6 +121,7 @@ class Fallback extends Action
         CartRepositoryInterface $cartRepository,
         QuoteLocator $quoteLocator,
         OrderLocator $orderLocator,
+        Compliance $compliance,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
@@ -123,6 +133,7 @@ class Fallback extends Action
         $this->quoteLocator = $quoteLocator;
         $this->orderLocator = $orderLocator;
         $this->logger = $logger;
+        $this->gdprCompliance = $compliance;
     }
 
     /**
@@ -154,7 +165,8 @@ class Fallback extends Action
             $this->messageManager->addErrorMessage(__('An error occurred during payment status update.'));
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
-            $this->logger->debug($this->getRequest()->getRequestString());
+            $compliant = $this->gdprCompliance->process($this->getRequest()->getRequestString());
+            $this->logger->debug($compliant);
         }
         return $resultRedirect;
     }

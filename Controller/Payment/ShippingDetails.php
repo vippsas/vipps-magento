@@ -23,8 +23,11 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
 };
 use Magento\Quote\Model\Quote;
+use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\{
+    QuoteLocator, Quote\AddressUpdater
+};
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
@@ -66,6 +69,16 @@ class ShippingDetails extends Action
     private $logger;
 
     /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
+    /**
+     * @var AddressUpdater
+     */
+    private $addressUpdater;
+
+    /**
      * ShippingDetails constructor.
      *
      * @param Context $context
@@ -73,6 +86,8 @@ class ShippingDetails extends Action
      * @param QuoteLocator $quoteLocator
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
+     * @param AddressUpdater $addressUpdater
+     * @param Compliance $compliance
      * @param Json $serializer
      * @param LoggerInterface $logger
      */
@@ -82,6 +97,8 @@ class ShippingDetails extends Action
         QuoteLocator $quoteLocator,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
+        AddressUpdater $addressUpdater,
+        Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
     ) {
@@ -92,6 +109,8 @@ class ShippingDetails extends Action
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
         $this->logger = $logger;
+        $this->addressUpdater = $addressUpdater;
+        $this->gdprCompliance = $compliance;
     }
 
     /**
@@ -119,6 +138,7 @@ class ShippingDetails extends Action
              * As Quote is deactivated, so we need to activate it for estimating shipping methods
              */
             $quote = $this->cartRepository->get($quote->getId());
+            $this->addressUpdater->fromSourceAddress($quote, $address);
             $quote->setIsActive(true);
             $shippingMethods = $this->shipmentEstimation->estimateByExtendedAddress($quote->getId(), $address);
             $responseData = [
@@ -151,7 +171,8 @@ class ShippingDetails extends Action
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
         } finally {
-            $this->logger->debug($this->getRequest()->getContent());
+            $compliantString = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $this->logger->debug($compliantString);
         }
         return $result;
     }
