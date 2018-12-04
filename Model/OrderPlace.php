@@ -264,6 +264,8 @@ class OrderPlace
             }
 
             $this->prepareQuote($clonedQuote);
+
+            $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
             $clonedQuote->collectTotals();
 
             $this->validateAmount($clonedQuote, $transaction);
