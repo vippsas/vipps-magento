@@ -16,6 +16,7 @@
 namespace Vipps\Payment\Cron;
 
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
 use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory, Quote, Quote\Payment};
@@ -78,6 +79,10 @@ class FetchOrderFromVipps
      * @var StoreManagerInterface
      */
     private $storeManager;
+    /**
+     * @var ScopeCodeResolver
+     */
+    private $scopeCodeResolver;
 
     /**
      * FetchOrderFromVipps constructor.
@@ -89,6 +94,7 @@ class FetchOrderFromVipps
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
+     * @param ScopeCodeResolver $scopeCodeResolver
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
@@ -97,7 +103,8 @@ class FetchOrderFromVipps
         OrderPlace $orderManagement,
         CartRepositoryInterface $cartRepository,
         LoggerInterface $logger,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        ScopeCodeResolver $scopeCodeResolver
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
@@ -106,6 +113,7 @@ class FetchOrderFromVipps
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
+        $this->scopeCodeResolver = $scopeCodeResolver;
     }
 
     /**
@@ -130,6 +138,7 @@ class FetchOrderFromVipps
                     /** @var Quote $quote */
                     try {
                         // set quote store as current store
+                        $this->scopeCodeResolver->clean();
                         $this->storeManager->setCurrentStore($quote->getStore()->getId());
 
                         // fetch order status from vipps
