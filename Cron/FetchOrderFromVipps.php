@@ -79,6 +79,7 @@ class FetchOrderFromVipps
      * @var StoreManagerInterface
      */
     private $storeManager;
+
     /**
      * @var ScopeCodeResolver
      */
