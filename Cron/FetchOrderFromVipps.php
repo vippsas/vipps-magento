@@ -138,22 +138,19 @@ class FetchOrderFromVipps
                 foreach ($quoteCollection as $quote) {
                     /** @var Quote $quote */
                     try {
-                        // set quote store as current store
-                        $this->scopeCodeResolver->clean();
-                        $this->storeManager->setCurrentStore($quote->getStore()->getId());
+                        // prepare environment before processing
+                        $this->prepareEnv($quote);
 
                         // fetch order status from vipps
                         $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
-                        if ($transaction->isTransactionAborted()) {
-                            $this->cancelQuote($quote);
-                            continue;
+
+                        // check if quote should be canceled
+                        if ($this->shouldCancelQuote($quote, $transaction, $reason)) {
+                            $this->cancelQuote($quote, $reason);
+                        } else {
+                            // process quote
+                            $this->processQuote($quote, $transaction);
                         }
-                        if ($this->shouldCancelExpiredQuote($quote, $transaction)) {
-                            $this->cancelQuote($quote, 'expired');
-                            continue;
-                        }
-                        // process quote
-                        $this->processQuote($quote, $transaction);
                     } catch (VippsException $e) {
                         $this->processVippsException($quote, $e);
                         $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
@@ -172,6 +169,37 @@ class FetchOrderFromVipps
 
     /**
      * @param Quote $quote
+     */
+    private function prepareEnv(Quote $quote)
+    {
+        // set quote store as current store
+        $this->scopeCodeResolver->clean();
+        $this->storeManager->setCurrentStore($quote->getStore()->getId());
+    }
+
+    /**
+     * @param Quote $quote
+     * @param Transaction $transaction
+     * @param null $reason
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    private function shouldCancelQuote(Quote $quote, Transaction $transaction, &$reason = null)
+    {
+        if ($transaction->isTransactionAborted()) {
+            $reason = 'aborted';
+            return true;
+        }
+        if ($this->shouldCancelExpiredQuote($quote, $transaction)) {
+            $reason = 'expired after 5 min';
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param Quote $quote
      * @param Transaction $transaction
      *
      * @return bool
@@ -180,10 +208,16 @@ class FetchOrderFromVipps
     private function shouldCancelExpiredQuote(Quote $quote, Transaction $transaction)
     {
         $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add(new \DateInterval('PT5M')); //@codingStandardsIgnoreLine
-        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
+        $isQuoteExpired5M = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
 
-        return $isQuoteExpired
-            && ($transaction->getTransactionInfo()->getStatus() == Transaction::TRANSACTION_STATUS_INITIATE);
+        return $isQuoteExpired5M
+            && (in_array(
+                $transaction->getTransactionInfo()->getStatus(),
+                [
+                    Transaction::TRANSACTION_STATUS_REGISTER,
+                    Transaction::TRANSACTION_STATUS_INITIATE
+                ]
+            ));
 
     }
 
