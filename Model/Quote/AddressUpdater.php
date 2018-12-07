@@ -19,7 +19,7 @@ namespace Vipps\Payment\Model\Quote;
 use \Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
 
 use Magento\Quote\{
-    Api\CartRepositoryInterface, Model\Quote, Model\Quote\Address
+    Model\Quote, Model\Quote\Address
 };
 
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
@@ -31,40 +31,18 @@ use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 class AddressUpdater extends AbstractHelper
 {
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * AddressUpdater constructor.
-     * @param CartRepositoryInterface $cartRepository
-     */
-    public function __construct(CartRepositoryInterface $cartRepository)
-    {
-        $this->cartRepository = $cartRepository;
-    }
-
-    /**
      * Update quote addresses from source address.
      *
      * @param Quote $quote
      * @param Address $sourceAddress
+     * @throws \Exception
      */
     public function fromSourceAddress(Quote $quote, Address $sourceAddress)
     {
         $quote->setMayEditShippingAddress(false);
-
-        $this->updateQuoteAddresses($quote, $sourceAddress);
         $this->disabledQuoteAddressValidation($quote);
 
-        /**
-         * Unset shipping assignment to prevent from saving / applying outdated data
-         * @see \Magento\Quote\Model\QuoteRepository\SaveHandler::processShippingAssignment
-         */
-        if ($quote->getExtensionAttributes()) {
-            $quote->getExtensionAttributes()->setShippingAssignments(null);
-        }
-        $this->cartRepository->save($quote);
+        $this->updateQuoteAddresses($quote, $sourceAddress);
     }
 
     /**
@@ -72,6 +50,7 @@ class AddressUpdater extends AbstractHelper
      *
      * @param Quote $quote
      * @param Address $sourceAddress
+     * @throws \Exception
      */
     private function updateQuoteAddresses(Quote $quote, Address $sourceAddress)
     {
@@ -81,8 +60,8 @@ class AddressUpdater extends AbstractHelper
         }
 
         $billingAddress = $quote->getBillingAddress();
-        $this->updateAddress($billingAddress, $sourceAddress);
         $billingAddress->setSameAsBilling(false);
+        $this->updateAddress($billingAddress, $sourceAddress);
     }
 
     /**
@@ -90,6 +69,7 @@ class AddressUpdater extends AbstractHelper
      *
      * @param Address $destAddress
      * @param Address $sourceAddress
+     * @throws \Exception
      */
     private function updateAddress(Address $destAddress, Address $sourceAddress)
     {
@@ -100,6 +80,7 @@ class AddressUpdater extends AbstractHelper
             ->setPostcode($sourceAddress->getPostcode())
             ->setSaveInAddressBook(false)
             ->setSameAsBilling(true)
-            ->setCustomerAddressId(null);
+            ->setCustomerAddressId(null)
+            ->save();
     }
 }
