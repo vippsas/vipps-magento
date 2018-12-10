@@ -243,7 +243,8 @@ class OrderPlace
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        $reservedOrderId = $quote->getReservedOrderId();
+        $clonedQuote = clone $quote;
+        $reservedOrderId = $clonedQuote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
         }
@@ -251,31 +252,31 @@ class OrderPlace
         $order = $this->orderLocator->get($reservedOrderId);
         if (!$order) {
             //this is used only for express checkout
-            $this->quoteUpdater->execute($quote);
-            /** @var Quote $quote */
-            $quote = $this->cartRepository->get($quote->getId());
-            if ($quote->getReservedOrderId() !== $reservedOrderId) {
+            $this->quoteUpdater->execute($clonedQuote);
+            /** @var Quote $clonedQuote */
+            $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
+            if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
                 return null;
             }
 
-            $this->prepareQuote($quote);
+            $this->prepareQuote($clonedQuote);
 
-            $quote->getShippingAddress()->setCollectShippingRates(true);
-            $quote->collectTotals();
+            $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
+            $clonedQuote->collectTotals();
 
-            if ($this->validateAmount($quote, $transaction)) {
+            if ($this->validateAmount($clonedQuote, $transaction)) {
                 // set quote active, collect totals and place order
-                $quote->setIsActive(true);
-                $orderId = $this->cartManagement->placeOrder($quote->getId());
+                $clonedQuote->setIsActive(true);
+                $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
                 $order = $this->orderRepository->get($orderId);
             } else {
                 // cancel order on vipps side
-                $this->commandManager->cancel($quote->getPayment());
+                $this->commandManager->cancel($clonedQuote->getPayment());
             }
         }
 
-        $quote->setReservedOrderId(null);
-        $this->cartRepository->save($quote);
+        $clonedQuote->setReservedOrderId(null);
+        $this->cartRepository->save($clonedQuote);
 
         return $order;
     }

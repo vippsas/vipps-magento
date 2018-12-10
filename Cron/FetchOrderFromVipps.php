@@ -172,7 +172,7 @@ class FetchOrderFromVipps
             if ($transaction->isTransactionAborted()) {
                 $this->cancelQuote($quote, $transaction, 'canceled on vipps side');
             } else {
-                $order = $this->placeOrder(clone $quote, $transaction);
+                $order = $this->placeOrder($quote, $transaction);
             }
         } catch (\Throwable $e) {
             $currentException = $e; //@codingStandardsIgnoreLine
