@@ -91,6 +91,21 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
     /**
      * {@inheritdoc}
      *
+     * @param InfoInterface $payment
+     * @param array $arguments
+     *
+     * @return ResultInterface|mixed|null
+     * @throws CommandException
+     * @throws NotFoundException
+     */
+    public function cancel(InfoInterface $payment, $arguments = [])
+    {
+        return $this->executeByCode('cancel', $payment, $arguments);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
      * @param CommandInterface $command
      * @param InfoInterface|null $payment
      * @param array $arguments

@@ -32,7 +32,7 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, CartManagementInterface, Data\CartInterface
 };
 use Magento\Quote\Model\Quote;
-use Magento\Store\Model\ScopeInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Gateway\{
     Transaction\Transaction, Exception\VippsException
@@ -99,6 +99,11 @@ class OrderPlace
     private $config;
 
     /**
+     * @var CommandManagerInterface
+     */
+    private $commandManager;
+
+    /**
      * OrderPlace constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -111,7 +116,7 @@ class OrderPlace
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
      * @param ConfigInterface $config
-     *
+     * @param CommandManagerInterface $commandManager
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -124,7 +129,8 @@ class OrderPlace
         Processor $processor,
         QuoteUpdater $quoteUpdater,
         LockManager $lockManager,
-        ConfigInterface $config
+        ConfigInterface $config,
+        CommandManagerInterface $commandManager
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -136,6 +142,7 @@ class OrderPlace
         $this->quoteUpdater = $quoteUpdater;
         $this->lockManager = $lockManager;
         $this->config = $config;
+        $this->commandManager = $commandManager;
     }
 
     /**
@@ -246,9 +253,7 @@ class OrderPlace
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
-        $clonedQuote = clone $quote;
-
-        $reservedOrderId = $clonedQuote->getReservedOrderId();
+        $reservedOrderId = $quote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
         }
@@ -256,29 +261,31 @@ class OrderPlace
         $order = $this->orderLocator->get($reservedOrderId);
         if (!$order) {
             //this is used only for express checkout
-            $this->quoteUpdater->execute($clonedQuote);
-            /** @var Quote $clonedQuote */
-            $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
-            if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
+            $this->quoteUpdater->execute($quote);
+            /** @var Quote $quote */
+            $quote = $this->cartRepository->get($quote->getId());
+            if ($quote->getReservedOrderId() !== $reservedOrderId) {
                 return null;
             }
 
-            $this->prepareQuote($clonedQuote);
+            $this->prepareQuote($quote);
 
-            $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
-            $clonedQuote->collectTotals();
+            $quote->getShippingAddress()->setCollectShippingRates(true);
+            $quote->collectTotals();
 
-            $this->validateAmount($clonedQuote, $transaction);
-
-            // set quote active, collect totals and place order
-            $clonedQuote->setIsActive(true);
-            $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
-
-            $order = $this->orderRepository->get($orderId);
+            if ($this->validateAmount($quote, $transaction)) {
+                // set quote active, collect totals and place order
+                $quote->setIsActive(true);
+                $orderId = $this->cartManagement->placeOrder($quote->getId());
+                $order = $this->orderRepository->get($orderId);
+            } else {
+                // cancel order on vipps side
+                $this->commandManager->cancel($quote->getPayment());
+            }
         }
 
-        $clonedQuote->setReservedOrderId(null);
-        $this->cartRepository->save($clonedQuote);
+        $quote->setReservedOrderId(null);
+        $this->cartRepository->save($quote);
 
         return $order;
     }
@@ -385,17 +392,13 @@ class OrderPlace
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
-     * @throws WrongAmountException
+     * @return bool
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
         $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
-        if ($quoteAmount !== $vippsAmount) {
-            throw new WrongAmountException(
-                __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $vippsAmount, $quoteAmount)
-            );
-        }
+        return $quoteAmount == $vippsAmount;
     }
 }

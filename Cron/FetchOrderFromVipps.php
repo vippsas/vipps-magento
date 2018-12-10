@@ -121,7 +121,7 @@ class FetchOrderFromVipps
      * Create orders from Vipps that are not created in Magento yet
      *
      * @throws NoSuchEntityException
-     * @throws LocalizedException
+     * @throws \Exception
      */
     public function execute()
     {
@@ -136,34 +136,54 @@ class FetchOrderFromVipps
                     $quoteCollection->count() //@codingStandardsIgnoreLine
                 ));
                 foreach ($quoteCollection as $quote) {
-                    /** @var Quote $quote */
-                    try {
-                        // prepare environment before processing
-                        $this->prepareEnv($quote);
-
-                        // fetch order status from vipps
-                        $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
-
-                        // check if quote should be canceled
-                        if ($this->shouldCancelQuote($quote, $transaction, $reason)) {
-                            $this->cancelQuote($quote, $reason);
-                        } else {
-                            // process quote
-                            $this->processQuote($quote, $transaction);
-                        }
-                    } catch (VippsException $e) {
-                        $this->processVippsException($quote, $e);
-                        $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
-                    } catch (\Throwable $e) {
-                        $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
-                    } finally {
-                        usleep(1000000); //delay for 1 second
-                    }
+                    $this->processQuote($quote);
                 }
                 $currentPage++;
             } while ($currentPage <= $quoteCollection->getLastPageNumber());
         } finally {
             $this->storeManager->setCurrentStore($currentStore);
+        }
+    }
+
+    /**
+     * Main process
+     *
+     * @param Quote $quote
+     *
+     * @throws \Exception
+     */
+    private function processQuote(Quote $quote)
+    {
+        try {
+            $order = null;
+
+            $this->prepareEnv($quote);
+
+            // fetch order status from vipps
+            $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+            if ($transaction->isTransactionAborted()) {
+                $this->cancelQuote($quote, 'aborted on vipps side');
+                return;
+            }
+
+            if ($transaction->isTransactionNotReserved()) {
+                if ($this->isQuoteExpired($quote, new \DateInterval('PT5M'))) {
+                    $this->cancelQuote($quote, 'expired after 5 min');
+                }
+                return;
+            }
+
+            $order = $this->placeOrder(clone $quote, $transaction);
+        } catch (VippsException $e) {
+            if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
+                $this->cancelQuote($quote, $e);
+            }
+            $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
+        } catch (\Throwable $e) {
+            $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
+        } finally {
+            $this->postProcessing($quote, $order);
+            usleep(1000000); //delay for 1 second
         }
     }
 
@@ -179,46 +199,15 @@ class FetchOrderFromVipps
 
     /**
      * @param Quote $quote
-     * @param Transaction $transaction
-     * @param null $reason
+     * @param \DateInterval $interval
      *
      * @return bool
-     * @throws \Exception
      */
-    private function shouldCancelQuote(Quote $quote, Transaction $transaction, &$reason = null)
+    private function isQuoteExpired(Quote $quote, \DateInterval $interval)
     {
-        if ($transaction->isTransactionAborted()) {
-            $reason = 'aborted';
-            return true;
-        }
-        if ($this->shouldCancelExpiredQuote($quote, $transaction)) {
-            $reason = 'expired after 5 min';
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param Quote $quote
-     * @param Transaction $transaction
-     *
-     * @return bool
-     * @throws \Exception
-     */
-    private function shouldCancelExpiredQuote(Quote $quote, Transaction $transaction)
-    {
-        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add(new \DateInterval('PT5M')); //@codingStandardsIgnoreLine
-        $isQuoteExpired5M = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
-
-        return $isQuoteExpired5M
-            && (in_array(
-                $transaction->getTransactionInfo()->getStatus(),
-                [
-                    Transaction::TRANSACTION_STATUS_REGISTER,
-                    Transaction::TRANSACTION_STATUS_INITIATE
-                ]
-            ));
-
+        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
+        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
+        return $isQuoteExpired;
     }
 
     /**
@@ -246,31 +235,19 @@ class FetchOrderFromVipps
      * @throws LocalizedException
      * @throws WrongAmountException
      */
-    private function processQuote(CartInterface $quote, Transaction $transaction)
+    private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
         $order = $this->orderPlace->execute($quote, $transaction);
-        if (!$order) {
+        if ($order) {
+            $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
+        } else {
             $this->logger->critical(sprintf(
                 'Order has not been placed, quote id: "%s", reserved_order_id: "%s"',
                 $quote->getId(),
                 $quote->getReservedOrderId()
             ));
-        } else {
-            $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
         }
         return $order;
-    }
-
-    /**
-     * @param CartInterface $quote
-     * @param VippsException $e
-     */
-    private function processVippsException(CartInterface $quote, VippsException $e)
-    {
-        if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
-            /** @var Payment $payment */
-            $this->cancelQuote($quote, $e);
-        }
     }
 
     /**
@@ -310,6 +287,28 @@ class FetchOrderFromVipps
             $quote->getId(),
             $reservedOrderId
         ));
+    }
+
+    /**
+     * @param OrderInterface|null $order
+     * @param Quote $quote
+     *
+     * @throws NoSuchEntityException
+     * @throws \Exception
+     */
+    private function postProcessing(Quote $quote, OrderInterface $order = null)
+    {
+        if (!$order) {
+            /** @var Quote $updatedQuote */
+            $updatedQuote = $this->cartRepository->get($quote->getEntityId());
+            if ($updatedQuote->getReservedOrderId()) {
+                // more then 1 day
+                if ($this->isQuoteExpired($updatedQuote, new \DateInterval('P1D'))) {
+                    $this->commandManager->cancel($updatedQuote->getPayment());
+                    $this->cancelQuote($updatedQuote, 'expired after 1 day');
+                }
+            }
+        }
     }
 
     /**
