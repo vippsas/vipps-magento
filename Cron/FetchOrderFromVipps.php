@@ -46,6 +46,11 @@ class FetchOrderFromVipps
     const COLLECTION_PAGE_SIZE = 100;
 
     /**
+     * @var string
+     */
+    const MAX_NUMBER_OF_ATTEMPTS = 3;
+
+    /**
      * @var CollectionFactory
      */
     private $quoteCollectionFactory;
@@ -137,6 +142,7 @@ class FetchOrderFromVipps
                 ));
                 foreach ($quoteCollection as $quote) {
                     $this->processQuote($quote);
+                    usleep(1000000); //delay for 1 second
                 }
                 $currentPage++;
             } while ($currentPage <= $quoteCollection->getLastPageNumber());
@@ -150,41 +156,83 @@ class FetchOrderFromVipps
      *
      * @param Quote $quote
      *
+     * @throws NoSuchEntityException
      * @throws \Exception
      */
     private function processQuote(Quote $quote)
     {
         try {
             $order = null;
+            $transaction = null;
+            $currentException = null;
 
             $this->prepareEnv($quote);
 
-            // fetch order status from vipps
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+
             if ($transaction->isTransactionAborted()) {
-                $this->cancelQuote($quote, 'aborted on vipps side');
-                return;
+                $this->cancelQuote($quote, $transaction, 'canceled on vipps side');
+            } else {
+                $order = $this->placeOrder(clone $quote, $transaction);
             }
-
-            if ($transaction->isTransactionNotReserved()) {
-                if ($this->isQuoteExpired($quote, new \DateInterval('PT5M'))) {
-                    $this->cancelQuote($quote, 'expired after 5 min');
-                }
-                return;
-            }
-
-            $order = $this->placeOrder(clone $quote, $transaction);
-        } catch (VippsException $e) {
-            if ($e->getCode() < ZendResponse::STATUS_CODE_500) {
-                $this->cancelQuote($quote, $e);
-            }
-            $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
         } catch (\Throwable $e) {
+            $currentException = $e; //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
         } finally {
-            $this->postProcessing($quote, $order);
-            usleep(1000000); //delay for 1 second
+            if ($order) {
+                // if order exists - nothing to do, all good
+                return;
+            }
+            /** @var Quote $quote */
+            $quote = $this->cartRepository->get($quote->getEntityId());
+            if (!$quote->getReservedOrderId()) {
+                // if quote does not have reserved order id - such quote will not be processed next time
+                return;
+            }
+
+            // count not success (order not created) attempts of this process
+            if ($this->countAttempts($quote) >= $this->getMaxNumberOfAttempts()) {
+                $this->cancelQuote(
+                    $quote,
+                    $transaction,
+                    sprintf(
+                        'canceled after "%s" attempts, last error "%s"',
+                        $this->getMaxNumberOfAttempts(),
+                        $currentException ? $currentException->getMessage() : 'n/a'
+                    )
+                );
+                return;
+            }
         }
+    }
+
+    /**
+     * @param Quote|CartInterface $quote
+     *
+     * @return int
+     * @throws LocalizedException
+     */
+    private function countAttempts($quote)
+    {
+        $additionalInfo = $quote->getPayment()->getAdditionalInformation();
+        $attempts = (int)($additionalInfo['vipps']['attempts'] ?? 0);
+
+        $additionalInfo['vipps']['attempts'] = ++$attempts;
+        $quote->getPayment()->setAdditionalInformation($additionalInfo);
+
+        if ($attempts < $this->getMaxNumberOfAttempts()) {
+            $this->cartRepository->save($quote);
+        }
+
+        return $attempts;
+    }
+
+    /**
+     * @return int
+     */
+    private function getMaxNumberOfAttempts()
+    {
+        return (int)self::MAX_NUMBER_OF_ATTEMPTS;
     }
 
     /**
@@ -203,7 +251,7 @@ class FetchOrderFromVipps
      *
      * @return bool
      */
-    private function isQuoteExpired(Quote $quote, \DateInterval $interval)
+    private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
     {
         $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
         $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
@@ -253,12 +301,15 @@ class FetchOrderFromVipps
     /**
      * Cancel quote by setting reserved_order_id to null
      *
-     * @param CartInterface $quote
-     * @param \Exception|string $info
+     * @param CartInterface|Quote $quote
+     * @param Transaction|null $transaction
+     * @param null $info
+     *
+     * @throws LocalizedException
      */
-    private function cancelQuote(CartInterface $quote, $info = null)
+    private function cancelQuote(CartInterface $quote, Transaction $transaction = null, $info = null)
     {
-        $reservedOrderId = $quote->getReservedOrderId();
+        $savedQuote = clone $quote;
         $quote->setReservedOrderId(null);
 
         $additionalInformation = [];
@@ -274,40 +325,25 @@ class FetchOrderFromVipps
         $additionalInformation = array_merge(
             $additionalInformation,
             [
-                'reserved_order_id' => $reservedOrderId
+                'reserved_order_id' => $savedQuote->getReservedOrderId()
             ]
         );
         $payment = $quote->getPayment();
-        $payment->setAdditionalInformation('vipps', $additionalInformation);
+        $existingAdditionalInfo = $payment->getAdditionalInformation()['vipps'] ?? [];
+        $payment->setAdditionalInformation('vipps', array_merge($existingAdditionalInfo, $additionalInformation));
 
         $this->cartRepository->save($quote);
 
         $this->logger->debug(sprintf(
-            'Quote was canceled, id: "%s", reserved_order_id: "%s"',
+            'Quote was canceled, id: "%s", reserved_order_id: "%s", cancel reason "%s"',
             $quote->getId(),
-            $reservedOrderId
+            $savedQuote->getReservedOrderId(),
+            $additionalInformation['cancel_reason_phrase']
         ));
-    }
 
-    /**
-     * @param OrderInterface|null $order
-     * @param Quote $quote
-     *
-     * @throws NoSuchEntityException
-     * @throws \Exception
-     */
-    private function postProcessing(Quote $quote, OrderInterface $order = null)
-    {
-        if (!$order) {
-            /** @var Quote $updatedQuote */
-            $updatedQuote = $this->cartRepository->get($quote->getEntityId());
-            if ($updatedQuote->getReservedOrderId()) {
-                // more then 1 day
-                if ($this->isQuoteExpired($updatedQuote, new \DateInterval('P1D'))) {
-                    $this->commandManager->cancel($updatedQuote->getPayment());
-                    $this->cancelQuote($updatedQuote, 'expired after 1 day');
-                }
-            }
+        // cancel order on vipps side
+        if ($transaction && $transaction->isTransactionReserved()) {
+            $this->commandManager->cancel($savedQuote->getPayment());
         }
     }
 

@@ -241,11 +241,11 @@ class Transaction
      *
      * @return bool
      */
-    public function isTransactionNotReserved()
+    public function isTransactionReserved()
     {
         $statuses = [
-            Transaction::TRANSACTION_STATUS_REGISTER,
-            Transaction::TRANSACTION_STATUS_INITIATE
+            Transaction::TRANSACTION_STATUS_RESERVE,
+            Transaction::TRANSACTION_STATUS_RESERVED
         ];
         if (in_array($this->getTransactionInfo()->getStatus(), $statuses)) {
             return true;
