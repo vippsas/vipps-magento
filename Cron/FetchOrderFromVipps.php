@@ -19,7 +19,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
-use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory, Quote, Quote\Payment};
+use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory, Quote};
 use Magento\Sales\Api\Data\OrderInterface;
 use Vipps\Payment\{
     Api\CommandManagerInterface,
@@ -29,7 +29,6 @@ use Vipps\Payment\{
     Gateway\Transaction\TransactionBuilder
 };
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
-use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\Exception\LocalizedException;
 
