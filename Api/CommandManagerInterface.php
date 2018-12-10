@@ -54,4 +54,14 @@ interface CommandManagerInterface
      * @throws VippsException
      */
     public function getOrderStatus($orderId);
+
+    /**
+     * Method to execute cancel Command.
+     *
+     * @param InfoInterface $payment
+     * @param array $arguments
+     *
+     * @return mixed
+     */
+    public function cancel(InfoInterface $payment, $arguments = []);
 }

@@ -130,7 +130,7 @@ class Callback extends Action
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
-                'message' => __('An error occurred during callback processing.')
+                'message' => 'An error occurred during callback processing. ' . $e->getMessage()
             ]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());

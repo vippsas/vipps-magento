@@ -127,9 +127,6 @@ class QuoteUpdater extends AbstractHelper
         $shippingAddress->setSaveInAddressBook(false);
         $shippingAddress->setSameAsBilling(true);
         $shippingAddress->unsCustomerAddressId();
-
-        // initiate collect totals again because we have made changes
-        $shippingAddress->setCollectShippingRates(true);
     }
 
     /**

@@ -32,7 +32,7 @@ use Magento\Quote\Api\{
     CartRepositoryInterface, CartManagementInterface, Data\CartInterface
 };
 use Magento\Quote\Model\Quote;
-use Magento\Store\Model\ScopeInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Gateway\{
     Transaction\Transaction, Exception\VippsException
@@ -99,6 +99,11 @@ class OrderPlace
     private $config;
 
     /**
+     * @var CommandManagerInterface
+     */
+    private $commandManager;
+
+    /**
      * OrderPlace constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -111,7 +116,7 @@ class OrderPlace
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
      * @param ConfigInterface $config
-     *
+     * @param CommandManagerInterface $commandManager
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -124,7 +129,8 @@ class OrderPlace
         Processor $processor,
         QuoteUpdater $quoteUpdater,
         LockManager $lockManager,
-        ConfigInterface $config
+        ConfigInterface $config,
+        CommandManagerInterface $commandManager
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -136,6 +142,7 @@ class OrderPlace
         $this->quoteUpdater = $quoteUpdater;
         $this->lockManager = $lockManager;
         $this->config = $config;
+        $this->commandManager = $commandManager;
     }
 
     /**
@@ -220,17 +227,7 @@ class OrderPlace
      */
     private function canPlaceOrder(Transaction $transaction)
     {
-        if (in_array(
-            $transaction->getTransactionInfo()->getStatus(),
-            [
-                Transaction::TRANSACTION_STATUS_RESERVE,
-                Transaction::TRANSACTION_STATUS_RESERVED
-            ]
-        )) {
-            return true;
-        }
-
-        return false;
+        return $transaction->isTransactionReserved();
     }
 
     /**
@@ -247,7 +244,6 @@ class OrderPlace
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
         $clonedQuote = clone $quote;
-
         $reservedOrderId = $clonedQuote->getReservedOrderId();
         if (!$reservedOrderId) {
             return null;
@@ -264,15 +260,19 @@ class OrderPlace
             }
 
             $this->prepareQuote($clonedQuote);
+
+            $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
             $clonedQuote->collectTotals();
 
-            $this->validateAmount($clonedQuote, $transaction);
-
-            // set quote active, collect totals and place order
-            $clonedQuote->setIsActive(true);
-            $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
-
-            $order = $this->orderRepository->get($orderId);
+            if ($this->validateAmount($clonedQuote, $transaction)) {
+                // set quote active, collect totals and place order
+                $clonedQuote->setIsActive(true);
+                $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+                $order = $this->orderRepository->get($orderId);
+            } else {
+                // cancel order on vipps side
+                $this->commandManager->cancel($clonedQuote->getPayment());
+            }
         }
 
         $clonedQuote->setReservedOrderId(null);
@@ -383,17 +383,13 @@ class OrderPlace
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
-     * @throws WrongAmountException
+     * @return bool
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
         $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
-        if ($quoteAmount !== $vippsAmount) {
-            throw new WrongAmountException(
-                __('Reserved amount in Vipps "%1" is not equal to order amount "%2".', $vippsAmount, $quoteAmount)
-            );
-        }
+        return $quoteAmount == $vippsAmount;
     }
 }
