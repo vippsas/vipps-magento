@@ -237,6 +237,24 @@ class Transaction
     }
 
     /**
+     * Check that transaction has not been reserved yet
+     *
+     * @return bool
+     */
+    public function isTransactionReserved()
+    {
+        $statuses = [
+            Transaction::TRANSACTION_STATUS_RESERVE,
+            Transaction::TRANSACTION_STATUS_RESERVED
+        ];
+        if (in_array($this->getTransactionInfo()->getStatus(), $statuses)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Method to retrieve Transaction Id.
      *
      * @return null|string
