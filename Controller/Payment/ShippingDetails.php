@@ -158,6 +158,7 @@ class ShippingDetails extends Action
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
+            $this->logger->critical($e->getMessage());
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
