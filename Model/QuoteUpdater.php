@@ -142,11 +142,18 @@ class QuoteUpdater extends AbstractHelper
     {
         $userDetails = $transaction->getUserDetails();
         $billingAddress = $quote->getBillingAddress();
+        $shippingDetails = $transaction->getShippingDetails();
 
         $billingAddress->setLastname($userDetails->getLastName());
         $billingAddress->setFirstname($userDetails->getFirstName());
         $billingAddress->setEmail($userDetails->getEmail());
         $billingAddress->setTelephone($userDetails->getMobileNumber());
+
+        // try to obtain postCode one more time if it is not done before
+        if (!$billingAddress->getPostcode() && $shippingDetails->getPostcode()) {
+            $billingAddress->setPostcode($shippingDetails->getPostcode());
+        }
+
         //We do not save user address from vipps in Magento
         $billingAddress->setSaveInAddressBook(false);
         $billingAddress->setSameAsBilling(false);
