@@ -123,6 +123,11 @@ class QuoteUpdater extends AbstractHelper
         $shippingAddress->setShippingMethod($shippingDetails->getShippingMethodId());
         $shippingAddress->setShippingAmount($shippingDetails->getShippingCost());
 
+        // try to obtain postCode one more time if it is not done before
+        if (!$shippingAddress->getPostcode() && $shippingDetails->getPostcode()) {
+            $shippingAddress->setPostcode($shippingDetails->getPostcode());
+        }
+
         //We do not save user address from vipps in Magento
         $shippingAddress->setSaveInAddressBook(false);
         $shippingAddress->setSameAsBilling(true);
