@@ -2,10 +2,13 @@
 
 ## How can I get help with Vipps for Magento?
 
-The best way is to use GitHub's buil-in "issue" functionality:
+Vipps for Magento is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
+the plugin also help with improvements, maintenance and developer assistance.
+
+The best way to report a problem (or ask a question) is to use GitHub's built-in "issue" functionality:
 [Issues](https://github.com/vippsas/vipps-magento/issues)
 
-## How can I get help with Vipps (unrelated to Magento)?
+### How can I get help with Vipps (unrelated to Magento)?
 
 See: [How to contact Vipps Integration](https://github.com/vippsas/vipps-developers/blob/master/contact.md).
 
