@@ -5,6 +5,10 @@
 The best way is to use GitHub's buil-in "issue" functionality:
 [Issues](https://github.com/vippsas/vipps-magento/issues)
 
+## How can I get help with Vipps (unrelated to Magento)?
+
+See: [How to contact Vipps Integration](https://github.com/vippsas/vipps-developers/blob/master/contact.md).
+
 ## Why does it take so long after purchase before orders are created in Magento?
 
 This depends on status of the cron job configured in Magento.
