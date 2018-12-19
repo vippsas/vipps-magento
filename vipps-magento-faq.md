@@ -1,5 +1,10 @@
 # Vipps for Magento: Frequently Asked questions
 
+## How can I get help with Vipps for Magento?
+
+The best way is to use GitHub's buil-in "issue" functionality:
+[Issues](https://github.com/vippsas/vipps-magento/issues)
+
 ## Why does it take so long after purchase before orders are created in Magento?
 
 This depends on status of the cron job configured in Magento.
