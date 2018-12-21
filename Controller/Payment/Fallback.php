@@ -13,17 +13,33 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\{
-    Controller\ResultFactory, Controller\ResultInterface, Exception\CouldNotSaveException,
-    Exception\LocalizedException, Exception\NoSuchEntityException, Exception\InputException,
-    Session\SessionManagerInterface, Controller\Result\Redirect, App\Action\Action, App\Action\Context,
-    App\ResponseInterface
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Exception\CouldNotSaveException,
+    Exception\LocalizedException,
+    Exception\NoSuchEntityException,
+    Exception\InputException,
+    Session\SessionManagerInterface,
+    Controller\Result\Redirect,
+    App\Action\Action,
+    App\Action\Context,
+    App\ResponseInterface,
+    App\CsrfAwareActionInterface,
+    App\RequestInterface,
+    App\Request\InvalidRequestException
 };
 use Vipps\Payment\{
-    Api\CommandManagerInterface, Gateway\Exception\MerchantException, Gateway\Request\Initiate\MerchantDataBuilder,
-    Model\OrderLocator, Model\OrderPlace, Gateway\Transaction\TransactionBuilder, Model\QuoteLocator,
+    Api\CommandManagerInterface,
+    Gateway\Exception\MerchantException,
+    Gateway\Request\Initiate\MerchantDataBuilder,
+    Model\OrderLocator,
+    Model\OrderPlace,
+    Gateway\Transaction\TransactionBuilder,
+    Model\QuoteLocator,
     Model\Gdpr\Compliance
 };
 use Magento\Quote\{
@@ -39,7 +55,7 @@ use Psr\Log\LoggerInterface;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Fallback extends Action
+class Fallback extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var CommandManagerInterface
@@ -123,7 +139,8 @@ class Fallback extends Action
         OrderLocator $orderLocator,
         Compliance $compliance,
         LoggerInterface $logger
-    ) {
+    )
+    {
         parent::__construct($context);
         $this->commandManager = $commandManager;
         $this->checkoutSession = $checkoutSession;
@@ -305,5 +322,23 @@ class Fallback extends Action
             $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
             $this->checkoutSession->setLastOrderStatus($order->getStatus());
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(
+        RequestInterface $request
+    ): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }

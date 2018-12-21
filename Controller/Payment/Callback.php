@@ -21,7 +21,10 @@ use Magento\Framework\{
     App\Action\Context,
     Controller\ResultInterface,
     App\ResponseInterface,
-    Serialize\Serializer\Json
+    Serialize\Serializer\Json,
+    App\CsrfAwareActionInterface,
+    App\RequestInterface,
+    App\Request\InvalidRequestException
 };
 use Vipps\Payment\{
     Gateway\Request\Initiate\MerchantDataBuilder,
@@ -41,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Callback extends Action
+class Callback extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var OrderPlace
@@ -215,5 +218,23 @@ class Callback extends Action
             }
         }
         return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(
+        RequestInterface $request
+    ): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }

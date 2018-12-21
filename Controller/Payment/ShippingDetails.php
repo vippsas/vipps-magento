@@ -13,11 +13,20 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\{
-    Controller\ResultFactory, Exception\LocalizedException, Serialize\Serializer\Json,
-    Controller\ResultInterface, App\ResponseInterface, App\Action\Action, App\Action\Context
+    App\Action\Action,
+    App\Action\Context,
+    App\CsrfAwareActionInterface,
+    App\ResponseInterface,
+    App\RequestInterface,
+    App\Request\InvalidRequestException,
+    Controller\ResultFactory,
+    Exception\LocalizedException,
+    Serialize\Serializer\Json,
+    Controller\ResultInterface,
 };
 use Magento\Quote\Api\{
     CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
@@ -36,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ShippingDetails extends Action
+class ShippingDetails extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var CartRepositoryInterface
@@ -101,7 +110,8 @@ class ShippingDetails extends Action
         Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
-    ) {
+    )
+    {
         parent::__construct($context);
         $this->cartRepository = $cartRepository;
         $this->quoteLocator = $quoteLocator;
@@ -207,5 +217,23 @@ class ShippingDetails extends Action
             throw new LocalizedException(__('Requested quote not found'));
         }
         return $quote;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(
+        RequestInterface $request
+    ): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }
