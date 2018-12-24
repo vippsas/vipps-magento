@@ -37,7 +37,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $this->addPaymentJwtScope($installer);
         }
 
-        if (version_compare($context->getVersion(), '1.1.1', '<')) {
+        if (version_compare($context->getVersion(), '1.2.0', '<')) {
             $this->createVippsQuoteTable($installer);
             $this->createVippsAttemptsTable($installer);
         }
