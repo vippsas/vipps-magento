@@ -16,40 +16,33 @@
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
+use Magento\Checkout\Model\Session;
+use Magento\Framework\{App\Action\Action,
+    App\Action\Context,
+    App\CsrfAwareActionInterface,
+    App\Request\InvalidRequestException,
+    App\RequestInterface,
+    App\ResponseInterface,
+    Controller\Result\Redirect,
     Controller\ResultFactory,
     Controller\ResultInterface,
     Exception\CouldNotSaveException,
+    Exception\InputException,
     Exception\LocalizedException,
     Exception\NoSuchEntityException,
-    Exception\InputException,
-    Session\SessionManagerInterface,
-    Controller\Result\Redirect,
-    App\Action\Action,
-    App\Action\Context,
-    App\ResponseInterface,
-    App\CsrfAwareActionInterface,
-    App\RequestInterface,
-    App\Request\InvalidRequestException
-};
-use MEQP2\Tests\NamingConventions\true\bool;
-use Vipps\Payment\{
-    Api\CommandManagerInterface,
+    Session\SessionManagerInterface};
+use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
+use Magento\Sales\Api\Data\OrderInterface;
+use Psr\Log\LoggerInterface;
+use Vipps\Payment\{Api\CommandManagerInterface,
     Gateway\Exception\MerchantException,
     Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\TransactionBuilder,
+    Model\Gdpr\Compliance,
     Model\OrderLocator,
     Model\OrderPlace,
-    Gateway\Transaction\TransactionBuilder,
-    Model\QuoteLocator,
-    Model\Gdpr\Compliance
-};
-use Magento\Quote\{
-    Api\Data\CartInterface, Api\CartRepositoryInterface, Model\Quote
-};
-use Magento\Checkout\Model\Session;
-use Magento\Sales\Api\Data\OrderInterface;
+    Model\QuoteLocator};
 use Zend\Http\Response as ZendResponse;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class Fallback
@@ -140,8 +133,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         OrderLocator $orderLocator,
         Compliance $compliance,
         LoggerInterface $logger
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
         $this->checkoutSession = $checkoutSession;
