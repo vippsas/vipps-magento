@@ -217,6 +217,8 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     /**
      * {@inheritdoc}
      *
+     * @param RequestInterface $request
+     *
      * @return null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -226,6 +228,8 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param RequestInterface $request
      *
      * @return bool
      */

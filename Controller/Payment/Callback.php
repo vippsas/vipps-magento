@@ -16,8 +16,7 @@
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    App\Action\Action,
+use Magento\Framework\{App\Action\Action,
     App\Action\Context,
     App\CsrfAwareActionInterface,
     App\Request\InvalidRequestException,
@@ -28,8 +27,7 @@ use Magento\Framework\{
     Serialize\Serializer\Json};
 use Magento\Quote\{Api\Data\CartInterface, Model\Quote};
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{
-    Gateway\Request\Initiate\MerchantDataBuilder,
+use Vipps\Payment\{Gateway\Request\Initiate\MerchantDataBuilder,
     Gateway\Transaction\TransactionBuilder,
     Model\Gdpr\Compliance,
     Model\OrderPlace,
@@ -220,7 +218,9 @@ class Callback extends Action implements CsrfAwareActionInterface
     /**
      * {@inheritdoc}
      *
-     * @return null
+     * @param RequestInterface $request
+     *
+     * @return InvalidRequestException|null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -229,6 +229,7 @@ class Callback extends Action implements CsrfAwareActionInterface
 
     /**
      * {@inheritdoc}
+     * @param RequestInterface $request
      *
      * @return bool
      */
