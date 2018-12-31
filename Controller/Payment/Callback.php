@@ -13,31 +13,27 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory,
-    App\Action\Action,
+use Magento\Framework\{App\Action\Action,
     App\Action\Context,
-    Controller\ResultInterface,
-    App\ResponseInterface,
-    Serialize\Serializer\Json,
     App\CsrfAwareActionInterface,
+    App\Request\InvalidRequestException,
     App\RequestInterface,
-    App\Request\InvalidRequestException
-};
-use Vipps\Payment\{
-    Gateway\Request\Initiate\MerchantDataBuilder,
-    Gateway\Transaction\TransactionBuilder,
-    Model\OrderPlace,
-    Model\QuoteLocator,
-    Model\Gdpr\Compliance
-};
-use Magento\Quote\{
-    Api\Data\CartInterface, Model\Quote
-};
-use Zend\Http\Response as ZendResponse;
+    App\ResponseInterface,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Serialize\Serializer\Json};
+use Magento\Quote\{Api\Data\CartInterface, Model\Quote};
+use MEQP2\Tests\NamingConventions\true\bool;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\{Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\TransactionBuilder,
+    Model\Gdpr\Compliance,
+    Model\OrderPlace,
+    Model\QuoteLocator};
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class Callback
@@ -110,8 +106,6 @@ class Callback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @return ResponseInterface|ResultInterface
      */
     public function execute()
@@ -221,7 +215,9 @@ class Callback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
+     * @return null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -229,7 +225,9 @@ class Callback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
+     * @return bool
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {

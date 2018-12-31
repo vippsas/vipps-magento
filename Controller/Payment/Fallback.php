@@ -32,6 +32,7 @@ use Magento\Framework\{
     App\RequestInterface,
     App\Request\InvalidRequestException
 };
+use MEQP2\Tests\NamingConventions\true\bool;
 use Vipps\Payment\{
     Api\CommandManagerInterface,
     Gateway\Exception\MerchantException,
@@ -325,7 +326,9 @@ class Fallback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
+     * @return null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -333,7 +336,9 @@ class Fallback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
+     * @return bool
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
