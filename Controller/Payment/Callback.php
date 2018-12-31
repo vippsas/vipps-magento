@@ -13,35 +13,33 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory,
-    App\Action\Action,
+use Magento\Framework\{App\Action\Action,
     App\Action\Context,
-    Controller\ResultInterface,
+    App\CsrfAwareActionInterface,
+    App\Request\InvalidRequestException,
+    App\RequestInterface,
     App\ResponseInterface,
-    Serialize\Serializer\Json
-};
-use Vipps\Payment\{
-    Gateway\Request\Initiate\MerchantDataBuilder,
-    Gateway\Transaction\TransactionBuilder,
-    Model\OrderPlace,
-    Model\QuoteLocator,
-    Model\Gdpr\Compliance
-};
-use Magento\Quote\{
-    Api\Data\CartInterface, Model\Quote
-};
-use Zend\Http\Response as ZendResponse;
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Serialize\Serializer\Json};
+use Magento\Quote\{Api\Data\CartInterface, Model\Quote};
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\{Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\TransactionBuilder,
+    Model\Gdpr\Compliance,
+    Model\OrderPlace,
+    Model\QuoteLocator};
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class Callback
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Callback extends Action
+class Callback extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var OrderPlace
@@ -215,5 +213,28 @@ class Callback extends Action
             }
         }
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return InvalidRequestException|null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }
