@@ -13,17 +13,16 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Response;
 
-use Magento\Customer\Model\Session;
-use Magento\Framework\Session\SessionManagerInterface;
-use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
-use Magento\Quote\{
-    Api\CartRepositoryInterface, Model\Quote, Model\Quote\Payment
-};
-use Vipps\Payment\Gateway\Request\SubjectReader;
-use Magento\Checkout\Model\Type\Onepage;
 use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Checkout\Model\Type\Onepage;
+use Magento\Customer\Model\Session;
+use Magento\Framework\{App\ResourceConnection, Session\SessionManagerInterface};
+use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
+use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
+use Vipps\Payment\{Gateway\Request\SubjectReader, Model\Monitoring\QuoteManagement};
 
 /**
  * Class InitiateHandler
@@ -53,6 +52,16 @@ class InitiateHandler implements HandlerInterface
     private $customerSession;
 
     /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
+    /**
+     * @var QuoteManagement
+     */
+    private $quoteMonitoringManagement;
+
+    /**
      * InitiateHandler constructor.
      *
      * @param CartRepositoryInterface $cartRepository
@@ -64,16 +73,21 @@ class InitiateHandler implements HandlerInterface
         CartRepositoryInterface $cartRepository,
         SubjectReader $subjectReader,
         CheckoutHelper $checkoutHelper,
-        SessionManagerInterface $customerSession
-    ) {
+        SessionManagerInterface $customerSession,
+        ResourceConnection $resourceConnection,
+        QuoteManagement $quoteMonitoringManagement
+    )
+    {
         $this->cartRepository = $cartRepository;
         $this->subjectReader = $subjectReader;
         $this->checkoutHelper = $checkoutHelper;
         $this->customerSession = $customerSession;
+        $this->resourceConnection = $resourceConnection;
+        $this->quoteMonitoringManagement = $quoteMonitoringManagement;
     }
 
     /**
-     * {@inheritdoc}
+     * Save quote payment method.
      *
      * @param array $handlingSubject
      * @param array $responseBody
@@ -100,6 +114,19 @@ class InitiateHandler implements HandlerInterface
         $payment->setMethod('vipps');
         $quote->setIsActive(false);
 
-        $this->cartRepository->save($quote);
+        $connection = $this->resourceConnection->getConnection();
+
+        try {
+            $connection->beginTransaction();
+
+            $this->cartRepository->save($quote);
+            $this->quoteMonitoringManagement->create($quote);
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+
     }
 }
