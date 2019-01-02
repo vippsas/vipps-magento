@@ -79,11 +79,11 @@ interface QuoteInterface
     /**
      * @return string
      */
-    public function getCreatedAt(int $createdAt);
+    public function getCreatedAt();
 
     /**
      * @return string
      */
-    public function getUpdatedAt(string $updatedAt);
+    public function getUpdatedAt();
 
 }
