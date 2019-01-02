@@ -68,6 +68,8 @@ class InitiateHandler implements HandlerInterface
      * @param SubjectReader $subjectReader
      * @param CheckoutHelper $checkoutHelper
      * @param SessionManagerInterface $customerSession
+     * @param ResourceConnection $resourceConnection
+     * @param QuoteManagement $monitoringManagement
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
@@ -75,15 +77,14 @@ class InitiateHandler implements HandlerInterface
         CheckoutHelper $checkoutHelper,
         SessionManagerInterface $customerSession,
         ResourceConnection $resourceConnection,
-        QuoteManagement $quoteMonitoringManagement
-    )
-    {
+        QuoteManagement $monitoringManagement
+    ) {
         $this->cartRepository = $cartRepository;
         $this->subjectReader = $subjectReader;
         $this->checkoutHelper = $checkoutHelper;
         $this->customerSession = $customerSession;
         $this->resourceConnection = $resourceConnection;
-        $this->quoteMonitoringManagement = $quoteMonitoringManagement;
+        $this->quoteMonitoringManagement = $monitoringManagement;
     }
 
     /**

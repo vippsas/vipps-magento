@@ -33,6 +33,16 @@ interface QuoteInterface
     const RESERVED_ORDER_ID = 'reserved_order_id';
 
     /**
+     * @const string
+     */
+    const CREATED_AT = 'created_at';
+
+    /**
+     * @const string
+     */
+    const UPDATED_AT = 'updated_at';
+
+    /**
      * @param int $quoteId
      * @return self
      */
@@ -45,6 +55,18 @@ interface QuoteInterface
     public function setReservedOrderId(string $reservedOrderId);
 
     /**
+     * @param string $createdAt
+     * @return self
+     */
+    public function setCreatedAt(string $createdAt);
+
+    /**
+     * @param string $updatedAt
+     * @return self
+     */
+    public function setUpdatedAt(string $updatedAt);
+
+    /**
      * @return int
      */
     public function getQuoteId();
@@ -53,4 +75,15 @@ interface QuoteInterface
      * @return string
      */
     public function getReservedOrderId();
+
+    /**
+     * @return string
+     */
+    public function getCreatedAt(int $createdAt);
+
+    /**
+     * @return string
+     */
+    public function getUpdatedAt(string $updatedAt);
+
 }

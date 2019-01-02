@@ -53,8 +53,7 @@ class Collection extends SearchResult
         EventManager $eventManager,
         $mainTable = 'vipps_quote',
         $resourceModel = Quote::class
-    )
-    {
+    ) {
         parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $mainTable, $resourceModel);
     }
 }
