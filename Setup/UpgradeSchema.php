@@ -188,17 +188,24 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             )
             ->addColumn(
                 'type',
-                Table::TYPE_INTEGER,
-                1,
+                Table::TYPE_TEXT,
+                10,
                 [],
                 'Type'
             )
             ->addColumn(
-                'reason',
+                'code',
+                Table::TYPE_TEXT,
+                255,
+                [],
+                'Reason Code'
+            )
+            ->addColumn(
+                'phrase',
                 Table::TYPE_TEXT,
                 null,
                 [],
-                'Reason'
+                'Reason Phrase'
             )->addColumn(
                 'created_at',
                 Table::TYPE_DATETIME,
