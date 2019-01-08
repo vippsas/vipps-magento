@@ -14,6 +14,7 @@
  *  IN THE SOFTWARE.
  *
  */
+
 namespace Vipps\Payment\Model\Monitoring;
 
 use Magento\Framework\Model\AbstractModel;
@@ -26,14 +27,6 @@ use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
 class Quote extends AbstractModel implements QuoteInterface
 {
     /**
-     * Constructor.
-     */
-    protected function _construct()
-    {
-        $this->_init(QuoteResource::class);
-    }
-
-    /**
      * @param int $quoteId
      * @return self
      */
@@ -43,10 +36,10 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
-     * @param string $reservedOrderId
+     * @param string|null $reservedOrderId Null for backward compatibility.
      * @return self
      */
-    public function setReservedOrderId(string $reservedOrderId)
+    public function setReservedOrderId($reservedOrderId = '')
     {
         return $this->setData(self::RESERVED_ORDER_ID, $reservedOrderId);
     }
@@ -65,5 +58,90 @@ class Quote extends AbstractModel implements QuoteInterface
     public function getReservedOrderId()
     {
         return $this->getData(self::RESERVED_ORDER_ID);
+    }
+
+    /**
+     * @param string $createdAt
+     * @return self
+     */
+    public function setCreatedAt(string $createdAt)
+    {
+        return $this->setData(self::CREATED_AT, $createdAt);
+    }
+
+    /**
+     * @param string $updatedAt
+     * @return self
+     */
+    public function setUpdatedAt(string $updatedAt)
+    {
+        return $this->setData(self::UPDATED_AT, $updatedAt);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCreatedAt()
+    {
+        return $this->getData(self::CREATED_AT);
+    }
+
+    /**
+     * @return string
+     */
+    public function getUpdatedAt()
+    {
+        return $this->getData(self::UPDATED_AT);
+    }
+
+    /**
+     * @return int
+     */
+    public function getEntityId()
+    {
+        return $this->getData(self::ENTITY_ID);
+    }
+
+    /**
+     * Increment attempts.
+     *
+     * @return Quote
+     */
+    public function incrementAttempt()
+    {
+        return $this->setAttempts($this->getAttempts() + 1);
+    }
+
+    /**
+     * @param int $attempts
+     * @return self
+     */
+    public function setAttempts(int $attempts)
+    {
+        return $this->setData(self::ATTEMPTS, $attempts);
+    }
+
+    /**
+     * @return int
+     */
+    public function getAttempts()
+    {
+        return $this->getData(self::ATTEMPTS);
+    }
+
+    /**
+     * Clear attempts.
+     */
+    public function clearAttempts()
+    {
+        $this->setAttempts(0);
+    }
+
+    /**
+     * Constructor.
+     */
+    protected function _construct()
+    {
+        $this->_init(QuoteResource::class);
     }
 }

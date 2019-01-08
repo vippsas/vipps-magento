@@ -19,6 +19,7 @@ namespace Vipps\Payment\Model\Order\Cancellation;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
+use Vipps\Payment\Model\Adminhtml\Source\Cancellation\Type;
 
 /**
  * Class Config
@@ -54,24 +55,35 @@ class Config
     }
 
     /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isTypeAutomatic($storeId = null)
+    {
+        return $this->getType($storeId) === Type::AUTOMATIC;
+    }
+
+    /**
      * Cancellation type code.
      *
+     * @param int|null $storeId
      * @return string
      */
-    public function getType()
+    public function getType($storeId = null)
     {
-        return $this->getStoreConfig(self::XML_PATH_TYPE);
+        return $this->getStoreConfig(self::XML_PATH_TYPE, $storeId);
     }
 
     /**
      * Common method to return store config value.
      *
      * @param $path
+     * @param int|null $storeId
      * @return mixed
      */
-    private function getStoreConfig($path)
+    private function getStoreConfig($path, $storeId = null)
     {
-        return $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE);
+        return $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     /**
@@ -79,7 +91,7 @@ class Config
      *
      * @return int
      */
-    public function getAttemptsCount()
+    public function getAttemptsMaxCount()
     {
         return $this->getStoreConfig(self::XML_PATH_ATTEMPT_COUNT);
     }
