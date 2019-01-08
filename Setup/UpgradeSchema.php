@@ -58,12 +58,12 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $tableName,
             'scope',
             [
-                'type' => Table::TYPE_TEXT,
-                'length' => 8,
-                'after' => 'token_id',
+                'type'     => Table::TYPE_TEXT,
+                'length'   => 8,
+                'after'    => 'token_id',
                 'nullable' => false,
-                'default' => 'default',
-                'comment' => 'Scope'
+                'default'  => 'default',
+                'comment'  => 'Scope'
             ]
         );
         $installer->getConnection()->truncateTable($tableName);
@@ -90,7 +90,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 'quote_id',
                 Table::TYPE_INTEGER,
                 null,
-                ['nullable' => false, 'unsigned' => true],
+                ['nullable' => true, 'unsigned' => true],
                 'Quote Id'
             )->addColumn(
                 'reserved_order_id',
@@ -99,17 +99,32 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 ['nullable' => false, 'default' => ''],
                 'Order Increment Id'
             )->addColumn(
+                'attempts',
+                Table::TYPE_INTEGER,
+                3,
+                ['nullable' => false, 'default' => '0'],
+                'Attempts Number'
+            )
+            ->addColumn(
                 'created_at',
-                Table::TYPE_DATETIME,
+                Table::TYPE_TIMESTAMP,
                 null,
-                [],
+                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT, Table::OPTION_NULLABLE => false],
                 'Created at'
             )->addColumn(
                 'updated_at',
-                Table::TYPE_DATETIME,
+                Table::TYPE_TIMESTAMP,
                 null,
-                [],
-                'Updated at');
+                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT_UPDATE, Table::OPTION_NULLABLE => false],
+                'Updated at')
+            ->addIndex($installer->getIdxName('vipps_quote', 'quote_id'), 'quote_id')
+            ->addForeignKey(
+                $installer->getFkName('vipps_quote', 'quote_id', 'quote', 'entity_id'),
+                'quote_id',
+                'quote',
+                'entity_id',
+                Table::ACTION_SET_NULL
+            );
 
         $installer->getConnection()->createTable($table);
     }
@@ -145,9 +160,9 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 'Message'
             )->addColumn(
                 'created_at',
-                Table::TYPE_DATETIME,
+                Table::TYPE_TIMESTAMP,
                 null,
-                [],
+                [Table::OPTION_NULLABLE => false, Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT],
                 'Created at'
             )
             ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
@@ -194,23 +209,16 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 'Type'
             )
             ->addColumn(
-                'code',
-                Table::TYPE_TEXT,
-                255,
-                [],
-                'Reason Code'
-            )
-            ->addColumn(
                 'phrase',
                 Table::TYPE_TEXT,
                 null,
-                [],
+                [Table::OPTION_NULLABLE => true],
                 'Reason Phrase'
             )->addColumn(
                 'created_at',
-                Table::TYPE_DATETIME,
+                Table::TYPE_TIMESTAMP,
                 null,
-                [],
+                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT, Table::OPTION_NULLABLE => false],
                 'Created at'
             )
             ->addIndex($installer->getIdxName('vipps_quote_cancellation', 'parent_id'), 'parent_id')
