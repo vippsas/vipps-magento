@@ -15,20 +15,58 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Quote;
-
-use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\Monitoring\Data\QuoteAttemptInterface;
+namespace Vipps\Payment\Api\Monitoring\Data;
 
 /**
- * Interface AttemptRepositoryInterface
+ * Interface QuoteCancellationInterface
  */
-interface AttemptRepositoryInterface
+interface QuoteCancellationInterface
 {
     /**
-     * @param QuoteAttemptInterface $attempt
-     * @return QuoteAttemptInterface
-     * @throws CouldNotSaveException
+     * @const Vipps quote id
      */
-    public function save(QuoteAttemptInterface $attempt);
+    const PARENT_ID = 'parent_id';
+
+    /**
+     * @const Cancellation type (magento, vipps, both)
+     */
+    const TYPE = 'type';
+
+    /**
+     * @const Reason.
+     */
+    const PHRASE = 'phrase';
+
+    /**
+     * @return int
+     */
+    public function getParentId();
+
+    /**
+     * @return string
+     */
+    public function getType();
+
+    /**
+     * @return string
+     */
+    public function getPhrase();
+
+    /**
+     * @param int $parentId
+     * @return self
+     */
+    public function setParentId(int $parentId);
+
+    /**
+     * @param string $type
+     * @return self
+     */
+    public function setType(string $type);
+
+    /**
+     * @param string $phrase
+     * @return self
+     */
+    public function setPhrase(string $phrase);
 }

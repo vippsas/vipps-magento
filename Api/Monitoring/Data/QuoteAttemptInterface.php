@@ -20,7 +20,7 @@ namespace Vipps\Payment\Api\Monitoring\Data;
 /**
  * Interface QuoteInterface
  */
-interface QuoteInterface
+interface QuoteAttemptInterface
 {
     /**
      * @const string
@@ -28,14 +28,14 @@ interface QuoteInterface
     const ENTITY_ID = 'entity_id';
 
     /**
-     * @const string
+     * @const string Vipps Quote Id.
      */
-    const QUOTE_ID = 'quote_id';
+    const PARENT_ID = 'parent_id';
 
     /**
      * @const string
      */
-    const RESERVED_ORDER_ID = 'reserved_order_id';
+    const MESSAGE = 'message';
 
     /**
      * @const string
@@ -43,72 +43,40 @@ interface QuoteInterface
     const CREATED_AT = 'created_at';
 
     /**
-     * @const string
-     */
-    const UPDATED_AT = 'updated_at';
-
-    /**
-     * @const string
-     */
-    const ATTEMPTS = 'attempts';
-
-    /**
-     * @param int $quoteId
+     * @param int $parentId
      * @return self
      */
-    public function setQuoteId(int $quoteId);
+    public function setParentId(int $parentId);
 
     /**
-     * @param string|null $reservedOrderId
-     * @return self
+     * @param string $message
+     * @return string
      */
-    public function setReservedOrderId($reservedOrderId);
+    public function setMessage(string $message);
 
     /**
      * @param string $createdAt
-     * @return self
+     * @return string
      */
     public function setCreatedAt(string $createdAt);
 
     /**
-     * @param string $updatedAt
-     * @return self
-     */
-    public function setUpdatedAt(string $updatedAt);
-
-    /**
-     * @param int $attempts
-     * @return self
-     */
-    public function setAttempts(int $attempts);
-
-    /**
      * @return int
      */
-    public function getQuoteId();
-
-    /**
-     * @return string
-     */
-    public function getReservedOrderId();
-
-    /**
-     * @return string
-     */
-    public function getCreatedAt();
-
-    /**
-     * @return string
-     */
-    public function getUpdatedAt();
-
-    /**
-     * @return int
-     */
-    public function getAttempts();
+    public function getParentId();
 
     /**
      * @return int
      */
     public function getEntityId();
+
+    /**
+     * @return string
+     */
+    public function getMessage();
+
+    /**
+     * @return string
+     */
+    public function getCreatedAt();
 }
