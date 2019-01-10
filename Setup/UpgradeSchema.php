@@ -16,8 +16,8 @@
 
 namespace Vipps\Payment\Setup;
 
-use Magento\Framework\Setup\{SchemaSetupInterface, UpgradeSchemaInterface, ModuleContextInterface};
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\Setup\{ModuleContextInterface, SchemaSetupInterface, UpgradeSchemaInterface};
 
 class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreLine
 {
@@ -42,6 +42,9 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $this->createVippsAttemptsTable($installer);
         }
 
+        if (version_compare($context->getVersion(), '1.2.1', '<')) {
+            $this->createCancellationTable($installer);
+        }
         $installer->endSetup();
     }
 
@@ -150,6 +153,69 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
             ->addForeignKey(
                 $installer->getFkName('vipps_quote_attempts', 'parent_id', 'vipps_quote', 'entity_id'),
+                'parent_id',
+                'vipps_quote',
+                'entity_id',
+                Table::ACTION_CASCADE
+            );
+
+        $installer->getConnection()->createTable($table);
+    }
+
+    /**
+     * Create cancellation table.
+     *
+     * @param SchemaSetupInterface $installer
+     * @throws \Zend_Db_Exception
+     */
+    private function createCancellationTable(SchemaSetupInterface $installer): void
+    {
+        $connection = $installer->getConnection();
+
+        $table = $connection->newTable($connection->getTableName('vipps_quote_cancellation'))
+            ->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
+                'Entity Id'
+            )->addColumn(
+                'parent_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['nullable' => false, 'unsigned' => true],
+                'Vipps Quote Id'
+            )
+            ->addColumn(
+                'type',
+                Table::TYPE_TEXT,
+                10,
+                [],
+                'Type'
+            )
+            ->addColumn(
+                'code',
+                Table::TYPE_TEXT,
+                255,
+                [],
+                'Reason Code'
+            )
+            ->addColumn(
+                'phrase',
+                Table::TYPE_TEXT,
+                null,
+                [],
+                'Reason Phrase'
+            )->addColumn(
+                'created_at',
+                Table::TYPE_DATETIME,
+                null,
+                [],
+                'Created at'
+            )
+            ->addIndex($installer->getIdxName('vipps_quote_cancellation', 'parent_id'), 'parent_id')
+            ->addForeignKey(
+                $installer->getFkName('vipps_quote_cancellation', 'parent_id', 'vipps_quote', 'entity_id'),
                 'parent_id',
                 'vipps_quote',
                 'entity_id',
