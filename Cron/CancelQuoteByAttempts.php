@@ -257,7 +257,6 @@ class CancelQuoteByAttempts
             $this->prepareEnv($quote);
 
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
-
         } catch (\Throwable $e) {
             $this->logger->critical($e->getMessage(), ['quote_id' => $quote->getId()]);
         } finally {

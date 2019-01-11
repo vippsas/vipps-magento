@@ -15,11 +15,12 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Api\Monitoring\Quote;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Model\Monitoring\Quote\Cancellation;
 
 /**
  * Quote Cancellation Facade.

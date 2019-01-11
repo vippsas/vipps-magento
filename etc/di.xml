@@ -382,6 +382,14 @@
         </arguments>
     </type>
 
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Monitoring\Quote\GridCollection</item>
+            </argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Cron\FetchOrderFromVipps">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>

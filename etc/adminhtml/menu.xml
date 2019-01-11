@@ -15,24 +15,35 @@
  * IN THE SOFTWARE.
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
         <add
-            id="Vipps_Payment::vipps"
-            title="Vipps Payment"
-            translate="title"
-            module="Vipps_Payment"
-            sortOrder="100"
-            parent="Magento_Backend::system"
-            resource="Vipps_Payment::vipps" />
+                id="Vipps_Payment::vipps"
+                title="Vipps Payment"
+                translate="title"
+                module="Vipps_Payment"
+                sortOrder="100"
+                parent="Magento_Backend::system"
+                resource="Vipps_Payment::vipps"/>
         <add
-            id="Vipps_Payment::vipps_profiling"
-            title="Requests Profiling"
-            translate="title"
-            module="Vipps_Payment"
-            sortOrder="110"
-            parent="Vipps_Payment::vipps"
-            action="vipps/profiling/index"
-            resource="Vipps_Payment::vipps" />
+                id="Vipps_Payment::vipps_monitoring"
+                title="Quote Monitoring"
+                translate="title"
+                module="Vipps_Payment"
+                sortOrder="10"
+                parent="Vipps_Payment::vipps"
+                action="vipps/monitoring/index"
+                resource="Vipps_Payment::vipps"/>
+
+        <add
+                id="Vipps_Payment::vipps_profiling"
+                title="Requests Profiling"
+                translate="title"
+                module="Vipps_Payment"
+                sortOrder="20"
+                parent="Vipps_Payment::vipps"
+                action="vipps/profiling/index"
+                resource="Vipps_Payment::vipps"/>
     </menu>
 </config>

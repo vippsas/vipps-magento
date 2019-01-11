@@ -130,11 +130,30 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
-     * Clear attempts.
+     * Clear attempts. Can be used to restart pushing to vipps.
+     *
+     * @return QuoteInterface
      */
     public function clearAttempts()
     {
-        $this->setAttempts(0);
+        return $this->setAttempts(0);
+    }
+
+    /**
+     * @param int $isCanceled
+     * @return QuoteInterface
+     */
+    public function setIsCanceled(int $isCanceled)
+    {
+        return $this->setData(self::IS_CANCELED, $isCanceled);
+    }
+
+    /**
+     * @return int
+     */
+    public function getIsCanceled()
+    {
+        return $this->getData(self::IS_CANCELED);
     }
 
     /**

@@ -41,6 +41,7 @@ class QuoteRepository implements QuoteRepositoryInterface
      * QuoteRepository constructor.
      *
      * @param QuoteResource $quoteResource .
+     * @param QuoteFactory $quoteFactory
      */
     public function __construct(QuoteResource $quoteResource, QuoteFactory $quoteFactory)
     {
@@ -73,17 +74,38 @@ class QuoteRepository implements QuoteRepositoryInterface
     }
 
     /**
+     * Load monitoring quote by quote.
+     *
      * @param $quoteId
+     * @return Quote
      * @throws NoSuchEntityException
      */
     public function loadByQuote($quoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create([]);
+        $monitoringQuote = $this->quoteFactory->create();
 
         $this->quoteResource->load($monitoringQuote, $quoteId, 'quote_id');
 
         if (!$monitoringQuote->getId()) {
             throw NoSuchEntityException::singleField('quote_id', $quoteId);
+        }
+
+        return $monitoringQuote;
+    }
+
+    /**
+     * @param int $monitoringQuoteId
+     * @return Quote
+     * @throws NoSuchEntityException
+     */
+    public function load(int $monitoringQuoteId)
+    {
+        $monitoringQuote = $this->quoteFactory->create();
+
+        $this->quoteResource->load($monitoringQuote, $monitoringQuoteId);
+
+        if (!$monitoringQuote->getId()) {
+            throw NoSuchEntityException::singleField('entity_id', $monitoringQuoteId);
         }
 
         return $monitoringQuote;

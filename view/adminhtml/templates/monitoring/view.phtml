@@ -1,0 +1,103 @@
+<?php
+/**
+ * Copyright 2018 Vipps
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ *  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ *  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ *  and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ *  TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+ *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ *  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ *  IN THE SOFTWARE.
+ *
+ */
+
+/** @var \Vipps\Payment\Block\Monitoring\View $block */
+$monitoringQuote = $block->getMonitoringQuote();
+?>
+<div class="fieldset-wrapper">
+    <div class="fieldset-wrapper-title">
+        <span class="title"><?php echo __('Quote Monitoring Information'); ?></span>
+    </div>
+    <table class="admin__table-secondary">
+        <tbody>
+        <tr>
+            <th style="width: 30%;"><?php echo __('Quote Id'); ?></th>
+            <td><?php echo $monitoringQuote->getQuoteId(); ?></td>
+        </tr>
+        <tr>
+            <th><?php echo __('Reserved Order Id'); ?></th>
+            <td><?php echo $monitoringQuote->getReservedOrderId(); ?></td>
+        </tr>
+        <tr>
+            <th><?php echo __('Number Of Attempts'); ?></th>
+            <td><?php /* @escapeVerified */
+                echo $monitoringQuote->getAttempts(); ?></td>
+        </tr>
+        <tr>
+            <th><?php echo __('Is Canceled'); ?></th>
+            <td><?php /* @escapeVerified */
+                echo $monitoringQuote->getIsCanceled() ? 'Yes' : 'No'; ?></td>
+        </tr>
+        <tr>
+            <th><?php echo __('Created At'); ?></th>
+            <td><?php echo $monitoringQuote->getCreatedAt(); ?></td>
+        </tr>
+        <tr>
+            <th><?php echo __('Last Updated At'); ?></th>
+            <td><?php echo $monitoringQuote->getUpdatedAt(); ?></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <div class="fieldset-wrapper-title">
+        <span class="title"><?php echo __('Quote Information'); ?></span>
+    </div>
+    <?php if ($loadingError = $block->getQuoteLoadingError()): ?>
+        <?= $loadingError; ?>
+    <?php else: ?>
+        <?php $quote = $block->getQuote(); ?>
+        <table class="admin__table-secondary">
+            <tbody>
+            <tr>
+                <th style="width: 30%;"><?php echo __('Store Id'); ?></th>
+                <td><?php echo $quote->getStoreId(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Reserved Order Id'); ?></th>
+                <td><?php echo $quote->getReservedOrderId(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Customer email'); ?></th>
+                <td><?= $quote->getCustomerEmail(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Customer Full Name'); ?></th>
+                <td><?= $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Grand Total'); ?></th>
+                <td><?php /* @escapeVerified */
+                    echo $quote->getGrandTotal(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Is Active'); ?></th>
+                <td><?php /* @escapeVerified */
+                    echo $quote->getIsActive() ? 'Yes' : 'No'; ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Created At'); ?></th>
+                <td><?php echo $quote->getCreatedAt(); ?></td>
+            </tr>
+            <tr>
+                <th><?php echo __('Last Updated At'); ?></th>
+                <td><?php echo $quote->getUpdatedAt(); ?></td>
+            </tr>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</div>
