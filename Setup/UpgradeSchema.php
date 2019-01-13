@@ -43,7 +43,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         }
 
         if (version_compare($context->getVersion(), '1.2.1', '<')) {
-            $this->createCancellationTable($installer);
+            $this->addCancelationToQuote($installer);
         }
 
         if (version_compare($context->getVersion(), '1.3.0', '<')) {
@@ -121,7 +121,8 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 Table::TYPE_TIMESTAMP,
                 null,
                 [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT_UPDATE, Table::OPTION_NULLABLE => false],
-                'Updated at')
+                'Updated at'
+            )
             ->addIndex($installer->getIdxName('vipps_quote', 'quote_id'), 'quote_id')
             ->addForeignKey(
                 $installer->getFkName('vipps_quote', 'quote_id', 'quote', 'entity_id'),
@@ -188,54 +189,48 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
      * @param SchemaSetupInterface $installer
      * @throws \Zend_Db_Exception
      */
-    private function createCancellationTable(SchemaSetupInterface $installer): void
+    private function addCancelationToQuote(SchemaSetupInterface $installer): void
     {
         $connection = $installer->getConnection();
+        $tableName = $connection->getTableName('vipps_quote');
 
-        $table = $connection->newTable($connection->getTableName('vipps_quote_cancellation'))
+        $connection
             ->addColumn(
-                'entity_id',
-                Table::TYPE_INTEGER,
-                null,
-                ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
-                'Entity Id'
-            )->addColumn(
-                'parent_id',
-                Table::TYPE_INTEGER,
-                null,
-                ['nullable' => false, 'unsigned' => true],
-                'Vipps Quote Id'
-            )
-            ->addColumn(
-                'type',
-                Table::TYPE_TEXT,
-                10,
-                [],
-                'Type'
-            )
-            ->addColumn(
-                'phrase',
-                Table::TYPE_TEXT,
-                null,
-                [Table::OPTION_NULLABLE => true],
-                'Reason Phrase'
-            )->addColumn(
-                'created_at',
-                Table::TYPE_TIMESTAMP,
-                null,
-                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT, Table::OPTION_NULLABLE => false],
-                'Created at'
-            )
-            ->addIndex($installer->getIdxName('vipps_quote_cancellation', 'parent_id'), 'parent_id')
-            ->addForeignKey(
-                $installer->getFkName('vipps_quote_cancellation', 'parent_id', 'vipps_quote', 'entity_id'),
-                'parent_id',
-                'vipps_quote',
-                'entity_id',
-                Table::ACTION_CASCADE
+                $tableName,
+                'is_canceled',
+                [
+                    Table::OPTION_TYPE     => Table::TYPE_BOOLEAN,
+                    Table::OPTION_NULLABLE => true,
+                    Table::OPTION_DEFAULT  => 0,
+                    'comment'              => 'Is canceled',
+                    'after'                => 'attempts'
+                ]
             );
 
-        $installer->getConnection()->createTable($table);
+        $connection
+            ->addColumn(
+                $tableName,
+                'cancel_type',
+                [
+                    Table::OPTION_TYPE     => Table::TYPE_TEXT,
+                    Table::OPTION_LENGTH   => 10,
+                    Table::OPTION_NULLABLE => true,
+                    'comment'              => 'Cancellation Type',
+                    'after'                => 'is_canceled'
+                ]
+            );
+
+        $connection
+            ->addColumn(
+                $tableName,
+                'cancel_reason',
+                [
+                    Table::OPTION_TYPE     => Table::TYPE_TEXT,
+                    Table::OPTION_NULLABLE => true,
+                    'comment'              => 'Cancellation Reason',
+                    'after'                => 'cancel_type'
+                ]
+            );
     }
 
     /**

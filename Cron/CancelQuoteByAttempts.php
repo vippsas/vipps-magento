@@ -19,22 +19,19 @@ namespace Vipps\Payment\Cron;
 
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{NoSuchEntityException};
-use Magento\Quote\Api\{CartRepositoryInterface};
 use Magento\Quote\Model\{Quote, ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Monitoring\Data\QuoteCancellationInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
+    Model\Monitoring\Quote\CancellationFacade,
     Model\Monitoring\Quote\CancellationRepository,
-    Model\Order\Cancellation\Config,
-    Model\OrderPlace};
-use Vipps\Payment\Model\Monitoring\Quote\AttemptManagement;
+    Model\Order\Cancellation\Config};
 use Vipps\Payment\Model\Monitoring\Quote\CancellationFactory;
 use Vipps\Payment\Model\Monitoring\QuoteManagement as QuoteMonitorManagement;
-use Vipps\Payment\Model\Monitoring\QuoteRepository as QuoteMonitorRepository;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote\Cancellation\Type as CancellationTypeResource;
 
 /**
  * Class FetchOrderStatus
@@ -64,19 +61,9 @@ class CancelQuoteByAttempts
     private $transactionBuilder;
 
     /**
-     * @var OrderPlace
-     */
-    private $orderPlace;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
 
     /**
      * @var StoreManagerInterface
@@ -87,32 +74,19 @@ class CancelQuoteByAttempts
      * @var ScopeCodeResolver
      */
     private $scopeCodeResolver;
+
     /**
      * @var QuoteMonitorManagement
      */
     private $quoteManagement;
+
     /**
      * @var Config
      */
     private $cancellationConfig;
+
     /**
-     * @var CancellationFactory
-     */
-    private $cancellationFactory;
-    /**
-     * @var CancellationRepository
-     */
-    private $cancellationRepository;
-    /**
-     * @var QuoteMonitorRepository
-     */
-    private $quoteMonitorRepository;
-    /**
-     * @var AttemptManagement
-     */
-    private $attemptManagement;
-    /**
-     * @var \Vipps\Payment\Model\Monitoring\Quote\CancellationFacade
+     * @var CancellationFacade
      */
     private $cancellationFacade;
 
@@ -122,43 +96,32 @@ class CancelQuoteByAttempts
      * @param CollectionFactory $quoteCollectionFactory
      * @param CommandManagerInterface $commandManager
      * @param TransactionBuilder $transactionBuilder
-     * @param OrderPlace $orderManagement
-     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
+     * @param QuoteMonitorManagement $quoteManagement
+     * @param Config $cancellationConfig
+     * @param CancellationFacade $cancellationFacade
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
         CommandManagerInterface $commandManager,
         TransactionBuilder $transactionBuilder,
-        OrderPlace $orderManagement,
-        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
         ScopeCodeResolver $scopeCodeResolver,
         QuoteMonitorManagement $quoteManagement,
         Config $cancellationConfig,
-        CancellationFactory $cancellationFactory,
-        CancellationRepository $cancellationRepository,
-        QuoteMonitorRepository $quoteMonitorRepository,
-        AttemptManagement $attemptManagement,
-        \Vipps\Payment\Model\Monitoring\Quote\CancellationFacade $cancellationFacade
+        CancellationFacade $cancellationFacade
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
-        $this->orderPlace = $orderManagement;
-        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->scopeCodeResolver = $scopeCodeResolver;
         $this->quoteManagement = $quoteManagement;
         $this->cancellationConfig = $cancellationConfig;
-        $this->cancellationFactory = $cancellationFactory;
-        $this->cancellationRepository = $cancellationRepository;
-        $this->quoteMonitorRepository = $quoteMonitorRepository;
-        $this->attemptManagement = $attemptManagement;
         $this->cancellationFacade = $cancellationFacade;
     }
 
@@ -193,6 +156,8 @@ class CancelQuoteByAttempts
 
     /**
      * Get quote collection to cancel.
+     * Conditions are:
+     * number of attempts greater than allowed
      *
      * @param $currentPage
      *
@@ -224,15 +189,7 @@ class CancelQuoteByAttempts
             );
 
         // Filter not cancelled quotes.
-        $collection
-            ->getSelect()
-            ->joinLeft(
-                ['vqc' => $collection->getTable('vipps_quote_cancellation')],
-                'vq.entity_id = vqc.parent_id',
-                []
-            );
-        $collection->addFieldToFilter('vqc.entity_id', ['null' => 1]);
-
+        $collection->addFieldToFilter('vq.is_canceled', ['neq' => 1]);
 
         return $collection;
     }
@@ -264,7 +221,7 @@ class CancelQuoteByAttempts
                 ->cancellationFacade
                 ->cancelMagento(
                     $quote,
-                    CancellationTypeResource::MAGENTO,
+                    QuoteCancellationInterface::CANCEL_TYPE_MAGENTO,
                     __('Number of attempts reached: %1', $this->cancellationConfig->getAttemptsMaxCount()),
                     $transaction
                 );
@@ -294,17 +251,4 @@ class CancelQuoteByAttempts
         $response = $this->commandManager->getOrderStatus($orderId);
         return $this->transactionBuilder->setData($response)->build();
     }
-
-    /**
-     * @param Quote $quote
-     * @param \DateInterval $interval
-     *
-     * @return bool
-     */
-//    private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
-//    {
-//        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
-//        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
-//        return $isQuoteExpired;
-//    }
 }

@@ -18,55 +18,80 @@
 namespace Vipps\Payment\Api\Monitoring\Data;
 
 /**
- * Interface QuoteCancellationInterface
+ * Interface QuoteInterface
+ * @api
  */
 interface QuoteCancellationInterface
 {
     /**
-     * @const Vipps quote id
+     * @const string
      */
-    const PARENT_ID = 'parent_id';
+    const IS_CANCELED = 'is_canceled';
 
     /**
-     * @const Cancellation type (magento, vipps, both)
+     * @const string
      */
-    const TYPE = 'type';
+    const IS_CANCELED_YES = 1;
 
     /**
-     * @const Reason.
+     * @const string
      */
-    const PHRASE = 'phrase';
+    const IS_CANCELED_NO = 0;
 
     /**
-     * @return int
+     * @const string
      */
-    public function getParentId();
+    const CANCEL_TYPE = 'cancel_type';
 
     /**
-     * @return string
+     * @const string
      */
-    public function getType();
+    const CANCEL_REASON = 'cancel_reason';
 
     /**
-     * @return string
+     * @const string Canceled in vipps.
      */
-    public function getPhrase();
+    const CANCEL_TYPE_VIPPS = 'vipps';
 
     /**
-     * @param int $parentId
+     * @const string Canceled in magento.
+     */
+    const CANCEL_TYPE_MAGENTO = 'magento';
+
+    /**
+     * @const string Canceled everywhere.
+     */
+    const CANCEL_TYPE_ALL = 'all';
+
+    /**
+     * @return string|null
+     */
+    public function getCancelType();
+
+    /**
+     * @return string|null
+     */
+    public function getCancelReason();
+
+    /**
+     * @param bool $isCanceled
      * @return self
      */
-    public function setParentId(int $parentId);
+    public function setIsCanceled(bool $isCanceled);
+
+    /**
+     * @param string $reason
+     */
+    public function setCancelReason(string $reason);
 
     /**
      * @param string $type
      * @return self
      */
-    public function setType(string $type);
+    public function setCancelType($type);
 
     /**
-     * @param string $phrase
-     * @return self
+     * @return bool
      */
-    public function setPhrase(string $phrase);
+    public function isCanceled();
 }

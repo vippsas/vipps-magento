@@ -77,7 +77,6 @@ class QuoteRepository implements QuoteRepositoryInterface
      * Load monitoring quote by quote.
      *
      * @param $quoteId
-     * @return Quote
      * @throws NoSuchEntityException
      */
     public function loadByQuote($quoteId)

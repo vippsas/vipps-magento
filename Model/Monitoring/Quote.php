@@ -19,12 +19,13 @@ namespace Vipps\Payment\Model\Monitoring;
 
 use Magento\Framework\Model\AbstractModel;
 use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
+use Vipps\Payment\Api\Monitoring\Data\QuoteCancellationInterface;
 use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
 
 /**
  * Quote monitoring model.
  */
-class Quote extends AbstractModel implements QuoteInterface
+class Quote extends AbstractModel implements QuoteInterface, QuoteCancellationInterface
 {
     /**
      * @param int $quoteId
@@ -130,30 +131,61 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
-     * Clear attempts. Can be used to restart pushing to vipps.
-     *
-     * @return QuoteInterface
+     * @return bool
      */
-    public function clearAttempts()
+    public function isCanceled()
     {
-        return $this->setAttempts(0);
+        return $this->getData(self::IS_CANCELED);
     }
 
     /**
-     * @param int $isCanceled
-     * @return QuoteInterface
+     * @param bool $isCanceled
+     * @return Quote
      */
-    public function setIsCanceled(int $isCanceled)
+    public function setIsCanceled(bool $isCanceled)
     {
         return $this->setData(self::IS_CANCELED, $isCanceled);
     }
 
     /**
-     * @return int
+     * @return string|null
      */
-    public function getIsCanceled()
+    public function getCancelType()
     {
-        return $this->getData(self::IS_CANCELED);
+        return $this->getData(self::CANCEL_TYPE);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCancelReason()
+    {
+        return $this->getData(self::CANCEL_REASON);
+    }
+
+    /**
+     * @param string $reason
+     */
+    public function setCancelReason(string $reason)
+    {
+        $this->setData(self::CANCEL_REASON, $reason);
+    }
+
+    /**
+     * @param string $type
+     * @return Quote
+     */
+    public function setCancelType($type)
+    {
+        return $this->setData(self::CANCEL_TYPE, $type);
+    }
+
+    /**
+     * Clear attempts.
+     */
+    public function clearAttempts()
+    {
+        $this->setAttempts(0);
     }
 
     /**

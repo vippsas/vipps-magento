@@ -76,7 +76,6 @@ class QuoteManagement implements QuoteManagementInterface
     {
         if ($extensionAttributes = $quote->getExtensionAttributes()) {
             if (!$extensionAttributes->getVippsMonitoring()) {
-
                 $monitoringQuote = $this->getByQuote($quote);
 
                 $extensionAttributes->setVippsMonitoring($monitoringQuote);
