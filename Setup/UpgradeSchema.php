@@ -46,10 +46,6 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $this->addCancelationToQuote($installer);
         }
 
-        if (version_compare($context->getVersion(), '1.3.0', '<')) {
-            $this->addCancelToVippsQuote($installer);
-        }
-
         $installer->endSetup();
     }
 
@@ -229,27 +225,6 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                     Table::OPTION_NULLABLE => true,
                     'comment'              => 'Cancellation Reason',
                     'after'                => 'cancel_type'
-                ]
-            );
-    }
-
-    /**
-     * @param SchemaSetupInterface $installer
-     */
-    private function addCancelToVippsQuote(SchemaSetupInterface $installer)
-    {
-        $connection = $installer->getConnection();
-
-        $connection
-            ->addColumn(
-                $connection->getTableName('vipps_quote'),
-                'is_canceled',
-                [
-                    Table::OPTION_TYPE     => Table::TYPE_BOOLEAN,
-                    Table::OPTION_DEFAULT  => 0,
-                    Table::OPTION_NULLABLE => false,
-                    'comment'              => 'Is Canceled',
-                    'after'                => 'reserved_order_id'
                 ]
             );
     }
