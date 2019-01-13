@@ -20,7 +20,11 @@ namespace Vipps\Payment\Model\Monitoring\Quote;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Monitoring\Data\QuoteCancellationInterface,
+    Api\Monitoring\Data\QuoteInterface,
+    Api\Monitoring\Quote\CancellationFacadeInterface,
     Gateway\Transaction\Transaction,
+    Model\Monitoring\QuoteRepository,
     Model\Order\Cancellation\Config,
     Model\ResourceModel\Monitoring\Quote\Cancellation\Type as CancellationTypeResource};
 
@@ -34,36 +38,30 @@ class CancellationFacade implements CancellationFacadeInterface
      * @var CommandManagerInterface
      */
     private $commandManager;
-    /**
-     * @var CancellationFactory
-     */
-    private $cancellationFactory;
-    /**
-     * @var CancellationRepository
-     */
-    private $cancellationRepository;
+
     /**
      * @var Config
      */
     private $config;
+    /**
+     * @var QuoteRepository
+     */
+    private $quoteRepository;
 
     /**
      * CancellationFacade constructor.
      * @param CommandManagerInterface $commandManager
-     * @param CancellationFactory $cancellationFactory
-     * @param CancellationRepository $cancelRepository
+     * @param QuoteRepository $quoteRepository
      * @param Config $config
      */
     public function __construct(
         CommandManagerInterface $commandManager,
-        CancellationFactory $cancellationFactory,
-        CancellationRepository $cancelRepository,
+        QuoteRepository $quoteRepository,
         Config $config
     ) {
         $this->commandManager = $commandManager;
-        $this->cancellationFactory = $cancellationFactory;
-        $this->cancellationRepository = $cancelRepository;
         $this->config = $config;
+        $this->quoteRepository = $quoteRepository;
     }
 
     /**
@@ -82,26 +80,40 @@ class CancellationFacade implements CancellationFacadeInterface
         string $reason,
         Transaction $transaction = null
     ) {
-        /** @var \Vipps\Payment\Api\Monitoring\Data\QuoteInterface $quoteMonitoring */
-        $quoteMonitoring = $quote->getExtensionAttributes()->getVippsMonitoring();
+        /** @var \Vipps\Payment\Api\Monitoring\Data\QuoteInterface $monitoring */
+        $monitoring = $this->getMonitoring($quote);
 
-        if (!$quoteMonitoring) {
+        $monitoring
+            ->setIsCanceled(QuoteInterface::IS_CANCELED_YES)
+            ->setCancelType($type)
+            ->setCancelReason($reason);
+
+        $this->quoteRepository->save($monitoring);
+
+        // Nothing to cancel if cancellation initialed by Vipps.
+        if ($type === QuoteCancellationInterface::CANCEL_TYPE_MAGENTO
+            && $this->isAutomaticVippsCancellation($quote->getStoreId())
+        ) {
+            $this->cancelVipps($quote, $transaction);
+        }
+    }
+
+    /**
+     * Get Vipps Quote Monitoring entity.
+     *
+     * @param $quote
+     * @return mixed
+     * @throws NoSuchEntityException
+     */
+    private function getMonitoring($quote)
+    {
+        $monitoring = $quote->getExtensionAttributes()->getVippsMonitoring();
+
+        if (!$monitoring) {
             throw new NoSuchEntityException(__('Vipps Monitoring model is not loaded in Quote extension attributes'));
         }
 
-        // Creating magento cancellation.
-        $cancellation = $this
-            ->cancellationFactory
-            ->create($quoteMonitoring, $type, $reason);
-
-        $this->cancellationRepository->save($cancellation);
-
-        // Nothing to cancel if cancellation initialed by Vipps.
-        if ($type === CancellationTypeResource::MAGENTO
-            && $this->isAutomaticVippsCancellation($quote->getStoreId())
-        ) {
-            $this->cancelVipps($quote, $cancellation, $transaction);
-        }
+        return $monitoring;
     }
 
     /**
@@ -115,21 +127,22 @@ class CancellationFacade implements CancellationFacadeInterface
 
     /**
      * @param CartInterface $quote
-     * @param Cancellation $cancellation
      * @param Transaction|null $transaction
      * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws NoSuchEntityException
      */
     public function cancelVipps(
         CartInterface $quote,
-        Cancellation $cancellation,
         Transaction $transaction = null
     ) {
+        $monitoring = $this->getMonitoring($quote);
+
         // cancel order on vipps side
         if ($transaction && $transaction->isTransactionReserved()) {
             $this->commandManager->cancel($quote->getPayment());
 
-            $cancellation->setType(CancellationTypeResource::ALL);
-            $this->cancellationRepository->save($cancellation);
+            $monitoring->setType(QuoteCancellationInterface::CANCEL_TYPE_ALL);
+            $this->quoteRepository->save($monitoring);
         }
     }
 }

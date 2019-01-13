@@ -19,12 +19,13 @@ namespace Vipps\Payment\Model\Monitoring;
 
 use Magento\Framework\Model\AbstractModel;
 use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
+use Vipps\Payment\Api\Monitoring\Data\QuoteCancellationInterface;
 use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
 
 /**
  * Quote monitoring model.
  */
-class Quote extends AbstractModel implements QuoteInterface
+class Quote extends AbstractModel implements QuoteInterface, QuoteCancellationInterface
 {
     /**
      * @param int $quoteId
@@ -127,6 +128,56 @@ class Quote extends AbstractModel implements QuoteInterface
     public function getAttempts()
     {
         return $this->getData(self::ATTEMPTS);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCanceled()
+    {
+        return $this->getData(self::IS_CANCELED);
+    }
+
+    /**
+     * @param bool $isCanceled
+     * @return Quote
+     */
+    public function setIsCanceled(bool $isCanceled)
+    {
+        return $this->setData(self::IS_CANCELED, $isCanceled);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCancelType()
+    {
+        return $this->getData(self::CANCEL_TYPE);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCancelReason()
+    {
+        return $this->getData(self::CANCEL_REASON);
+    }
+
+    /**
+     * @param string $reason
+     */
+    public function setCancelReason(string $reason)
+    {
+        $this->setData(self::CANCEL_REASON, $reason);
+    }
+
+    /**
+     * @param string $type
+     * @return Quote
+     */
+    public function setCancelType($type)
+    {
+        return $this->setData(self::CANCEL_TYPE, $type);
     }
 
     /**

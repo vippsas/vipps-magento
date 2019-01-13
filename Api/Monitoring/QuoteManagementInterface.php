@@ -25,6 +25,7 @@ use Vipps\Payment\Model\Monitoring\QuoteManagement;
 
 /**
  * Interface QuoteManagementInterface
+ * @api
  */
 interface QuoteManagementInterface
 {

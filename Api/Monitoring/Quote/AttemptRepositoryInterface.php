@@ -22,6 +22,7 @@ use Vipps\Payment\Api\Monitoring\Data\QuoteAttemptInterface;
 
 /**
  * Interface AttemptRepositoryInterface
+ * @api
  */
 interface AttemptRepositoryInterface
 {

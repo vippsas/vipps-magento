@@ -25,6 +25,8 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Monitoring\Data\QuoteCancellationInterface,
+    Api\Monitoring\Data\QuoteInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
@@ -224,19 +226,12 @@ class FetchOrderFromVipps
         );
 
         // Filter not cancelled quotes.
-        $collection
-            ->getSelect()
-            ->joinLeft(
-                ['vqc' => $collection->getTable('vipps_quote_cancellation')],
-                'vq.entity_id = vqc.parent_id',
-                []
-            );
-        $collection->addFieldToFilter('vqc.entity_id', ['null' => 1]);
+        $collection->addFieldToFilter('vq.is_canceled', ['neq' => 1]);
 
-        // @todo: uncomment this.
-//        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-//        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)]); // 5min
-//        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
+        // @todo discuss if this legacy should be removed.
+        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
+        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)]); // 5min
+        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
         return $collection;
     }
 
@@ -262,7 +257,7 @@ class FetchOrderFromVipps
                     ->cancellationFacade
                     ->cancelMagento(
                         $quote,
-                        CancellationTypeResource::VIPPS,
+                        QuoteCancellationInterface::CANCEL_TYPE_VIPPS,
                         'Transaction was cancelled on Vipps side',
                         $transaction
                     );

@@ -15,7 +15,7 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Api\Monitoring\Quote;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
@@ -24,6 +24,7 @@ use Vipps\Payment\Gateway\Transaction\Transaction;
 /**
  * Quote Cancellation Facade.
  * It cancels the quote. Provides an ability to send cancellation request to Vipps.
+ * @api
  */
 interface CancellationFacadeInterface
 {
@@ -41,9 +42,9 @@ interface CancellationFacadeInterface
 
     /**
      * @param CartInterface $quote
-     * @param Cancellation $cancellation
      * @param Transaction|null $transaction
      * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws NoSuchEntityException
      */
-    public function cancelVipps(CartInterface $quote, Cancellation $cancellation, Transaction $transaction = null);
+    public function cancelVipps(CartInterface $quote, Transaction $transaction = null);
 }

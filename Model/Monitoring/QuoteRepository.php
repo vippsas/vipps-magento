@@ -74,14 +74,13 @@ class QuoteRepository implements QuoteRepositoryInterface
 
     /**
      * @param $quoteId
+     * @return Quote
      * @throws NoSuchEntityException
      */
     public function loadByQuote($quoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create([]);
-
+        $monitoringQuote = $this->quoteFactory->create();
         $this->quoteResource->load($monitoringQuote, $quoteId, 'quote_id');
-
         if (!$monitoringQuote->getId()) {
             throw NoSuchEntityException::singleField('quote_id', $quoteId);
         }
