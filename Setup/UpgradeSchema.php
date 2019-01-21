@@ -45,6 +45,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         if (version_compare($context->getVersion(), '1.2.1', '<')) {
             $this->addCancelationToQuote($installer);
         }
+
         $installer->endSetup();
     }
 

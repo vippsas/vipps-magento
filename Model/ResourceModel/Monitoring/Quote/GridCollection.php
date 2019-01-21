@@ -29,7 +29,7 @@ use Vipps\Payment\Model\ResourceModel\Monitoring\Quote;
 /**
  * Class Collection
  */
-class Collection extends SearchResult
+class GridCollection extends SearchResult
 {
     /**
      * @var string
@@ -51,7 +51,7 @@ class Collection extends SearchResult
         Logger $logger,
         FetchStrategy $fetchStrategy,
         EventManager $eventManager,
-        $mainTable = 'vipps_quote',
+        $mainTable = Quote::TABLE_NAME,
         $resourceModel = Quote::class
     ) {
         parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $mainTable, $resourceModel);
