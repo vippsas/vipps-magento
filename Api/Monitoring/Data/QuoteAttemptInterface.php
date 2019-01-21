@@ -15,38 +15,69 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring;
-
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
-use Vipps\Payment\Model\Monitoring\Quote;
-use Vipps\Payment\Model\Monitoring\QuoteManagement;
+namespace Vipps\Payment\Api\Monitoring\Data;
 
 /**
- * Interface QuoteManagementInterface
+ * Interface QuoteInterface
  * @api
  */
-interface QuoteManagementInterface
+interface QuoteAttemptInterface
 {
     /**
-     * @param CartInterface $cart
-     * @return QuoteInterface
+     * @const string
      */
-    public function create(CartInterface $cart);
+    const ENTITY_ID = 'entity_id';
 
     /**
-     * @param CartInterface $cart
-     * @return Quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @const string Vipps Quote Id.
      */
-    public function getByQuote(CartInterface $cart);
+    const PARENT_ID = 'parent_id';
 
     /**
-     * Loads Vipps monitoring as extension attribute.
-     *
-     * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @const string
      */
-    public function loadExtensionAttribute(CartInterface $quote);
+    const MESSAGE = 'message';
+
+    /**
+     * @const string
+     */
+    const CREATED_AT = 'created_at';
+
+    /**
+     * @param int $parentId
+     * @return self
+     */
+    public function setParentId(int $parentId);
+
+    /**
+     * @param string $message
+     * @return string
+     */
+    public function setMessage(string $message);
+
+    /**
+     * @param string $createdAt
+     * @return string
+     */
+    public function setCreatedAt(string $createdAt);
+
+    /**
+     * @return int
+     */
+    public function getParentId();
+
+    /**
+     * @return int
+     */
+    public function getEntityId();
+
+    /**
+     * @return string
+     */
+    public function getMessage();
+
+    /**
+     * @return string
+     */
+    public function getCreatedAt();
 }

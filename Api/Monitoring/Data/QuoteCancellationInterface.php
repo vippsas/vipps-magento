@@ -21,95 +21,77 @@ namespace Vipps\Payment\Api\Monitoring\Data;
  * Interface QuoteInterface
  * @api
  */
-interface QuoteInterface
+interface QuoteCancellationInterface
 {
     /**
      * @const string
      */
-    const ENTITY_ID = 'entity_id';
+    const IS_CANCELED = 'is_canceled';
 
     /**
      * @const string
      */
-    const QUOTE_ID = 'quote_id';
+    const IS_CANCELED_YES = 1;
 
     /**
      * @const string
      */
-    const RESERVED_ORDER_ID = 'reserved_order_id';
+    const IS_CANCELED_NO = 0;
 
     /**
      * @const string
      */
-    const CREATED_AT = 'created_at';
+    const CANCEL_TYPE = 'cancel_type';
 
     /**
      * @const string
      */
-    const UPDATED_AT = 'updated_at';
+    const CANCEL_REASON = 'cancel_reason';
 
     /**
-     * @const string
+     * @const string Canceled in vipps.
      */
-    const ATTEMPTS = 'attempts';
+    const CANCEL_TYPE_VIPPS = 'vipps';
 
     /**
-     * @param int $quoteId
+     * @const string Canceled in magento.
+     */
+    const CANCEL_TYPE_MAGENTO = 'magento';
+
+    /**
+     * @const string Canceled everywhere.
+     */
+    const CANCEL_TYPE_ALL = 'all';
+
+    /**
+     * @return string|null
+     */
+    public function getCancelType();
+
+    /**
+     * @return string|null
+     */
+    public function getCancelReason();
+
+    /**
+     * @param bool $isCanceled
      * @return self
      */
-    public function setQuoteId(int $quoteId);
+    public function setIsCanceled(bool $isCanceled);
 
     /**
-     * @param string|null $reservedOrderId
+     * @param string $reason
+     */
+    public function setCancelReason(string $reason);
+
+    /**
+     * @param string $type
      * @return self
      */
-    public function setReservedOrderId($reservedOrderId);
+    public function setCancelType($type);
 
     /**
-     * @param string $createdAt
-     * @return self
+     * @return bool
      */
-    public function setCreatedAt(string $createdAt);
-
-    /**
-     * @param string $updatedAt
-     * @return self
-     */
-    public function setUpdatedAt(string $updatedAt);
-
-    /**
-     * @param int $attempts
-     * @return self
-     */
-    public function setAttempts(int $attempts);
-
-    /**
-     * @return int
-     */
-    public function getQuoteId();
-
-    /**
-     * @return string
-     */
-    public function getReservedOrderId();
-
-    /**
-     * @return string
-     */
-    public function getCreatedAt();
-
-    /**
-     * @return string
-     */
-    public function getUpdatedAt();
-
-    /**
-     * @return int
-     */
-    public function getAttempts();
-
-    /**
-     * @return int
-     */
-    public function getEntityId();
+    public function isCanceled();
 }

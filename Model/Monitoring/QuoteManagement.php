@@ -17,6 +17,7 @@
 
 namespace Vipps\Payment\Model\Monitoring;
 
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\Api\Monitoring\{Data\QuoteInterface, QuoteManagementInterface};
 
@@ -63,6 +64,45 @@ class QuoteManagement implements QuoteManagementInterface
             ->setReservedOrderId($cart->getReservedOrderId());
 
         return $this->quoteRepository->save($monitoringQuote);
+    }
 
+    /**
+     * Loads Vipps monitoring as extension attribute.
+     *
+     * @param CartInterface $quote
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
+    public function loadExtensionAttribute(CartInterface $quote)
+    {
+        if ($extensionAttributes = $quote->getExtensionAttributes()) {
+            if (!$extensionAttributes->getVippsMonitoring()) {
+                $monitoringQuote = $this->getByQuote($quote);
+
+                $extensionAttributes->setVippsMonitoring($monitoringQuote);
+            }
+        }
+    }
+
+    /**
+     * @param CartInterface $cart
+     * @return Quote
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
+    public function getByQuote(CartInterface $cart)
+    {
+        /** @var Quote $monitoringQuote */
+        try {
+            $monitoringQuote = $this->quoteRepository->loadByQuote($cart->getId());
+        } catch (NoSuchEntityException $exception) {
+            // Setup default values for backward compatibility with current quotes.
+            $monitoringQuote = $this->quoteFactory->create()
+                ->setQuoteId($cart->getId())
+                ->setReservedOrderId($cart->getReservedOrderId());
+
+            // Backward compatibility for old quotes paid with vipps.
+            $this->quoteRepository->save($monitoringQuote);
+        }
+
+        return $monitoringQuote;
     }
 }

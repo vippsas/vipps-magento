@@ -17,19 +17,34 @@
 
 namespace Vipps\Payment\Api\Monitoring\Quote;
 
-use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\Monitoring\Data\QuoteAttemptInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Quote\Api\Data\CartInterface;
+use Vipps\Payment\Gateway\Transaction\Transaction;
 
 /**
- * Interface AttemptRepositoryInterface
+ * Quote Cancellation Facade.
+ * It cancels the quote. Provides an ability to send cancellation request to Vipps.
  * @api
  */
-interface AttemptRepositoryInterface
+interface CancellationFacadeInterface
 {
     /**
-     * @param QuoteAttemptInterface $attempt
-     * @return QuoteAttemptInterface
-     * @throws CouldNotSaveException
+     * vipps_monitoring extension attribute requires to be loaded in the quote.
+     *
+     * @param CartInterface $quote
+     * @param string $type
+     * @param string $reason
+     * @param Transaction|null $transaction
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    public function save(QuoteAttemptInterface $attempt);
+    public function cancelMagento(CartInterface $quote, string $type, string $reason, Transaction $transaction = null);
+
+    /**
+     * @param CartInterface $quote
+     * @param Transaction|null $transaction
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws NoSuchEntityException
+     */
+    public function cancelVipps(CartInterface $quote, Transaction $transaction = null);
 }

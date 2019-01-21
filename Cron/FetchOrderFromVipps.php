@@ -13,24 +13,33 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Cron;
 
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Config\ScopeCodeResolver;
-use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException};
+use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
-use Magento\Quote\Model\{ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory, Quote};
+use Magento\Quote\Model\{Quote, ResourceModel\Quote\Collection, ResourceModel\Quote\CollectionFactory};
 use Magento\Sales\Api\Data\OrderInterface;
-use Vipps\Payment\{
-    Api\CommandManagerInterface,
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Monitoring\Data\QuoteCancellationInterface,
+    Api\Monitoring\Data\QuoteInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
-    Model\OrderPlace,
-    Gateway\Transaction\TransactionBuilder
-};
+    Gateway\Transaction\TransactionBuilder,
+    Model\Order\Cancellation\Config,
+    Model\OrderPlace};
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
-use Psr\Log\LoggerInterface;
-use Magento\Framework\Exception\LocalizedException;
+use Vipps\Payment\Model\Monitoring\{Quote\AttemptManagement,
+    Quote\CancellationFacade,
+    Quote\CancellationFactory,
+    Quote\CancellationRepository,
+    QuoteManagement as QuoteMonitorManagement,
+    QuoteRepository as QuoteMonitorRepository};
+use Vipps\Payment\Model\ResourceModel\Monitoring\Quote\Cancellation\Type as CancellationTypeResource;
 
 /**
  * Class FetchOrderStatus
@@ -43,11 +52,6 @@ class FetchOrderFromVipps
      * Order collection page size
      */
     const COLLECTION_PAGE_SIZE = 100;
-
-    /**
-     * @var string
-     */
-    const MAX_NUMBER_OF_ATTEMPTS = 3;
 
     /**
      * @var CollectionFactory
@@ -88,37 +92,73 @@ class FetchOrderFromVipps
      * @var ScopeCodeResolver
      */
     private $scopeCodeResolver;
+    /**
+     * @var QuoteMonitorManagement
+     */
+    private $quoteManagement;
+    /**
+     * @var Config
+     */
+    private $cancellationConfig;
+    /**
+     * @var CancellationFactory
+     */
+    private $cancellationFactory;
+    /**
+     * @var CancellationRepository
+     */
+    private $cancellationRepository;
+    /**
+     * @var QuoteMonitorRepository
+     */
+    private $quoteMonitorRepository;
+    /**
+     * @var AttemptManagement
+     */
+    private $attemptManagement;
+    /**
+     * @var CancellationFacade
+     */
+    private $cancellationFacade;
 
     /**
      * FetchOrderFromVipps constructor.
-     *
      * @param CollectionFactory $quoteCollectionFactory
      * @param CommandManagerInterface $commandManager
      * @param TransactionBuilder $transactionBuilder
      * @param OrderPlace $orderManagement
-     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
+     * @param QuoteMonitorManagement $quoteManagement
+     * @param Config $cancellationConfig
+     * @param AttemptManagement $attemptManagement
+     * @param CancellationFacade $cancellationFacade
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
         CommandManagerInterface $commandManager,
         TransactionBuilder $transactionBuilder,
         OrderPlace $orderManagement,
-        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
-        ScopeCodeResolver $scopeCodeResolver
+        ScopeCodeResolver $scopeCodeResolver,
+        QuoteMonitorManagement $quoteManagement,
+        Config $cancellationConfig,
+        AttemptManagement $attemptManagement,
+        CancellationFacade $cancellationFacade
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
         $this->orderPlace = $orderManagement;
-        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->scopeCodeResolver = $scopeCodeResolver;
+        $this->quoteManagement = $quoteManagement;
+        $this->cancellationConfig = $cancellationConfig;
+        $this->attemptManagement = $attemptManagement;
+        $this->cancellationFacade = $cancellationFacade;
     }
 
     /**
@@ -134,11 +174,10 @@ class FetchOrderFromVipps
             $currentPage = 1;
             do {
                 $quoteCollection = $this->createCollection($currentPage);
-                $this->logger->debug(sprintf(
-                    'Fetched payment details, page: "%s", quotes: "%s"',
-                    $currentPage,
-                    $quoteCollection->count() //@codingStandardsIgnoreLine
-                ));
+                $this->logger->debug(
+                    'Fetched payment details',
+                    ['page' => $currentPage, 'count' => $quoteCollection->count()]
+                );
                 foreach ($quoteCollection as $quote) {
                     $this->processQuote($quote);
                     usleep(1000000); //delay for 1 second
@@ -151,90 +190,114 @@ class FetchOrderFromVipps
     }
 
     /**
-     * Main process
+     * @param $currentPage
      *
+     * @return Collection
+     */
+    private function createCollection($currentPage)
+    {
+        /** @var Collection $collection */
+        $collection = $this->quoteCollectionFactory->create();
+
+        $collection
+            ->setPageSize(self::COLLECTION_PAGE_SIZE)
+            ->setCurPage($currentPage)
+            ->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id', 'updated_at'])
+            ->join(
+                ['p' => $collection->getTable('quote_payment')],
+                'main_table.entity_id = p.quote_id',
+                ['p.method']
+            )
+            ->addFieldToFilter('p.method', ['eq' => 'vipps']);
+
+        // Filter quotes that reached max count of queries. They will be cancelled by another job.
+        $collection
+            ->getSelect()
+            ->joinLeft(
+                ['vq' => $collection->getTable('vipps_quote')],
+                'main_table.entity_id = vq.quote_id',
+                ['attempts']
+            );
+
+        $collection->addFieldToFilter('vq.attempts', [
+                ['lt' => $this->cancellationConfig->getAttemptsMaxCount()],
+                ['null' => 1]
+            ]
+        );
+
+        // Filter not cancelled quotes.
+        $collection->addFieldToFilter('vq.is_canceled', ['neq' => 1]);
+
+        // @todo discuss if this legacy should be removed.
+        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
+        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)]); // 5min
+        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
+        return $collection;
+    }
+
+    /**
      * @param Quote $quote
-     *
-     * @throws NoSuchEntityException
-     * @throws \Exception
+     * @throws CouldNotSaveException
      */
     private function processQuote(Quote $quote)
     {
         try {
-            $order = null;
-            $transaction = null;
-            $currentException = null;
+            $this->quoteManagement->loadExtensionAttribute($quote);
+            $attempt = $this->createMonitoringAttempt($quote);
 
+            // Load vipps quote monitoring as extension attribute.
             $this->prepareEnv($quote);
 
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
 
             if ($transaction->isTransactionAborted()) {
-                $this->cancelQuote($quote, $transaction, 'canceled on vipps side');
+                $attempt->setMessage('Transaction was cancelled on Vipps side');
+                // Create cancellation if transaction was aborted on Vipps side.
+                $this
+                    ->cancellationFacade
+                    ->cancelMagento(
+                        $quote,
+                        QuoteCancellationInterface::CANCEL_TYPE_VIPPS,
+                        'Transaction was cancelled on Vipps side',
+                        $transaction
+                    );
             } else {
-                $order = $this->placeOrder($quote, $transaction);
+                $this->placeOrder($quote, $transaction);
             }
         } catch (\Throwable $e) {
-            $currentException = $e; //@codingStandardsIgnoreLine
-            $this->logger->critical($e->getMessage() . ', quote id = ' . $quote->getId());
+            $this->logger->critical($e->getMessage(), ['quote_id' => $quote->getId()]);
+            if (isset($attempt)) {
+                $attempt->setMessage($e->getMessage());
+            }
         } finally {
-            if ($order) {
-                // if order exists - nothing to do, all good
-                return;
-            }
-            /** @var Quote $quote */
-            $quote = $this->cartRepository->get($quote->getEntityId());
-            if (!$quote->getReservedOrderId()) {
-                // if quote does not have reserved order id - such quote will not be processed next time
-                return;
-            }
-
-            // count not success (order not created) attempts of this process
-            if ($this->countAttempts($quote) >= $this->getMaxNumberOfAttempts()) {
-                $this->cancelQuote(
-                    $quote,
-                    $transaction,
-                    sprintf(
-                        'canceled after "%s" attempts, last error "%s"',
-                        $this->getMaxNumberOfAttempts(),
-                        $currentException ? $currentException->getMessage() : 'n/a'
-                    )
-                );
-                return;
+            if (isset($attempt)) {
+                // Simply save the attempt.
+                $this->attemptManagement->save($attempt);
             }
         }
     }
 
     /**
-     * @param Quote|CartInterface $quote
+     * Create monitoring attempt.
      *
-     * @return int
-     * @throws LocalizedException
+     * @param CartInterface $quote
+     * @return \Vipps\Payment\Model\Monitoring\Quote\Attempt
+     * @throws AlreadyExistsException
+     * @throws CouldNotSaveException
      */
-    private function countAttempts($quote)
+    private function createMonitoringAttempt(CartInterface $quote)
     {
-        $additionalInfo = $quote->getPayment()->getAdditionalInformation();
-        $attempts = (int)($additionalInfo['vipps']['attempts'] ?? 0);
+        /** @var \Vipps\Payment\Model\Monitoring\Quote $monitoringQuote */
+        $monitoringQuote = $quote
+            ->getExtensionAttributes()
+            ->getVippsMonitoring();
 
-        $additionalInfo['vipps']['attempts'] = ++$attempts;
-        $quote->getPayment()->setAdditionalInformation($additionalInfo);
-
-        if ($attempts < $this->getMaxNumberOfAttempts()) {
-            $this->cartRepository->save($quote);
-        }
-
-        return $attempts;
+        return $this->attemptManagement->createAttempt($monitoringQuote);
     }
 
     /**
-     * @return int
-     */
-    private function getMaxNumberOfAttempts()
-    {
-        return (int)self::MAX_NUMBER_OF_ATTEMPTS;
-    }
-
-    /**
+     * Prepare environment.
+     *
      * @param Quote $quote
      */
     private function prepareEnv(Quote $quote)
@@ -242,19 +305,6 @@ class FetchOrderFromVipps
         // set quote store as current store
         $this->scopeCodeResolver->clean();
         $this->storeManager->setCurrentStore($quote->getStore()->getId());
-    }
-
-    /**
-     * @param Quote $quote
-     * @param \DateInterval $interval
-     *
-     * @return bool
-     */
-    private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
-    {
-        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
-        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
-        return $isQuoteExpired;
     }
 
     /**
@@ -298,76 +348,16 @@ class FetchOrderFromVipps
     }
 
     /**
-     * Cancel quote by setting reserved_order_id to null
+     * @deprecated
+     * @param Quote $quote
+     * @param \DateInterval $interval
      *
-     * @param CartInterface|Quote $quote
-     * @param Transaction|null $transaction
-     * @param null $info
-     *
-     * @throws LocalizedException
+     * @return bool
      */
-    private function cancelQuote(CartInterface $quote, Transaction $transaction = null, $info = null)
+    private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
     {
-        $savedQuote = clone $quote;
-        $quote->setReservedOrderId(null);
-
-        $additionalInformation = [];
-        if ($info instanceof \Exception) {
-            $additionalInformation = [
-                'cancel_reason_code' => $info->getCode(),
-                'cancel_reason_phrase' => $info->getMessage()
-            ];
-        } elseif (\is_string($info)) {
-            $additionalInformation['cancel_reason_phrase'] = $info;
-        }
-
-        $additionalInformation = array_merge(
-            $additionalInformation,
-            [
-                'reserved_order_id' => $savedQuote->getReservedOrderId()
-            ]
-        );
-        $payment = $quote->getPayment();
-        $existingAdditionalInfo = $payment->getAdditionalInformation()['vipps'] ?? [];
-        $payment->setAdditionalInformation('vipps', array_merge($existingAdditionalInfo, $additionalInformation));
-
-        $this->cartRepository->save($quote);
-
-        $this->logger->debug(sprintf(
-            'Quote was canceled, id: "%s", reserved_order_id: "%s", cancel reason "%s"',
-            $quote->getId(),
-            $savedQuote->getReservedOrderId(),
-            $additionalInformation['cancel_reason_phrase']
-        ));
-
-        // cancel order on vipps side
-        if ($transaction && $transaction->isTransactionReserved()) {
-            $this->commandManager->cancel($savedQuote->getPayment());
-        }
-    }
-
-    /**
-     * @param $currentPage
-     *
-     * @return Collection
-     */
-    private function createCollection($currentPage)
-    {
-        /** @var Collection $collection */
-        $collection = $this->quoteCollectionFactory->create();
-
-        $collection->setPageSize(self::COLLECTION_PAGE_SIZE);
-        $collection->setCurPage($currentPage);
-        $collection->addFieldToSelect(['entity_id', 'reserved_order_id', 'store_id', 'updated_at']); //@codingStandardsIgnoreLine
-        $collection->join(
-            ['p' => $collection->getTable('quote_payment')],
-            'main_table.entity_id = p.quote_id',
-            ['p.method']
-        );
-        $collection->addFieldToFilter('p.method', ['eq' => 'vipps']);
-        $collection->addFieldToFilter('main_table.is_active', ['in' => ['0']]);
-        $collection->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)]); // 5min
-        $collection->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
-        return $collection;
+        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
+        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
+        return $isQuoteExpired;
     }
 }

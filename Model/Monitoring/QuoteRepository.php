@@ -14,9 +14,11 @@
  *  IN THE SOFTWARE.
  *
  */
+
 namespace Vipps\Payment\Model\Monitoring;
 
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
 use Vipps\Payment\Api\Monitoring\QuoteRepositoryInterface;
 use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
@@ -30,15 +32,20 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @var QuoteResource
      */
     private $quoteResource;
+    /**
+     * @var QuoteFactory
+     */
+    private $quoteFactory;
 
     /**
      * QuoteRepository constructor.
      *
-     * @param QuoteResource $quoteResource.
+     * @param QuoteResource $quoteResource .
      */
-    public function __construct(QuoteResource $quoteResource)
+    public function __construct(QuoteResource $quoteResource, QuoteFactory $quoteFactory)
     {
         $this->quoteResource = $quoteResource;
+        $this->quoteFactory = $quoteFactory;
     }
 
     /**
@@ -63,5 +70,21 @@ class QuoteRepository implements QuoteRepositoryInterface
                 $e
             );
         }
+    }
+
+    /**
+     * @param $quoteId
+     * @return Quote
+     * @throws NoSuchEntityException
+     */
+    public function loadByQuote($quoteId)
+    {
+        $monitoringQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($monitoringQuote, $quoteId, 'quote_id');
+        if (!$monitoringQuote->getId()) {
+            throw NoSuchEntityException::singleField('quote_id', $quoteId);
+        }
+
+        return $monitoringQuote;
     }
 }
