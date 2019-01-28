@@ -22,7 +22,7 @@ use Magento\Customer\Model\Session;
 use Magento\Framework\{App\ResourceConnection, Session\SessionManagerInterface};
 use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
 use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
-use Vipps\Payment\{Gateway\Request\SubjectReader, Model\Monitoring\QuoteManagement};
+use Vipps\Payment\{Gateway\Request\SubjectReader, Model\QuoteManagement};
 
 /**
  * Class InitiateHandler

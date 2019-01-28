@@ -19,7 +19,7 @@ namespace Vipps\Payment\Block\Monitoring;
 
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Vipps\Payment\Model\Monitoring\QuoteRepository as MonitoringQuoteRepository;
+use Vipps\Payment\Model\QuoteRepository as MonitoringQuoteRepository;
 
 /**
  * View Quote Monitoring entity.
@@ -80,7 +80,7 @@ class View extends Template
     }
 
     /**
-     * @return \Vipps\Payment\Api\Monitoring\Data\QuoteInterface
+     * @return \Vipps\Payment\Api\Data\QuoteInterface
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getMonitoringQuote()

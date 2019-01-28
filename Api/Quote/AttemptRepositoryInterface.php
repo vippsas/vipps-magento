@@ -15,38 +15,21 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring;
+namespace Vipps\Payment\Api\Quote;
 
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
-use Vipps\Payment\Model\Monitoring\Quote;
-use Vipps\Payment\Model\Monitoring\QuoteManagement;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Vipps\Payment\Api\Data\QuoteAttemptInterface;
 
 /**
- * Interface QuoteManagementInterface
+ * Interface AttemptRepositoryInterface
  * @api
  */
-interface QuoteManagementInterface
+interface AttemptRepositoryInterface
 {
     /**
-     * @param CartInterface $cart
-     * @return QuoteInterface
+     * @param QuoteAttemptInterface $attempt
+     * @return QuoteAttemptInterface
+     * @throws CouldNotSaveException
      */
-    public function create(CartInterface $cart);
-
-    /**
-     * @param CartInterface $cart
-     * @return Quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function getByQuote(CartInterface $cart);
-
-    /**
-     * Loads Vipps monitoring as extension attribute.
-     *
-     * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function loadExtensionAttribute(CartInterface $quote);
+    public function save(QuoteAttemptInterface $attempt);
 }

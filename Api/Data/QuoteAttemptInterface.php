@@ -15,7 +15,7 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Data;
+namespace Vipps\Payment\Api\Data;
 
 /**
  * Interface QuoteInterface

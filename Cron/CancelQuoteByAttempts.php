@@ -23,15 +23,13 @@ use Magento\Quote\Model\{Quote, ResourceModel\Quote\Collection, ResourceModel\Qu
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Monitoring\Data\QuoteCancellationInterface,
+    Api\Data\QuoteCancellationInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
-    Model\Monitoring\Quote\CancellationFacade,
-    Model\Monitoring\Quote\CancellationRepository,
-    Model\Order\Cancellation\Config};
-use Vipps\Payment\Model\Monitoring\Quote\CancellationFactory;
-use Vipps\Payment\Model\Monitoring\QuoteManagement as QuoteMonitorManagement;
+    Model\Order\Cancellation\Config,
+    Model\Quote\CancellationFacade};
+use Vipps\Payment\Model\QuoteManagement as QuoteMonitorManagement;
 
 /**
  * Class FetchOrderStatus

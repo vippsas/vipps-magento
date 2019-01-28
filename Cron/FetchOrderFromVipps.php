@@ -25,21 +25,17 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Monitoring\Data\QuoteCancellationInterface,
-    Api\Monitoring\Data\QuoteInterface,
+    Api\Data\QuoteCancellationInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
     Model\Order\Cancellation\Config,
-    Model\OrderPlace};
+    Model\OrderPlace,
+    Model\Quote\AttemptManagement,
+    Model\Quote\CancellationFacade,
+    Model\QuoteManagement as QuoteMonitorManagement,
+    Model\QuoteRepository as QuoteMonitorRepository};
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
-use Vipps\Payment\Model\Monitoring\{Quote\AttemptManagement,
-    Quote\CancellationFacade,
-    Quote\CancellationFactory,
-    Quote\CancellationRepository,
-    QuoteManagement as QuoteMonitorManagement,
-    QuoteRepository as QuoteMonitorRepository};
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote\Cancellation\Type as CancellationTypeResource;
 
 /**
  * Class FetchOrderStatus
@@ -281,13 +277,13 @@ class FetchOrderFromVipps
      * Create monitoring attempt.
      *
      * @param CartInterface $quote
-     * @return \Vipps\Payment\Model\Monitoring\Quote\Attempt
+     * @return \Vipps\Payment\Model\Quote\Attempt
      * @throws AlreadyExistsException
      * @throws CouldNotSaveException
      */
     private function createMonitoringAttempt(CartInterface $quote)
     {
-        /** @var \Vipps\Payment\Model\Monitoring\Quote $monitoringQuote */
+        /** @var \Vipps\Payment\Model\Quote $monitoringQuote */
         $monitoringQuote = $quote
             ->getExtensionAttributes()
             ->getVippsMonitoring();

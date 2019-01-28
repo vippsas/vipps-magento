@@ -15,21 +15,30 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Quote;
+namespace Vipps\Payment\Model\ResourceModel\Quote;
 
-use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\Monitoring\Data\QuoteAttemptInterface;
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 
 /**
- * Interface AttemptRepositoryInterface
- * @api
+ * Class Attempt
  */
-interface AttemptRepositoryInterface
+class Attempt extends AbstractDb
 {
     /**
-     * @param QuoteAttemptInterface $attempt
-     * @return QuoteAttemptInterface
-     * @throws CouldNotSaveException
+     * Main table name
      */
-    public function save(QuoteAttemptInterface $attempt);
+    const TABLE_NAME = 'vipps_quote_attempt';
+
+    /**
+     * Index field name
+     */
+    const INDEX_FIELD = 'entity_id';
+
+    /**
+     * Initialize resource model
+     */
+    protected function _construct()
+    {
+        $this->_init(self::TABLE_NAME, self::INDEX_FIELD);
+    }
 }

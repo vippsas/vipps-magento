@@ -15,12 +15,12 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring;
+namespace Vipps\Payment\Model;
 
 use Magento\Framework\Model\AbstractModel;
-use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
-use Vipps\Payment\Api\Monitoring\Data\QuoteCancellationInterface;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
+use Vipps\Payment\Api\Data\QuoteCancellationInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
 
 /**
  * Quote monitoring model.
@@ -186,6 +186,16 @@ class Quote extends AbstractModel implements QuoteInterface, QuoteCancellationIn
     public function clearAttempts()
     {
         $this->setAttempts(0);
+    }
+
+    /**
+     * Get is canceled.
+     *
+     * @return bool
+     */
+    public function getIsCanceled()
+    {
+        return $this->getData(self::IS_CANCELED) === self::IS_CANCELED_YES;
     }
 
     /**

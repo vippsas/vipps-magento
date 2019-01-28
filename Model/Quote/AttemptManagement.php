@@ -15,11 +15,12 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Model\Quote;
 
-use Vipps\Payment\Model\{Monitoring\Quote as MonitoringQuote,
-    Monitoring\QuoteRepository as QuoteMonitorRepository,
-    ResourceModel\Monitoring\Quote\Attempt as Resource};
+use Vipps\Payment\Model\{Quote as MonitoringQuote,
+    Quote\AttemptFactory,
+    QuoteRepository as QuoteMonitorRepository,
+    ResourceModel\Quote\Attempt as Resource};
 
 /**
  * Attempt Management.

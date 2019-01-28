@@ -15,18 +15,17 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Model\Quote;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Monitoring\Data\QuoteCancellationInterface,
-    Api\Monitoring\Data\QuoteInterface,
-    Api\Monitoring\Quote\CancellationFacadeInterface,
+    Api\Data\QuoteCancellationInterface,
+    Api\Data\QuoteInterface,
+    Api\Quote\CancellationFacadeInterface,
     Gateway\Transaction\Transaction,
-    Model\Monitoring\QuoteRepository,
     Model\Order\Cancellation\Config,
-    Model\ResourceModel\Monitoring\Quote\Cancellation\Type as CancellationTypeResource};
+    Model\QuoteRepository};
 
 /**
  * Quote Cancellation Facade.
@@ -80,7 +79,7 @@ class CancellationFacade implements CancellationFacadeInterface
         string $reason,
         Transaction $transaction = null
     ) {
-        /** @var \Vipps\Payment\Api\Monitoring\Data\QuoteInterface $monitoring */
+        /** @var \Vipps\Payment\Api\Data\QuoteInterface $monitoring */
         $monitoring = $this->getMonitoring($quote);
 
         $monitoring
