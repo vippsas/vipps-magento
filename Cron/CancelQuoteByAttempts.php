@@ -217,7 +217,7 @@ class CancelQuoteByAttempts
         } finally {
             $this
                 ->cancellationFacade
-                ->cancelMagento(
+                ->cancel(
                     $quote,
                     QuoteCancellationInterface::CANCEL_TYPE_MAGENTO,
                     __('Number of attempts reached: %1', $this->cancellationConfig->getAttemptsMaxCount()),

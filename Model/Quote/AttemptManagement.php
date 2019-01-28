@@ -17,10 +17,7 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Vipps\Payment\Model\{Quote as MonitoringQuote,
-    Quote\AttemptFactory,
-    QuoteRepository as QuoteMonitorRepository,
-    ResourceModel\Quote\Attempt as Resource};
+use Vipps\Payment\Model\{Quote as MonitoringQuote, Quote\AttemptFactory, QuoteRepository as QuoteMonitorRepository};
 
 /**
  * Attempt Management.
@@ -31,11 +28,6 @@ class AttemptManagement
      * @var AttemptFactory
      */
     private $attemptFactory;
-
-    /**
-     * @var Resource
-     */
-    private $attemptResource;
 
     /**
      * @var QuoteMonitorRepository
@@ -51,17 +43,15 @@ class AttemptManagement
      * AttemptManagement constructor.
      *
      * @param AttemptFactory $attemptFactory
-     * @param Resource $resource
      * @param QuoteMonitorRepository $quoteRepository
+     * @param AttemptRepository $attemptRepository
      */
     public function __construct(
         AttemptFactory $attemptFactory,
-        Resource $resource,
         QuoteMonitorRepository $quoteRepository,
         AttemptRepository $attemptRepository
     ) {
         $this->attemptFactory = $attemptFactory;
-        $this->attemptResource = $resource;
         $this->quoteMonitorRepository = $quoteRepository;
         $this->attemptRepository = $attemptRepository;
     }

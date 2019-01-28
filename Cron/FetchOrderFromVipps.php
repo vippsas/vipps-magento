@@ -238,10 +238,10 @@ class FetchOrderFromVipps
     private function processQuote(Quote $quote)
     {
         try {
-            $this->quoteManagement->loadExtensionAttribute($quote);
-            $attempt = $this->createMonitoringAttempt($quote);
-
             // Load vipps quote monitoring as extension attribute.
+            $this->quoteManagement->loadExtensionAttribute($quote);
+            $attempt = $this->createAttempt($quote);
+
             $this->prepareEnv($quote);
 
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
@@ -251,7 +251,7 @@ class FetchOrderFromVipps
                 // Create cancellation if transaction was aborted on Vipps side.
                 $this
                     ->cancellationFacade
-                    ->cancelMagento(
+                    ->cancel(
                         $quote,
                         QuoteCancellationInterface::CANCEL_TYPE_VIPPS,
                         'Transaction was cancelled on Vipps side',
@@ -278,10 +278,9 @@ class FetchOrderFromVipps
      *
      * @param CartInterface $quote
      * @return \Vipps\Payment\Model\Quote\Attempt
-     * @throws AlreadyExistsException
      * @throws CouldNotSaveException
      */
-    private function createMonitoringAttempt(CartInterface $quote)
+    private function createAttempt(CartInterface $quote)
     {
         /** @var \Vipps\Payment\Model\Quote $monitoringQuote */
         $monitoringQuote = $quote

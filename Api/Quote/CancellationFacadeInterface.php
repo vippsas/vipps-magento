@@ -23,13 +23,12 @@ use Vipps\Payment\Gateway\Transaction\Transaction;
 
 /**
  * Quote Cancellation Facade.
- * It cancels the quote. Provides an ability to send cancellation request to Vipps.
  * @api
  */
 interface CancellationFacadeInterface
 {
     /**
-     * vipps_monitoring extension attribute requires to be loaded in the quote.
+     * Cancel Vipps payment transaction both, Magento and Vipps.
      *
      * @param CartInterface $quote
      * @param string $type
@@ -38,13 +37,5 @@ interface CancellationFacadeInterface
      * @throws NoSuchEntityException
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    public function cancelMagento(CartInterface $quote, string $type, string $reason, Transaction $transaction = null);
-
-    /**
-     * @param CartInterface $quote
-     * @param Transaction|null $transaction
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @throws NoSuchEntityException
-     */
-    public function cancelVipps(CartInterface $quote, Transaction $transaction = null);
+    public function cancel(CartInterface $quote, string $type, string $reason, Transaction $transaction = null);
 }

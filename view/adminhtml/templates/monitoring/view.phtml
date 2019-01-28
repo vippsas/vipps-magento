@@ -40,7 +40,7 @@ $monitoringQuote = $block->getMonitoringQuote();
         <tr>
             <th><?php echo __('Is Canceled'); ?></th>
             <td><?php /* @escapeVerified */
-                echo $monitoringQuote->getIsCanceled() ? 'Yes' : 'No'; ?></td>
+                echo $monitoringQuote->isCanceled() ? 'Yes' : 'No'; ?></td>
         </tr>
         <tr>
             <th><?php echo __('Created At'); ?></th>
