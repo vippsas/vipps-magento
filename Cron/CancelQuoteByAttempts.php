@@ -221,7 +221,7 @@ class CancelQuoteByAttempts
                 ->cancel(
                     $vippsQuote,
                     QuoteCancellationInterface::CANCEL_TYPE_MAGENTO,
-                    __('Number of attempts reached: %1', $this->cancellationConfig->getAttemptsMaxCount()),
+                    __('Max number of attempts reached (%1)', $this->cancellationConfig->getAttemptsMaxCount()),
                     $quote,
                     $transaction
                 );

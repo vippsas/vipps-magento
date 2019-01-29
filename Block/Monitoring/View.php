@@ -87,7 +87,7 @@ class View extends Template
     {
         if (!$this->vippsQuote) {
             try {
-                $this->vippsQuote = $this->vippsQuoteRepository->load($this->getRequest()->getParam('id'));
+                $this->vippsQuote = $this->vippsQuoteRepository->load($this->getRequest()->getParam('entity_id'));
             } catch (\Exception $e) {
                 // Display this error in template.
             }

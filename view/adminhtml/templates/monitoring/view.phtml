@@ -16,39 +16,54 @@
  */
 
 /** @var \Vipps\Payment\Block\Monitoring\View $block */
-$monitoringQuote = $block->getVippsQuote();
+$vippsQuote = $block->getVippsQuote();
 ?>
 <div class="fieldset-wrapper">
     <div class="fieldset-wrapper-title">
-        <span class="title"><?php echo __('Quote Monitoring Information'); ?></span>
+        <span class="title"><?= __('Vipps Information'); ?></span>
     </div>
     <table class="admin__table-secondary">
         <tbody>
         <tr>
-            <th style="width: 30%;"><?php echo __('Quote Id'); ?></th>
-            <td><?php echo $monitoringQuote->getQuoteId(); ?></td>
+            <th style="width: 30%;"><?= __('Vipps Quote Id'); ?></th>
+            <td><?php echo $vippsQuote->getEntityId(); ?></td>
         </tr>
         <tr>
-            <th><?php echo __('Reserved Order Id'); ?></th>
-            <td><?php echo $monitoringQuote->getReservedOrderId(); ?></td>
+            <th><?= __('Reserved Order Id'); ?></th>
+            <td><?php echo $vippsQuote->getReservedOrderId(); ?></td>
         </tr>
         <tr>
-            <th><?php echo __('Number Of Attempts'); ?></th>
+            <th><?= __('Number Of Attempts'); ?></th>
             <td><?php /* @escapeVerified */
-                echo $monitoringQuote->getAttempts(); ?></td>
+                echo $vippsQuote->getAttempts(); ?></td>
         </tr>
         <tr>
-            <th><?php echo __('Is Canceled'); ?></th>
-            <td><?php /* @escapeVerified */
-                echo $monitoringQuote->isCanceled() ? 'Yes' : 'No'; ?></td>
+            <th><?= __('Is Canceled'); ?></th>
+            <td><?= /* @escapeVerified */
+                $vippsQuote->isCanceled() ? 'Yes' : 'No'; ?>
+            </td>
         </tr>
+        <?php if ($vippsQuote->isCanceled()): ?>
+            <tr>
+                <th><?= __('Canceled In'); ?></th>
+                <td><?= /* @escapeVerified */
+                    $vippsQuote->getCancelType(); ?>
+                </td>
+            </tr>
+            <tr>
+                <th><?= __('Error Message'); ?></th>
+                <td><?= /* @escapeVerified */
+                    $vippsQuote->getCancelReason(); ?>
+                </td>
+            </tr>
+        <?php endif; ?>
         <tr>
             <th><?php echo __('Created At'); ?></th>
-            <td><?php echo $monitoringQuote->getCreatedAt(); ?></td>
+            <td><?php echo $vippsQuote->getCreatedAt(); ?></td>
         </tr>
         <tr>
             <th><?php echo __('Last Updated At'); ?></th>
-            <td><?php echo $monitoringQuote->getUpdatedAt(); ?></td>
+            <td><?php echo $vippsQuote->getUpdatedAt(); ?></td>
         </tr>
         </tbody>
     </table>
@@ -64,6 +79,10 @@ $monitoringQuote = $block->getVippsQuote();
         <table class="admin__table-secondary">
             <tbody>
             <tr>
+                <th style="width: 30%;"><?php echo __('Quote Id'); ?></th>
+                <td><?php echo $quote->getId(); ?></td>
+            </tr>
+            <tr>
                 <th style="width: 30%;"><?php echo __('Store Id'); ?></th>
                 <td><?php echo $quote->getStoreId(); ?></td>
             </tr>
@@ -72,7 +91,7 @@ $monitoringQuote = $block->getVippsQuote();
                 <td><?php echo $quote->getReservedOrderId(); ?></td>
             </tr>
             <tr>
-                <th><?php echo __('Customer email'); ?></th>
+                <th><?php echo __('Customer Email'); ?></th>
                 <td><?= $quote->getCustomerEmail(); ?></td>
             </tr>
             <tr>
