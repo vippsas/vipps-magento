@@ -17,25 +17,30 @@
 
 namespace Vipps\Payment\Api\Quote;
 
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 
 /**
- * Quote Cancellation Facade.
+ * Cancels Vipps payment everywhere.
  * @api
  */
-interface CancellationFacadeInterface
+interface CancelFacadeInterface
 {
     /**
      * Cancel Vipps payment transaction both, Magento and Vipps.
      *
-     * @param CartInterface $quote
+     * @param QuoteInterface $vippsQuote
      * @param string $type
      * @param string $reason
+     * @param CartInterface|null $quote
      * @param Transaction|null $transaction
-     * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    public function cancel(CartInterface $quote, string $type, string $reason, Transaction $transaction = null);
+    public function cancel(
+        QuoteInterface $vippsQuote,
+        string $type,
+        string $reason,
+        CartInterface $quote = null,
+        Transaction $transaction = null
+    );
 }

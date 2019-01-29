@@ -59,7 +59,7 @@ class InitiateHandler implements HandlerInterface
     /**
      * @var QuoteManagement
      */
-    private $quoteMonitoringManagement;
+    private $vippsQuoteManagement;
 
     /**
      * InitiateHandler constructor.
@@ -84,7 +84,7 @@ class InitiateHandler implements HandlerInterface
         $this->checkoutHelper = $checkoutHelper;
         $this->customerSession = $customerSession;
         $this->resourceConnection = $resourceConnection;
-        $this->quoteMonitoringManagement = $monitoringManagement;
+        $this->vippsQuoteManagement = $monitoringManagement;
     }
 
     /**
@@ -121,7 +121,7 @@ class InitiateHandler implements HandlerInterface
             $connection->beginTransaction();
 
             $this->cartRepository->save($quote);
-            $this->quoteMonitoringManagement->create($quote);
+            $this->vippsQuoteManagement->create($quote);
 
             $connection->commit();
         } catch (\Exception $e) {

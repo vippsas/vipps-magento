@@ -77,10 +77,10 @@ class QuoteManagement implements QuoteManagementInterface
     public function loadExtensionAttribute(CartInterface $quote)
     {
         if ($extensionAttributes = $quote->getExtensionAttributes()) {
-            if (!$extensionAttributes->getVippsMonitoring()) {
+            if (!$extensionAttributes->getVippsQuote()) {
                 $monitoringQuote = $this->getByQuote($quote);
 
-                $extensionAttributes->setVippsMonitoring($monitoringQuote);
+                $extensionAttributes->setVippsQuote($monitoringQuote);
             }
         }
     }

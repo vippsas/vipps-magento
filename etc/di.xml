@@ -385,7 +385,7 @@
     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
         <arguments>
             <argument name="collections" xsi:type="array">
-                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Monitoring\Quote\GridCollection</item>
+                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Quote\GridCollection</item>
             </argument>
         </arguments>
     </type>

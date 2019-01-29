@@ -17,12 +17,11 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
     Api\Data\QuoteCancellationInterface,
     Api\Data\QuoteInterface,
-    Api\Quote\CancellationFacadeInterface,
+    Api\Quote\CancelFacadeInterface,
     Gateway\Transaction\Transaction,
     Model\Order\Cancellation\Config,
     Model\QuoteRepository};
@@ -31,7 +30,7 @@ use Vipps\Payment\{Api\CommandManagerInterface,
  * Quote Cancellation Facade.
  * It cancels the quote. Provides an ability to send cancellation request to Vipps.
  */
-class CancellationFacade implements CancellationFacadeInterface
+class CancelFacade implements CancelFacadeInterface
 {
     /**
      * @var CommandManagerInterface
@@ -42,10 +41,16 @@ class CancellationFacade implements CancellationFacadeInterface
      * @var Config
      */
     private $config;
+
     /**
      * @var QuoteRepository
      */
     private $quoteRepository;
+
+    /**
+     * @var bool
+     */
+    private $forceVippsCancel = false;
 
     /**
      * CancellationFacade constructor.
@@ -67,46 +72,26 @@ class CancellationFacade implements CancellationFacadeInterface
      * vipps_monitoring extension attribute requires to be loaded in the quote.
      *
      * @param CartInterface $quote
+     * @param QuoteInterface $vippsQuote
      * @param string $type
      * @param string $reason
      * @param Transaction|null $transaction
-     * @throws NoSuchEntityException
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
     public function cancel(
-        CartInterface $quote,
+        QuoteInterface $vippsQuote,
         string $type,
         string $reason,
+        CartInterface $quote = null,
         Transaction $transaction = null
     ) {
-        /** @var \Vipps\Payment\Api\Data\QuoteInterface $vippsQuote */
-        $vippsQuote = $this->getVippsQuote($quote);
-
         if ($this->isAllowedToCancelMagento($vippsQuote)) {
             $this->cancelMagento($vippsQuote, $type, $reason);
         }
 
-        if ($this->isAllowedToCancelVipps($type, $quote->getStoreId(), $transaction)) {
-            $this->cancelVipps($quote, $vippsQuote);
+        if ($this->isAllowedToCancelVipps($type, $quote, $transaction)) {
+            $this->cancelVipps(QuoteCancellationInterface::CANCEL_TYPE_ALL, $quote, $vippsQuote);
         }
-    }
-
-    /**
-     * Get Vipps Quote Monitoring entity.
-     *
-     * @param $quote
-     * @return mixed
-     * @throws NoSuchEntityException
-     */
-    private function getVippsQuote($quote)
-    {
-        $monitoring = $quote->getExtensionAttributes()->getVippsMonitoring();
-
-        if (!$monitoring) {
-            throw new NoSuchEntityException(__('Vipps Quote model is not loaded in Quote extension attributes'));
-        }
-
-        return $monitoring;
     }
 
     /**
@@ -138,14 +123,15 @@ class CancellationFacade implements CancellationFacadeInterface
 
     /**
      * @param $type
-     * @param int $storeId
+     * @param CartInterface|null $quote
      * @param Transaction|null $transaction
      * @return bool
      */
-    private function isAllowedToCancelVipps($type, int $storeId, Transaction $transaction = null)
+    private function isAllowedToCancelVipps($type, CartInterface $quote = null, Transaction $transaction = null)
     {
         return $type === QuoteCancellationInterface::CANCEL_TYPE_MAGENTO // Initiated by Magento
-            && $this->isAutomaticVippsCancellation($storeId) // Automatic cancel is allowed by configuration
+            && $quote // Quote is required for Vipps cancellation
+            && $this->isAutomaticVippsCancellation($quote->getStoreId()) // Automatic cancel is allowed by configuration
             && $transaction // There is transaction in Vipps that can be canceled
             && $transaction->isTransactionReserved();
     }
@@ -156,7 +142,15 @@ class CancellationFacade implements CancellationFacadeInterface
      */
     private function isAutomaticVippsCancellation($storeId = null)
     {
-        return $this->config->isTypeAutomatic($storeId);
+        return $this->isForceVippsCancel() || $this->config->isTypeAutomatic($storeId);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isForceVippsCancel(): bool
+    {
+        return $this->forceVippsCancel;
     }
 
     /**
@@ -165,13 +159,22 @@ class CancellationFacade implements CancellationFacadeInterface
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
     private function cancelVipps(
+        $type,
         CartInterface $quote,
         QuoteInterface $vippsQuote
     ) {
         // cancel order on vipps side
         $this->commandManager->cancel($quote->getPayment());
 
-        $vippsQuote->setCancelType(QuoteCancellationInterface::CANCEL_TYPE_ALL);
+        $vippsQuote->setCancelType($type);
         $this->quoteRepository->save($vippsQuote);
+    }
+
+    /**
+     * @param bool $automaticVippsCancel
+     */
+    public function setForceAutomaticVippsCancel(bool $automaticVippsCancel)
+    {
+        $this->forceVippsCancel = $automaticVippsCancel;
     }
 }
