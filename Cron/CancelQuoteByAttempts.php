@@ -103,7 +103,6 @@ class CancelQuoteByAttempts
     /**
      * FetchOrderFromVipps constructor.
      *
-     * @param CollectionFactory $quoteCollectionFactory
      * @param CommandManagerInterface $commandManager
      * @param TransactionBuilder $transactionBuilder
      * @param LoggerInterface $logger
@@ -116,7 +115,6 @@ class CancelQuoteByAttempts
      * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
-        CollectionFactory $quoteCollectionFactory,
         CommandManagerInterface $commandManager,
         TransactionBuilder $transactionBuilder,
         LoggerInterface $logger,
@@ -128,7 +126,6 @@ class CancelQuoteByAttempts
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         CartRepositoryInterface $cartRepository
     ) {
-        $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
         $this->logger = $logger;

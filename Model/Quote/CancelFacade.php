@@ -75,7 +75,7 @@ class CancelFacade implements CancelFacadeInterface
      * @param QuoteInterface $vippsQuote
      * @param string $type
      * @param string $reason
-     * @param Transaction|null $transaction
+     * @param Transaction|null $transaction Order status transaction.
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
     public function cancel(
