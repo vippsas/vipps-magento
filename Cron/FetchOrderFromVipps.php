@@ -25,7 +25,7 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteCancellationInterface,
+    Api\Data\QuoteStatusInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
@@ -33,8 +33,7 @@ use Vipps\Payment\{Api\CommandManagerInterface,
     Model\OrderPlace,
     Model\Quote as VippsQuote,
     Model\Quote\AttemptManagement,
-    Model\Quote\CancelFacade,
-    Model\QuoteManagement as QuoteMonitorManagement,
+    Model\QuoteRepository as VippsQuoteRepository,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
@@ -100,23 +99,27 @@ class FetchOrderFromVipps
      * @var AttemptManagement
      */
     private $attemptManagement;
-    /**
-     * @var CancelFacade
-     */
-    private $cancellationFacade;
+
     /**
      * @var VippsQuoteCollectionFactory
      */
     private $vippsQuoteCollectionFactory;
+
     /**
      * @var QuoteRepository
      */
     private $quoteRepository;
 
     /**
+     * @var VippsQuoteRepository
+     */
+    private $vippsQuoteRepository;
+
+    /**
      * FetchOrderFromVipps constructor.
      * @param CollectionFactory $quoteCollectionFactory
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
+     * @param VippsQuoteRepository $vippsQuoteRepository
      * @param QuoteRepository $quoteRepository
      * @param CommandManagerInterface $commandManager
      * @param TransactionBuilder $transactionBuilder
@@ -124,14 +127,13 @@ class FetchOrderFromVipps
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
-     * @param QuoteMonitorManagement $quoteManagement
      * @param Config $cancellationConfig
      * @param AttemptManagement $attemptManagement
-     * @param CancelFacade $cancellationFacade
      */
     public function __construct(
         CollectionFactory $quoteCollectionFactory,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
+        VippsQuoteRepository $vippsQuoteRepository,
         QuoteRepository $quoteRepository,
         CommandManagerInterface $commandManager,
         TransactionBuilder $transactionBuilder,
@@ -140,8 +142,7 @@ class FetchOrderFromVipps
         StoreManagerInterface $storeManager,
         ScopeCodeResolver $scopeCodeResolver,
         Config $cancellationConfig,
-        AttemptManagement $attemptManagement,
-        CancelFacade $cancellationFacade
+        AttemptManagement $attemptManagement
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
@@ -152,9 +153,9 @@ class FetchOrderFromVipps
         $this->scopeCodeResolver = $scopeCodeResolver;
         $this->cancellationConfig = $cancellationConfig;
         $this->attemptManagement = $attemptManagement;
-        $this->cancellationFacade = $cancellationFacade;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
         $this->quoteRepository = $quoteRepository;
+        $this->vippsQuoteRepository = $vippsQuoteRepository;
     }
 
     /**
@@ -206,7 +207,10 @@ class FetchOrderFromVipps
                     ['null' => 1]
                 ]
             )
-            ->addFieldToFilter('is_canceled', ['neq' => 1]); // Filter not cancelled quotes.
+            ->addFieldToFilter(
+                QuoteStatusInterface::FIELD_STATUS,
+                ['in' => [QuoteStatusInterface::STATUS_NEW, QuoteStatusInterface::STATUS_PLACE_FAILED]]
+            ); // Filter new and place failed quotes.
 
         return $collection;
     }
@@ -228,17 +232,10 @@ class FetchOrderFromVipps
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
 
             if ($transaction->isTransactionAborted()) {
-                $attempt->setMessage('Transaction was cancelled on Vipps side');
-                // Create cancellation if transaction was aborted on Vipps side.
-                $this
-                    ->cancellationFacade
-                    ->cancel(
-                        $vippsQuote,
-                        QuoteCancellationInterface::CANCEL_TYPE_VIPPS,
-                        'Transaction was cancelled on Vipps side',
-                        $quote,
-                        $transaction
-                    );
+                $transactionMessage = 'Transaction was cancelled on Vipps side';
+                $attempt->setMessage($transactionMessage);
+                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
+                $this->vippsQuoteRepository->save($vippsQuote);
             } else {
                 $this->placeOrder($quote, $transaction);
             }
@@ -248,6 +245,9 @@ class FetchOrderFromVipps
                 $attempt->setMessage($e->getMessage());
             }
         } finally {
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACE_FAILED);
+            $this->vippsQuoteRepository->save($vippsQuote);
+
             if (isset($attempt)) {
                 // Simply save the attempt.
                 $this->attemptManagement->save($attempt);
@@ -313,6 +313,7 @@ class FetchOrderFromVipps
      * @param \DateInterval $interval
      *
      * @return bool
+     * @throws \Exception
      */
     private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
     {

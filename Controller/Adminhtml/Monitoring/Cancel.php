@@ -18,49 +18,39 @@
 namespace Vipps\Payment\Controller\Adminhtml\Monitoring;
 
 use Magento\Backend\{App\Action, App\Action\Context};
-use Magento\Framework\{App\ResponseInterface,
-    Controller\ResultInterface,
-    Registry,
-    View\Result\Page,
-    View\Result\PageFactory};
-use Vipps\Payment\Model\QuoteRepository as VippsQuoteRepository;
+use Magento\Framework\{App\ResponseInterface, Controller\ResultInterface, View\Result\Page};
+use Vipps\Payment\Model\Quote\Command\ManualCancelFactory;
+use Vipps\Payment\Model\QuoteRepository;
 
 /**
- * Class View
+ * Class Restart
  */
-class View extends Action
+class Cancel extends Action
 {
     /**
-     * @var PageFactory
-     */
-    private $resultPageFactory;
-    /**
-     * @var VippsQuoteRepository
+     * @var QuoteRepository
      */
     private $quoteRepository;
     /**
-     * @var Registry
+     * @var ManualCancelFactory
      */
-    private $registry;
+    private $manualCancelFactory;
 
     /**
-     * View constructor.
+     * Restart constructor.
      *
-     * @param VippsQuoteRepository $quoteRepository
-     * @param Registry $registry
      * @param Context $context
-     * @param PageFactory $resultPageFactory
+     * @param QuoteRepository $quoteRepository
+     * @param ManualCancelFactory $manualCancelFactory
      */
     public function __construct(
-        VippsQuoteRepository $quoteRepository,
-        Registry $registry,
         Context $context,
-        PageFactory $resultPageFactory
+        QuoteRepository $quoteRepository,
+        ManualCancelFactory $manualCancelFactory
     ) {
         parent::__construct($context);
-        $this->resultPageFactory = $resultPageFactory;
         $this->quoteRepository = $quoteRepository;
-        $this->registry = $registry;
+        $this->manualCancelFactory = $manualCancelFactory;
     }
 
     /**
@@ -69,19 +59,29 @@ class View extends Action
     public function execute()
     {
         try {
-            $vippsQuote = $this->quoteRepository->load($this->getRequest()->getParam('entity_id'));
-            $this->registry->register('vipps_quote', $vippsQuote);
+            $this
+                ->getManualCancelCommand()
+                ->execute();
         } catch (\Throwable $e) {
-            /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
             $this->messageManager->addErrorMessage($e->getMessage());
-            $resultRedirect = $this->resultRedirectFactory->create();
-            $resultRedirect->setPath('*/*');
-            
-            return $resultRedirect;
         }
 
-        $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('Vipps_Payment::vipps_monitoring');
-        return $resultPage;
+        return $this
+            ->resultRedirectFactory
+            ->create()
+            ->setUrl($this->_redirect->getRefererUrl());
+    }
+
+    /**
+     * @return \Vipps\Payment\Model\Quote\Command\ManualCancel
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    private function getManualCancelCommand()
+    {
+        $vippsQuote = $this
+            ->quoteRepository
+            ->load($this->getRequest()->getParam('entity_id'));
+
+        return $this->manualCancelFactory->create($vippsQuote);
     }
 }

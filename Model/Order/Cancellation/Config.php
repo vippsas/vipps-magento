@@ -58,9 +58,18 @@ class Config
      * @param int|null $storeId
      * @return bool
      */
-    public function isTypeAutomatic($storeId = null)
+    public function isAutomatic($storeId = null)
     {
         return $this->getType($storeId) === Type::AUTOMATIC;
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isManual($storeId = null)
+    {
+        return $this->getType($storeId) === Type::MANUAL;
     }
 
     /**

@@ -78,19 +78,23 @@
         <column name="attempts">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
-                    <item name="filter" xsi:type="string" />
+                    <item name="filter" xsi:type="string"/>
                     <item name="label" xsi:type="string" translate="true">Attempts Count</item>
                     <item name="sortOrder" xsi:type="number">40</item>
                 </item>
             </argument>
         </column>
-        <column name="is_canceled" component="Magento_Ui/js/grid/columns/select" sortOrder="50">
-            <settings>
-                <options class="Magento\Config\Model\Config\Source\Yesno"/>
-                <filter>select</filter>
-                <dataType>select</dataType>
-                <label translate="true">Is Canceled</label>
-            </settings>
+        <column name="status">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Vipps\Payment\Ui\Component\Column\Status</item>
+                <item name="config" xsi:type="array">
+                    <item name="filter" xsi:type="string">select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="label" xsi:type="string" translate="true">Status</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="sortOrder" xsi:type="number">50</item>
+                </item>
+            </argument>
         </column>
         <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date">
             <argument name="data" xsi:type="array">

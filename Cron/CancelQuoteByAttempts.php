@@ -24,8 +24,8 @@ use Magento\Quote\Model\{Quote, ResourceModel\Quote\CollectionFactory};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteCancellationInterface,
     Api\Data\QuoteInterface,
+    Api\Data\QuoteStatusInterface,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
@@ -33,6 +33,7 @@ use Vipps\Payment\{Api\CommandManagerInterface,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
+use Vipps\Payment\Model\Quote\AttemptManagement;
 use Vipps\Payment\Model\QuoteManagement as QuoteMonitorManagement;
 
 /**
@@ -99,6 +100,14 @@ class CancelQuoteByAttempts
      * @var CartRepositoryInterface
      */
     private $cartRepository;
+    /**
+     * @var AttemptManagement
+     */
+    private $attemptManagement;
+    /**
+     * @var AttemptRepository
+     */
+    private $attemptRepository;
 
     /**
      * FetchOrderFromVipps constructor.
@@ -124,7 +133,8 @@ class CancelQuoteByAttempts
         Config $cancellationConfig,
         CancelFacade $cancellationFacade,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
-        CartRepositoryInterface $cartRepository
+        CartRepositoryInterface $cartRepository,
+        AttemptManagement $attemptManagement
     ) {
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
@@ -136,6 +146,7 @@ class CancelQuoteByAttempts
         $this->cancellationFacade = $cancellationFacade;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
         $this->cartRepository = $cartRepository;
+        $this->attemptManagement = $attemptManagement;
     }
 
     /**
@@ -189,8 +200,8 @@ class CancelQuoteByAttempts
                 ['gteq' => $this->cancellationConfig->getAttemptsMaxCount()]
             );
 
-        // Filter not cancelled quotes.
-        $collection->addFieldToFilter('is_canceled', ['neq' => 1]);
+        // Filter processing cancelled quotes.
+        $collection->addFieldToFilter(QuoteStatusInterface::FIELD_STATUS, ['eq' => QuoteStatusInterface::STATUS_NEW]);
 
         return $collection;
     }
@@ -210,21 +221,28 @@ class CancelQuoteByAttempts
         try {
             $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
 
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+
             $this->prepareEnv($quote);
 
-            $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+            $attempt
+                ->setMessage(__(
+                    'Max number of attempts reached (%1)',
+                    $this->cancellationConfig->getAttemptsMaxCount()
+                ));
+
+            if ($this->cancellationConfig->isAutomatic($quote->getStoreId())) {
+                $this
+                    ->cancellationFacade
+                    ->cancel($vippsQuote, $quote);
+            }
         } catch (\Throwable $e) {
             $this->logger->critical($e->getMessage(), ['quote_id' => $vippsQuote->getId()]);
-        } finally {
-            $this
-                ->cancellationFacade
-                ->cancel(
-                    $vippsQuote,
-                    QuoteCancellationInterface::CANCEL_TYPE_MAGENTO,
-                    __('Max number of attempts reached (%1)', $this->cancellationConfig->getAttemptsMaxCount()),
-                    $quote,
-                    $transaction
-                );
+
+            if (isset($attempt)) {
+                $attempt->setMessage($e->getMessage());
+                $this->attemptManagement->save($attempt);
+            }
         }
     }
 

@@ -40,7 +40,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         if (version_compare($context->getVersion(), '1.2.0', '<')) {
             $this->createVippsQuoteTable($installer);
             $this->createVippsAttemptsTable($installer);
-            $this->addCancelationToQuote($installer);
+            $this->addStatusToQuote($installer);
         }
 
         $installer->endSetup();
@@ -180,9 +180,8 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
      * Create cancellation table.
      *
      * @param SchemaSetupInterface $installer
-     * @throws \Zend_Db_Exception
      */
-    private function addCancelationToQuote(SchemaSetupInterface $installer)
+    private function addStatusToQuote(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
         $tableName = $connection->getTableName('vipps_quote');
@@ -190,38 +189,14 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         $connection
             ->addColumn(
                 $tableName,
-                'is_canceled',
-                [
-                    'type'     => Table::TYPE_BOOLEAN,
-                    'nullable' => true,
-                    'default'  => 0,
-                    'comment'  => 'Is canceled',
-                    'after'    => 'attempts'
-                ]
-            );
-
-        $connection
-            ->addColumn(
-                $tableName,
-                'cancel_type',
+                'status',
                 [
                     'type'     => Table::TYPE_TEXT,
-                    'length'   => 10,
-                    'nullable' => true,
-                    'comment'  => 'Cancellation Type',
-                    'after'    => 'is_canceled'
-                ]
-            );
-
-        $connection
-            ->addColumn(
-                $tableName,
-                'cancel_reason',
-                [
-                    'type'     => Table::TYPE_TEXT,
-                    'nullable' => true,
-                    'comment'  => 'Cancellation Reason',
-                    'after'    => 'cancel_type'
+                    'length'   => 20,
+                    'nullable' => false,
+                    'comment'  => 'Status',
+                    'after'    => 'reserved_order_id',
+                    'default'  => 'new'
                 ]
             );
     }

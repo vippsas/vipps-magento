@@ -46,7 +46,7 @@
         <vipps>
             <order_cancellation>
                 <type>manual</type>
-                <attempts_count>1</attempts_count>
+                <attempts_count>3</attempts_count>
                 <customer_inactivity_time>10</customer_inactivity_time>
             </order_cancellation>
         </vipps>
