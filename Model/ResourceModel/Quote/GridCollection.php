@@ -15,7 +15,7 @@
  *
  */
 
-namespace Vipps\Payment\Model\ResourceModel\Monitoring\Quote;
+namespace Vipps\Payment\Model\ResourceModel\Quote;
 
 use Magento\Customer\Ui\Component\DataProvider\Document;
 use Magento\Framework\Data\Collection\Db\FetchStrategyInterface as FetchStrategy;
@@ -24,7 +24,7 @@ use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult;
 use Psr\Log\LoggerInterface as Logger;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote;
+use Vipps\Payment\Model\ResourceModel\Quote;
 
 /**
  * Class Collection

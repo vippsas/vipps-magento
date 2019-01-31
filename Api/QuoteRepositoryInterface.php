@@ -15,50 +15,21 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Api;
 
 use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\Monitoring\{Data\QuoteAttemptInterface, Quote\AttemptRepositoryInterface};
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote\Attempt as AttemptResource;
+use Vipps\Payment\Api\Data\QuoteInterface;
 
 /**
- * Class AttemptRepository
- * @package Vipps\Payment\Model\Monitoring\Quote
+ * Interface QuoteRepositoryInterface
+ * @api
  */
-class AttemptRepository implements AttemptRepositoryInterface
+interface QuoteRepositoryInterface
 {
     /**
-     * @var AttemptResource
-     */
-    private $resource;
-
-    /**
-     * @param AttemptResource $resource
-     */
-    public function __construct(AttemptResource $resource)
-    {
-        $this->resource = $resource;
-    }
-
-    /**
-     * @param QuoteAttemptInterface $attempt
-     * @return QuoteAttemptInterface
+     * @param QuoteInterface $quote Monitoring quote.
      * @throws CouldNotSaveException
+     * @return void
      */
-    public function save(QuoteAttemptInterface $attempt)
-    {
-        try {
-            $this->resource->save($attempt);
-
-            return $attempt;
-        } catch (\Exception $e) {
-            throw new CouldNotSaveException(
-                __(
-                    'Could not save Vipps Quote Attempt: %1',
-                    $e->getMessage()
-                ),
-                $e
-            );
-        }
-    }
+    public function save(QuoteInterface $quote);
 }

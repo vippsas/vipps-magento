@@ -15,11 +15,9 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Model\Quote;
 
-use Vipps\Payment\Model\{Monitoring\Quote as MonitoringQuote,
-    Monitoring\QuoteRepository as QuoteMonitorRepository,
-    ResourceModel\Monitoring\Quote\Attempt as Resource};
+use Vipps\Payment\Model\{Quote as VippsQuote, Quote\AttemptFactory, QuoteRepository as QuoteMonitorRepository};
 
 /**
  * Attempt Management.
@@ -30,11 +28,6 @@ class AttemptManagement
      * @var AttemptFactory
      */
     private $attemptFactory;
-
-    /**
-     * @var Resource
-     */
-    private $attemptResource;
 
     /**
      * @var QuoteMonitorRepository
@@ -50,17 +43,15 @@ class AttemptManagement
      * AttemptManagement constructor.
      *
      * @param AttemptFactory $attemptFactory
-     * @param Resource $resource
      * @param QuoteMonitorRepository $quoteRepository
+     * @param AttemptRepository $attemptRepository
      */
     public function __construct(
         AttemptFactory $attemptFactory,
-        Resource $resource,
         QuoteMonitorRepository $quoteRepository,
         AttemptRepository $attemptRepository
     ) {
         $this->attemptFactory = $attemptFactory;
-        $this->attemptResource = $resource;
         $this->quoteMonitorRepository = $quoteRepository;
         $this->attemptRepository = $attemptRepository;
     }
@@ -68,11 +59,11 @@ class AttemptManagement
     /**
      * Create new saved attempt. Increment attempt count. Fill it with message later.
      *
-     * @param MonitoringQuote $quote
+     * @param VippsQuote $quote
      * @return Attempt
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    public function createAttempt(MonitoringQuote $quote)
+    public function createAttempt(VippsQuote $quote)
     {
         $attempt = $this
             ->attemptFactory

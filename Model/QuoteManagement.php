@@ -15,11 +15,13 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring;
+namespace Vipps\Payment\Model;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Monitoring\{Data\QuoteInterface, QuoteManagementInterface};
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\QuoteManagementInterface;
+use Vipps\Payment\Model\QuoteFactory;
 
 /**
  * Class QuoteRepository
@@ -32,7 +34,7 @@ class QuoteManagement implements QuoteManagementInterface
     private $quoteFactory;
 
     /**
-     * @var \Vipps\Payment\Model\Monitoring\QuoteRepository
+     * @var \Vipps\Payment\Model\QuoteRepository
      */
     private $quoteRepository;
 
@@ -75,10 +77,10 @@ class QuoteManagement implements QuoteManagementInterface
     public function loadExtensionAttribute(CartInterface $quote)
     {
         if ($extensionAttributes = $quote->getExtensionAttributes()) {
-            if (!$extensionAttributes->getVippsMonitoring()) {
+            if (!$extensionAttributes->getVippsQuote()) {
                 $monitoringQuote = $this->getByQuote($quote);
 
-                $extensionAttributes->setVippsMonitoring($monitoringQuote);
+                $extensionAttributes->setVippsQuote($monitoringQuote);
             }
         }
     }

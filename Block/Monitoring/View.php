@@ -19,7 +19,7 @@ namespace Vipps\Payment\Block\Monitoring;
 
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Vipps\Payment\Model\Monitoring\QuoteRepository as MonitoringQuoteRepository;
+use Vipps\Payment\Model\QuoteRepository as vippsQuoteRepository;
 
 /**
  * View Quote Monitoring entity.
@@ -27,13 +27,13 @@ use Vipps\Payment\Model\Monitoring\QuoteRepository as MonitoringQuoteRepository;
 class View extends Template
 {
     /**
-     * @var MonitoringQuoteRepository
+     * @var vippsQuoteRepository
      */
-    private $monitoringQuoteRepository;
+    private $vippsQuoteRepository;
     /**
      * @var
      */
-    private $monitoringQuote;
+    private $vippsQuote;
     /**
      * @var CartRepositoryInterface
      */
@@ -47,19 +47,19 @@ class View extends Template
 
     /**
      * View constructor.
-     * @param MonitoringQuoteRepository $monitoringQuoteRepository
+     * @param vippsQuoteRepository $monitoringQuoteRepository
      * @param CartRepositoryInterface $quoteRepository
      * @param Template\Context $context
      * @param array $data
      */
     public function __construct(
-        MonitoringQuoteRepository $monitoringQuoteRepository,
+        vippsQuoteRepository $monitoringQuoteRepository,
         CartRepositoryInterface $quoteRepository,
         Template\Context $context,
         array $data = []
     ) {
         parent::__construct($context, $data);
-        $this->monitoringQuoteRepository = $monitoringQuoteRepository;
+        $this->vippsQuoteRepository = $monitoringQuoteRepository;
         $this->quoteRepository = $quoteRepository;
     }
 
@@ -70,7 +70,7 @@ class View extends Template
     {
         if (!$this->quote) {
             try {
-                $this->quote = $this->quoteRepository->get($this->getMonitoringQuote()->getQuoteId());
+                $this->quote = $this->quoteRepository->get($this->getVippsQuote()->getQuoteId());
             } catch (\Exception $e) {
                 $this->quoteLoadingError = $e->getMessage();
             }
@@ -80,20 +80,20 @@ class View extends Template
     }
 
     /**
-     * @return \Vipps\Payment\Api\Monitoring\Data\QuoteInterface
+     * @return \Vipps\Payment\Api\Data\QuoteInterface
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getMonitoringQuote()
+    public function getVippsQuote()
     {
-        if (!$this->monitoringQuote) {
+        if (!$this->vippsQuote) {
             try {
-                $this->monitoringQuote = $this->monitoringQuoteRepository->load($this->getRequest()->getParam('id'));
+                $this->vippsQuote = $this->vippsQuoteRepository->load($this->getRequest()->getParam('id'));
             } catch (\Exception $e) {
                 // Display this error in template.
             }
         }
 
-        return $this->monitoringQuote;
+        return $this->vippsQuote;
     }
 
     /**

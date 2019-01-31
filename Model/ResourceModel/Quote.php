@@ -15,19 +15,19 @@
  *
  */
 
-namespace Vipps\Payment\Model\ResourceModel\Monitoring\Quote;
+namespace Vipps\Payment\Model\ResourceModel;
 
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 
 /**
- * Class Attempt
+ * Class Quote
  */
-class Attempt extends AbstractDb
+class Quote extends AbstractDb
 {
     /**
      * Main table name
      */
-    const TABLE_NAME = 'vipps_quote_attempt';
+    const TABLE_NAME = 'vipps_quote';
 
     /**
      * Index field name
@@ -36,6 +36,8 @@ class Attempt extends AbstractDb
 
     /**
      * Initialize resource model
+     *
+     * @return void
      */
     protected function _construct()
     {

@@ -15,11 +15,11 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring\Quote;
+namespace Vipps\Payment\Model\Quote;
 
 use Magento\Framework\Model\AbstractModel;
-use Vipps\Payment\Api\Monitoring\Data\QuoteAttemptInterface;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote\Attempt as AttemptResource;
+use Vipps\Payment\Api\Data\QuoteAttemptInterface;
+use Vipps\Payment\Model\ResourceModel\Quote\Attempt as AttemptResource;
 
 /**
  * Quote cancellation model.

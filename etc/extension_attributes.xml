@@ -17,7 +17,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Api/etc/extension_attributes.xsd">
     <extension_attributes for="Magento\Quote\Api\Data\CartInterface">
-        <attribute code="vipps_monitoring" type="Vipps\Payment\Api\Monitoring\Data\QuoteInterface">
+        <attribute code="vipps_quote" type="Vipps\Payment\Api\Data\QuoteInterface">
         </attribute>
     </extension_attributes>
 </config>

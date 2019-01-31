@@ -40,9 +40,6 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         if (version_compare($context->getVersion(), '1.2.0', '<')) {
             $this->createVippsQuoteTable($installer);
             $this->createVippsAttemptsTable($installer);
-        }
-
-        if (version_compare($context->getVersion(), '1.2.1', '<')) {
             $this->addCancelationToQuote($installer);
         }
 
@@ -76,7 +73,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
      * @param SchemaSetupInterface $installer
      * @throws \Zend_Db_Exception
      */
-    private function createVippsQuoteTable(SchemaSetupInterface $installer): void
+    private function createVippsQuoteTable(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
 
@@ -110,13 +107,13 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 'created_at',
                 Table::TYPE_TIMESTAMP,
                 null,
-                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT, Table::OPTION_NULLABLE => false],
+                ['default' => Table::TIMESTAMP_INIT, 'nullable' => false],
                 'Created at'
             )->addColumn(
                 'updated_at',
                 Table::TYPE_TIMESTAMP,
                 null,
-                [Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT_UPDATE, Table::OPTION_NULLABLE => false],
+                ['default' => Table::TIMESTAMP_INIT_UPDATE, 'nullable' => false],
                 'Updated at'
             )
             ->addIndex($installer->getIdxName('vipps_quote', 'quote_id'), 'quote_id')
@@ -137,7 +134,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
      * @param SchemaSetupInterface $installer Schema installer.
      * @throws \Zend_Db_Exception
      */
-    private function createVippsAttemptsTable(SchemaSetupInterface $installer): void
+    private function createVippsAttemptsTable(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
 
@@ -164,7 +161,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 'created_at',
                 Table::TYPE_TIMESTAMP,
                 null,
-                [Table::OPTION_NULLABLE => false, Table::OPTION_DEFAULT => Table::TIMESTAMP_INIT],
+                ['nullable' => false, 'default' => Table::TIMESTAMP_INIT],
                 'Created at'
             )
             ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
@@ -185,7 +182,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
      * @param SchemaSetupInterface $installer
      * @throws \Zend_Db_Exception
      */
-    private function addCancelationToQuote(SchemaSetupInterface $installer): void
+    private function addCancelationToQuote(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
         $tableName = $connection->getTableName('vipps_quote');
@@ -195,11 +192,11 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 $tableName,
                 'is_canceled',
                 [
-                    Table::OPTION_TYPE     => Table::TYPE_BOOLEAN,
-                    Table::OPTION_NULLABLE => true,
-                    Table::OPTION_DEFAULT  => 0,
-                    'comment'              => 'Is canceled',
-                    'after'                => 'attempts'
+                    'type'     => Table::TYPE_BOOLEAN,
+                    'nullable' => true,
+                    'default'  => 0,
+                    'comment'  => 'Is canceled',
+                    'after'    => 'attempts'
                 ]
             );
 
@@ -208,11 +205,11 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 $tableName,
                 'cancel_type',
                 [
-                    Table::OPTION_TYPE     => Table::TYPE_TEXT,
-                    Table::OPTION_LENGTH   => 10,
-                    Table::OPTION_NULLABLE => true,
-                    'comment'              => 'Cancellation Type',
-                    'after'                => 'is_canceled'
+                    'type'     => Table::TYPE_TEXT,
+                    'length'   => 10,
+                    'nullable' => true,
+                    'comment'  => 'Cancellation Type',
+                    'after'    => 'is_canceled'
                 ]
             );
 
@@ -221,10 +218,10 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                 $tableName,
                 'cancel_reason',
                 [
-                    Table::OPTION_TYPE     => Table::TYPE_TEXT,
-                    Table::OPTION_NULLABLE => true,
-                    'comment'              => 'Cancellation Reason',
-                    'after'                => 'cancel_type'
+                    'type'     => Table::TYPE_TEXT,
+                    'nullable' => true,
+                    'comment'  => 'Cancellation Reason',
+                    'after'    => 'cancel_type'
                 ]
             );
     }

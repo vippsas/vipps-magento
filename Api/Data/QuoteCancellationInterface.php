@@ -15,7 +15,7 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Data;
+namespace Vipps\Payment\Api\Data;
 
 /**
  * Interface QuoteInterface
@@ -74,10 +74,10 @@ interface QuoteCancellationInterface
     public function getCancelReason();
 
     /**
-     * @param bool $isCanceled
+     * @param int $isCanceled
      * @return self
      */
-    public function setIsCanceled(bool $isCanceled);
+    public function setIsCanceled(int $isCanceled);
 
     /**
      * @param string $reason

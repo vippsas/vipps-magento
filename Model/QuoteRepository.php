@@ -15,13 +15,14 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring;
+namespace Vipps\Payment\Model;
 
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
-use Vipps\Payment\Api\Monitoring\QuoteRepositoryInterface;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Model\QuoteFactory;
+use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
 
 /**
  * Class QuoteRepository

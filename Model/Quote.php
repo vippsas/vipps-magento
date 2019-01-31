@@ -15,17 +15,16 @@
  *
  */
 
-namespace Vipps\Payment\Model\Monitoring;
+namespace Vipps\Payment\Model;
 
 use Magento\Framework\Model\AbstractModel;
-use Vipps\Payment\Api\Monitoring\Data\QuoteInterface;
-use Vipps\Payment\Api\Monitoring\Data\QuoteCancellationInterface;
-use Vipps\Payment\Model\ResourceModel\Monitoring\Quote as QuoteResource;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
 
 /**
  * Quote monitoring model.
  */
-class Quote extends AbstractModel implements QuoteInterface, QuoteCancellationInterface
+class Quote extends AbstractModel implements QuoteInterface
 {
     /**
      * @param int $quoteId
@@ -139,10 +138,10 @@ class Quote extends AbstractModel implements QuoteInterface, QuoteCancellationIn
     }
 
     /**
-     * @param bool $isCanceled
+     * @param int $isCanceled
      * @return Quote
      */
-    public function setIsCanceled(bool $isCanceled)
+    public function setIsCanceled(int $isCanceled)
     {
         return $this->setData(self::IS_CANCELED, $isCanceled);
     }

@@ -22,7 +22,7 @@ use Magento\Customer\Model\Session;
 use Magento\Framework\{App\ResourceConnection, Session\SessionManagerInterface};
 use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
 use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
-use Vipps\Payment\{Gateway\Request\SubjectReader, Model\Monitoring\QuoteManagement};
+use Vipps\Payment\{Gateway\Request\SubjectReader, Model\QuoteManagement};
 
 /**
  * Class InitiateHandler
@@ -59,7 +59,7 @@ class InitiateHandler implements HandlerInterface
     /**
      * @var QuoteManagement
      */
-    private $quoteMonitoringManagement;
+    private $vippsQuoteManagement;
 
     /**
      * InitiateHandler constructor.
@@ -84,7 +84,7 @@ class InitiateHandler implements HandlerInterface
         $this->checkoutHelper = $checkoutHelper;
         $this->customerSession = $customerSession;
         $this->resourceConnection = $resourceConnection;
-        $this->quoteMonitoringManagement = $monitoringManagement;
+        $this->vippsQuoteManagement = $monitoringManagement;
     }
 
     /**
@@ -121,7 +121,7 @@ class InitiateHandler implements HandlerInterface
             $connection->beginTransaction();
 
             $this->cartRepository->save($quote);
-            $this->quoteMonitoringManagement->create($quote);
+            $this->vippsQuoteManagement->create($quote);
 
             $connection->commit();
         } catch (\Exception $e) {

@@ -15,32 +15,28 @@
  *
  */
 
-namespace Vipps\Payment\Model\ResourceModel\Monitoring;
+namespace Vipps\Payment\Model\ResourceModel\Quote;
 
-use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Vipps\Payment\Model\{Quote as QuoteModel, ResourceModel\Quote as QuoteResource};
 
 /**
- * Class Quote
+ * Class Collection
  */
-class Quote extends AbstractDb
+class Collection extends AbstractCollection
 {
     /**
-     * Main table name
+     * @var string
      */
-    const TABLE_NAME = 'vipps_quote';
+    protected $_idFieldName = 'entity_id';
 
     /**
-     * Index field name
-     */
-    const INDEX_FIELD = 'entity_id';
-
-    /**
-     * Initialize resource model
+     * Define resource model
      *
      * @return void
      */
     protected function _construct()
     {
-        $this->_init(self::TABLE_NAME, self::INDEX_FIELD);
+        $this->_init(QuoteModel::class, QuoteResource::class);
     }
 }

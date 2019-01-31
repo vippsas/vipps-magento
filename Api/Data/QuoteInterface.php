@@ -15,20 +15,14 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Data;
+namespace Vipps\Payment\Api\Data;
 
 /**
  * Interface QuoteInterface
  * @api
  */
-interface QuoteInterface
+interface QuoteInterface extends QuoteCancellationInterface
 {
-    /**
-     * @const Canceled statuses.
-     */
-    const IS_CANCELED_YES = 1;
-    const IS_CANCELED_NO = 0;
-
     /**
      * @const string
      */
@@ -58,11 +52,6 @@ interface QuoteInterface
      * @const string
      */
     const ATTEMPTS = 'attempts';
-
-    /**
-     * @const string
-     */
-    const IS_CANCELED = 'is_canceled';
 
     /**
      * @param int $quoteId
@@ -95,12 +84,6 @@ interface QuoteInterface
     public function setAttempts(int $attempts);
 
     /**
-     * @param int $isCanceled
-     * @return self
-     */
-    public function setIsCanceled(int $isCanceled);
-
-    /**
      * @return int
      */
     public function getQuoteId();
@@ -129,10 +112,4 @@ interface QuoteInterface
      * @return int
      */
     public function getEntityId();
-
-    /**
-     * @return int
-     */
-    public function getIsCanceled();
-
 }

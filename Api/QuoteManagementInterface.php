@@ -15,69 +15,36 @@
  *
  */
 
-namespace Vipps\Payment\Api\Monitoring\Data;
+namespace Vipps\Payment\Api;
+
+use Magento\Quote\Api\Data\CartInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Model\Quote;
 
 /**
- * Interface QuoteInterface
+ * Interface QuoteManagementInterface
  * @api
  */
-interface QuoteAttemptInterface
+interface QuoteManagementInterface
 {
     /**
-     * @const string
+     * @param CartInterface $cart
+     * @return QuoteInterface
      */
-    const ENTITY_ID = 'entity_id';
+    public function create(CartInterface $cart);
 
     /**
-     * @const string Vipps Quote Id.
+     * @param CartInterface $cart
+     * @return Quote
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    const PARENT_ID = 'parent_id';
+    public function getByQuote(CartInterface $cart);
 
     /**
-     * @const string
+     * Loads Vipps monitoring as extension attribute.
+     *
+     * @param CartInterface $quote
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    const MESSAGE = 'message';
-
-    /**
-     * @const string
-     */
-    const CREATED_AT = 'created_at';
-
-    /**
-     * @param int $parentId
-     * @return self
-     */
-    public function setParentId(int $parentId);
-
-    /**
-     * @param string $message
-     * @return string
-     */
-    public function setMessage(string $message);
-
-    /**
-     * @param string $createdAt
-     * @return string
-     */
-    public function setCreatedAt(string $createdAt);
-
-    /**
-     * @return int
-     */
-    public function getParentId();
-
-    /**
-     * @return int
-     */
-    public function getEntityId();
-
-    /**
-     * @return string
-     */
-    public function getMessage();
-
-    /**
-     * @return string
-     */
-    public function getCreatedAt();
+    public function loadExtensionAttribute(CartInterface $quote);
 }
