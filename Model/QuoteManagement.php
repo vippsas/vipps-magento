@@ -107,4 +107,13 @@ class QuoteManagement implements QuoteManagementInterface
 
         return $monitoringQuote;
     }
+
+    /**
+     * @param Quote $quote
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
+    public function save(Quote $quote)
+    {
+        $this->quoteRepository->save($quote);
+    }
 }

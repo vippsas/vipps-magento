@@ -237,15 +237,18 @@ class FetchOrderFromVipps
                 $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
                 $this->vippsQuoteRepository->save($vippsQuote);
             } else {
-                $this->placeOrder($quote, $transaction);
+                $order = $this->placeOrder($quote, $transaction);
+                if ($order) {
+                    $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACED);
+                }
             }
         } catch (\Throwable $e) {
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACE_FAILED);
             $this->logger->critical($e->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
             if (isset($attempt)) {
                 $attempt->setMessage($e->getMessage());
             }
         } finally {
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACE_FAILED);
             $this->vippsQuoteRepository->save($vippsQuote);
 
             if (isset($attempt)) {
