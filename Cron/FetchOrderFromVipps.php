@@ -19,7 +19,8 @@ namespace Vipps\Payment\Cron;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Quote\Api\{CartRepositoryInterface, Data\CartInterface};
+use Magento\Framework\Intl\DateTimeFactory;
+use Magento\Quote\Api\{Data\CartInterface};
 use Magento\Quote\Model\{Quote, QuoteRepository, ResourceModel\Quote\CollectionFactory};
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -76,11 +77,6 @@ class FetchOrderFromVipps
     private $logger;
 
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
      * @var StoreManagerInterface
      */
     private $storeManager;
@@ -116,6 +112,11 @@ class FetchOrderFromVipps
     private $vippsQuoteRepository;
 
     /**
+     * @var DateTimeFactory
+     */
+    private $dateTimeFactory;
+
+    /**
      * FetchOrderFromVipps constructor.
      * @param CollectionFactory $quoteCollectionFactory
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
@@ -128,6 +129,7 @@ class FetchOrderFromVipps
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
      * @param Config $cancellationConfig
+     * @param DateTimeFactory $dateTimeFactory
      * @param AttemptManagement $attemptManagement
      */
     public function __construct(
@@ -142,6 +144,7 @@ class FetchOrderFromVipps
         StoreManagerInterface $storeManager,
         ScopeCodeResolver $scopeCodeResolver,
         Config $cancellationConfig,
+        DateTimeFactory $dateTimeFactory,
         AttemptManagement $attemptManagement
     ) {
         $this->quoteCollectionFactory = $quoteCollectionFactory;
@@ -156,6 +159,7 @@ class FetchOrderFromVipps
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
         $this->quoteRepository = $quoteRepository;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
+        $this->dateTimeFactory = $dateTimeFactory;
     }
 
     /**
@@ -221,6 +225,9 @@ class FetchOrderFromVipps
      */
     private function processQuote(VippsQuote $vippsQuote)
     {
+        $vippsQuoteStatus = '';
+        $attemptMessage = '';
+
         try {
             // Register empty attempt.
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
@@ -230,29 +237,30 @@ class FetchOrderFromVipps
             $this->prepareEnv($quote);
 
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
-
             if ($transaction->isTransactionAborted()) {
-                $transactionMessage = 'Transaction was cancelled on Vipps side';
-                $attempt->setMessage($transactionMessage);
-                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-                $this->vippsQuoteRepository->save($vippsQuote);
+                $attemptMessage = 'Transaction was cancelled on Vipps side';
+                $vippsQuoteStatus = QuoteStatusInterface::STATUS_CANCELED;
             } else {
                 $order = $this->placeOrder($quote, $transaction);
-                if ($order) {
-                    $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACED);
+                $vippsQuoteStatus = $order
+                    ? QuoteStatusInterface::STATUS_PLACED
+                    : QuoteStatusInterface::STATUS_PLACE_FAILED;
+
+                if ($transaction->isInitiate() && $this->isQuoteExpired($vippsQuote)) {
+                    $vippsQuoteStatus = QuoteStatusInterface::STATUS_EXPIRED;
+                    $attemptMessage = 'Transaction has been expired';
                 }
             }
         } catch (\Throwable $e) {
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACE_FAILED);
+            $vippsQuoteStatus = QuoteStatusInterface::STATUS_PLACE_FAILED;
             $this->logger->critical($e->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
-            if (isset($attempt)) {
-                $attempt->setMessage($e->getMessage());
-            }
+            $attemptMessage = $e->getMessage();
         } finally {
+            $vippsQuote->setStatus($vippsQuoteStatus);
             $this->vippsQuoteRepository->save($vippsQuote);
 
             if (isset($attempt)) {
-                // Simply save the attempt.
+                $attempt->setMessage($attemptMessage);
                 $this->attemptManagement->save($attempt);
             }
         }
@@ -311,17 +319,20 @@ class FetchOrderFromVipps
     }
 
     /**
-     * @deprecated
-     * @param Quote $quote
-     * @param \DateInterval $interval
+     * Validate Vipps Quote expiration.
      *
+     * @param $vippsQuote
      * @return bool
      * @throws \Exception
      */
-    private function isQuoteExpired(Quote $quote, \DateInterval $interval) //@codingStandardsIgnoreLine
+    private function isQuoteExpired($vippsQuote)
     {
-        $quoteExpiredAt = (new \DateTime($quote->getUpdatedAt()))->add($interval); //@codingStandardsIgnoreLine
-        $isQuoteExpired = !$quoteExpiredAt->diff(new \DateTime())->invert; //@codingStandardsIgnoreLine
-        return $isQuoteExpired;
+        $createdAt = $this->dateTimeFactory->create($vippsQuote->getCreatedAt());
+
+        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");
+
+        $createdAt->add($interval);
+
+        return !$createdAt->diff($this->dateTimeFactory->create())->invert;
     }
 }
