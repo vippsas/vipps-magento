@@ -150,4 +150,22 @@ class View extends Template
     {
         return $this->status->getLabel($code);
     }
+
+    /**
+     * Retrieve formatting date
+     *
+     * @param null|string|\DateTimeInterface $date
+     * @param int $format
+     * @param bool $showTime
+     * @param null|string $timezone
+     * @return string
+     */
+    public function formatDate(
+        $date = null,
+        $format = \IntlDateFormatter::MEDIUM,
+        $showTime = true,
+        $timezone = null
+    ) {
+        return parent::formatDate($date, $format, $showTime, $timezone);
+    }
 }

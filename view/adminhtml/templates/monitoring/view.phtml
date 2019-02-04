@@ -46,11 +46,11 @@ $attempts = $block->getAttempts();
         </tr>
         <tr>
             <th><?= __('Created At'); ?></th>
-            <td><?= $vippsQuote->getCreatedAt(); ?></td>
+            <td><?= $block->formatDate($vippsQuote->getCreatedAt()); ?></td>
         </tr>
         <tr>
             <th><?= __('Last Updated At'); ?></th>
-            <td><?= $vippsQuote->getUpdatedAt(); ?></td>
+            <td><?= $block->formatDate($vippsQuote->getUpdatedAt()); ?></td>
         </tr>
         </tbody>
     </table>
@@ -97,11 +97,11 @@ $attempts = $block->getAttempts();
             </tr>
             <tr>
                 <th><?= __('Created At'); ?></th>
-                <td><?= $quote->getCreatedAt(); ?></td>
+                <td><?= $block->formatDate($quote->getCreatedAt()); ?></td>
             </tr>
             <tr>
                 <th><?= __('Last Updated At'); ?></th>
-                <td><?= $quote->getUpdatedAt(); ?></td>
+                <td><?= $block->formatDate($quote->getUpdatedAt()); ?></td>
             </tr>
             </tbody>
         </table>
@@ -117,12 +117,16 @@ $attempts = $block->getAttempts();
             /** @var \Vipps\Payment\Model\Quote\Attempt $attempt */
             foreach ($attempts as $attempt): ?>
                 <tr>
-                    <th><?= $block->formatDate($attempt->getCreatedAt(), \IntlDateFormatter::LONG, true); ?></th>
-                    <td><?= $attempt->getMessage(); ?></td>
+                    <th><?= $attempt->getMessage(); ?></th>
+                    <td><?= $block->formatDate($attempt->getCreatedAt()); ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
+    <?php else: ?>
+        <div class="fieldset-wrapper-title">
+            <span class="title"><?= __('No attempts found.') ?></span>
+        </div>
     <?php endif; ?>
 
 </div>

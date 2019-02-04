@@ -39,18 +39,25 @@ class CancelFacade implements CancelFacadeInterface
      * @var QuoteRepository
      */
     private $quoteRepository;
+    /**
+     * @var AttemptManagement
+     */
+    private $attemptManagement;
 
     /**
      * CancellationFacade constructor.
      * @param CommandManagerInterface $commandManager
      * @param QuoteRepository $quoteRepository
+     * @param AttemptManagement $attemptManagement
      */
     public function __construct(
         CommandManagerInterface $commandManager,
-        QuoteRepository $quoteRepository
+        QuoteRepository $quoteRepository,
+        AttemptManagement $attemptManagement
     ) {
         $this->commandManager = $commandManager;
         $this->quoteRepository = $quoteRepository;
+        $this->attemptManagement = $attemptManagement;
     }
 
     /**
@@ -66,14 +73,20 @@ class CancelFacade implements CancelFacadeInterface
         CartInterface $quote
     ) {
         try {
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
             // cancel order on vipps side
             $this->commandManager->cancel($quote->getPayment());
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
+            $attempt->setMessage('The order has been canceled.');
         } catch (\Throwable $exception) {
             // Log the exception
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
+            $attempt->setMessage($exception->getMessage());
             throw $exception;
         } finally {
+            if (isset($attempt)) {
+                $this->attemptManagement->save($attempt);
+            }
             $this->quoteRepository->save($vippsQuote);
         }
     }
