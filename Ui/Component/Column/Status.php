@@ -50,6 +50,7 @@ class Status implements OptionSourceInterface
     {
         return [
             QuoteStatusInterface::STATUS_NEW           => __('New'),
+            QuoteStatusInterface::STATUS_EXPIRED       => __('Expired'),
             QuoteStatusInterface::STATUS_PLACED        => __('Placed'),
             QuoteStatusInterface::STATUS_PLACE_FAILED  => __('Placing Failed'),
             QuoteStatusInterface::STATUS_CANCELED      => __('Canceled'),
