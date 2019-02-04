@@ -97,10 +97,12 @@ class OrderPlace
      * @var CommandManagerInterface
      */
     private $commandManager;
+
     /**
      * @var QuoteManagement
      */
     private $quoteManagement;
+
     /**
      * @var LoggerInterface
      */
