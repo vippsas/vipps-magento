@@ -124,10 +124,11 @@
                 </item>
             </argument>
         </column>
-        <actionsColumn name="actions" class="Vipps\Payment\Ui\Component\Profiling\Column\ShowAction">
+        <actionsColumn name="actions" class="Vipps\Payment\Ui\Component\Column\ShowAction">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
                     <item name="indexField" xsi:type="string">entity_id</item>
+                    <item name="urlPath" xsi:type="string">vipps/profiling/view</item>
                     <item name="sortOrder" xsi:type="number">200</item>
                 </item>
             </argument>

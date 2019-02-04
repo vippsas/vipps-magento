@@ -18,9 +18,10 @@
 namespace Vipps\Payment\Model\Quote;
 
 use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\{Data\QuoteAttemptInterface};
+use Vipps\Payment\Api\{Data\QuoteAttemptInterface, Data\QuoteInterface};
 use Vipps\Payment\Api\Quote\AttemptRepositoryInterface;
 use Vipps\Payment\Model\ResourceModel\Quote\Attempt as AttemptResource;
+use Vipps\Payment\Model\ResourceModel\Quote\Attempt\CollectionFactory;
 
 /**
  * Class AttemptRepository
@@ -31,13 +32,19 @@ class AttemptRepository implements AttemptRepositoryInterface
      * @var AttemptResource
      */
     private $resource;
+    /**
+     * @var CollectionFactory
+     */
+    private $collectionFactory;
 
     /**
      * @param AttemptResource $resource
+     * @param CollectionFactory $collectionFactory
      */
-    public function __construct(AttemptResource $resource)
+    public function __construct(AttemptResource $resource, CollectionFactory $collectionFactory)
     {
         $this->resource = $resource;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -60,5 +67,20 @@ class AttemptRepository implements AttemptRepositoryInterface
                 $e
             );
         }
+    }
+
+    /**
+     * @param QuoteInterface $quote
+     * @return AttemptResource\Collection
+     */
+    public function getByVippsQuote(QuoteInterface $quote)
+    {
+        /** @var \Vipps\Payment\Model\ResourceModel\Quote\Attempt\Collection $collection */
+        $collection = $this->collectionFactory->create();
+        $collection
+            ->addFieldToFilter('parent_id', ['eq' => $quote->getEntityId()])
+            ->setOrder('created_at');
+
+        return $collection;
     }
 }

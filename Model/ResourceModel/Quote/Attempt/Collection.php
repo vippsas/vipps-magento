@@ -15,26 +15,28 @@
  *
  */
 
-namespace Vipps\Payment\Api\Quote;
+namespace Vipps\Payment\Model\ResourceModel\Quote\Attempt;
 
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Gateway\Transaction\Transaction;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Vipps\Payment\Model\{Quote\Attempt as AttemptModel, ResourceModel\Quote\Attempt as AttemptResource};
 
 /**
- * Cancels Vipps payment everywhere.
- * @api
+ * Class Collection
  */
-interface CancelFacadeInterface
+class Collection extends AbstractCollection
 {
     /**
-     * Cancel Vipps payment transaction both, Magento and Vipps.
-     *
-     * @param QuoteInterface $vippsQuote
-     * @param CartInterface|null $quote
+     * @var string
      */
-    public function cancel(
-        QuoteInterface $vippsQuote,
-        CartInterface $quote
-    );
+    protected $_idFieldName = 'entity_id';
+
+    /**
+     * Define resource model
+     *
+     * @return void
+     */
+    protected function _construct()
+    {
+        $this->_init(AttemptModel::class, AttemptResource::class);
+    }
 }

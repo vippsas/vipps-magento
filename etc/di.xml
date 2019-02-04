@@ -48,6 +48,7 @@
     <type name="Vipps\Payment\Model\OrderPlace">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 

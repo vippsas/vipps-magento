@@ -15,20 +15,33 @@
  *
  */
 
-/** @var \Magento\Framework\View\Element\Template $block */
-?>
-<div class="page-actions" data-ui-id="page-actions-toolbar-content-header">
-    <div class="page-actions-inner">
-        <div class="page-actions-buttons">
-            <button
-                    id="back"
-                    title="Back"
-                    type="button"
-                    class="action- scalable back"
-                    onclick="location.href='<?php echo $block->getUrl('*/*'); ?>'"
-                    data-ui-id="back-button">
-                <span>Back</span>
-            </button>
-        </div>
-    </div>
-</div>
+namespace Vipps\Payment\Api\Data;
+
+/**
+ * Interface QuoteInterface
+ * @api
+ */
+interface QuoteStatusInterface
+{
+    /**
+     * @const string(10)
+     */
+    const FIELD_STATUS = 'status';
+
+    const STATUS_NEW = 'new';
+    const STATUS_PLACED = 'placed';
+    const STATUS_PLACE_FAILED = 'place_failed';
+    const STATUS_CANCELED = 'canceled';
+    const STATUS_CANCEL_FAILED = 'cancel_failed';
+
+    /**
+     * @return string
+     */
+    public function getStatus();
+
+    /**
+     * @param string $status
+     * @return self
+     */
+    public function setStatus(string $status);
+}

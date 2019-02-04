@@ -56,12 +56,12 @@
                 </item>
             </argument>
         </selectionsColumn>
-        <column name="quote_id">
+        <column name="entity_id">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
                     <item name="filter" xsi:type="string">textRange</item>
                     <item name="sorting" xsi:type="string">desc</item>
-                    <item name="label" xsi:type="string" translate="true">Quote ID</item>
+                    <item name="label" xsi:type="string" translate="true">Vipps Quote ID</item>
                     <item name="sortOrder" xsi:type="number">20</item>
                 </item>
             </argument>
@@ -78,19 +78,23 @@
         <column name="attempts">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
-                    <item name="filter" xsi:type="string">textRange</item>
+                    <item name="filter" xsi:type="string"/>
                     <item name="label" xsi:type="string" translate="true">Attempts Count</item>
                     <item name="sortOrder" xsi:type="number">40</item>
                 </item>
             </argument>
         </column>
-        <column name="is_canceled" component="Magento_Ui/js/grid/columns/select" sortOrder="50">
-            <settings>
-                <options class="Magento\Config\Model\Config\Source\Yesno"/>
-                <filter>select</filter>
-                <dataType>select</dataType>
-                <label translate="true">Is Canceled</label>
-            </settings>
+        <column name="status">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Vipps\Payment\Ui\Component\Column\Status</item>
+                <item name="config" xsi:type="array">
+                    <item name="filter" xsi:type="string">select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="label" xsi:type="string" translate="true">Status</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="sortOrder" xsi:type="number">50</item>
+                </item>
+            </argument>
         </column>
         <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date">
             <argument name="data" xsi:type="array">
@@ -109,17 +113,17 @@
                     <item name="filter" xsi:type="string">dateRange</item>
                     <item name="dataType" xsi:type="string">date</item>
                     <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/date</item>
-                    <item name="label" xsi:type="string" translate="true">Last Updated At</item>
+                    <item name="label" xsi:type="string" translate="true">Updated At</item>
                     <item name="sortOrder" xsi:type="number">110</item>
                 </item>
             </argument>
         </column>
-        <actionsColumn name="actions" class="Magento\Theme\Ui\Component\Listing\Column\ViewAction">
+        <actionsColumn name="actions" class="Vipps\Payment\Ui\Component\Column\ShowAction">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
                     <item name="indexField" xsi:type="string">entity_id</item>
                     <item name="sortOrder" xsi:type="number">200</item>
-                    <item name="viewUrlPath" xsi:type="string">vipps/monitoring/view</item>
+                    <item name="urlPath" xsi:type="string">vipps/monitoring/view</item>
                 </item>
             </argument>
         </actionsColumn>

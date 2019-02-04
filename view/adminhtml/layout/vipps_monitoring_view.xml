@@ -18,9 +18,9 @@
     <body>
         <referenceContainer name="content">
             <block
-                class="Magento\Framework\View\Element\Template"
+                class="Vipps\Payment\Block\Monitoring\Buttons"
                 name="vipps_monitoring_back_button"
-                template="Vipps_Payment::monitoring/back_button.phtml"
+                template="Vipps_Payment::monitoring/buttons.phtml"
             />
             <block
                 class="Vipps\Payment\Block\Monitoring\View"

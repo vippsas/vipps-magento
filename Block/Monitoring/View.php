@@ -17,9 +17,13 @@
 
 namespace Vipps\Payment\Block\Monitoring;
 
+use Magento\Framework\Pricing\Helper\Data;
+use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Vipps\Payment\Model\QuoteRepository as vippsQuoteRepository;
+use Vipps\Payment\Model\Quote\AttemptRepository;
+use Vipps\Payment\Model\QuoteRepository as VippsQuoteRepository;
+use Vipps\Payment\Ui\Component\Column\Status;
 
 /**
  * View Quote Monitoring entity.
@@ -27,40 +31,74 @@ use Vipps\Payment\Model\QuoteRepository as vippsQuoteRepository;
 class View extends Template
 {
     /**
-     * @var vippsQuoteRepository
+     * @var VippsQuoteRepository
      */
     private $vippsQuoteRepository;
-    /**
-     * @var
-     */
-    private $vippsQuote;
+
     /**
      * @var CartRepositoryInterface
      */
     private $quoteRepository;
 
-    private $quote;
     /**
-     * @var string|null
+     * @var string
      */
-    private $quoteLoadingError = null;
+    private $quoteLoadingError = '';
+
+    /**
+     * @var Registry
+     */
+    private $registry;
+
+    /**
+     * @var Data
+     */
+    private $priceHelper;
+
+    /**
+     * @var AttemptRepository
+     */
+    private $attemptRepository;
+    /**
+     * @var Status
+     */
+    private $status;
 
     /**
      * View constructor.
-     * @param vippsQuoteRepository $monitoringQuoteRepository
+     * @param VippsQuoteRepository $vippsQuoteRepository
      * @param CartRepositoryInterface $quoteRepository
+     * @param AttemptRepository $attemptRepository
+     * @param Registry $registry
+     * @param Data $priceHelper
      * @param Template\Context $context
      * @param array $data
      */
     public function __construct(
-        vippsQuoteRepository $monitoringQuoteRepository,
+        VippsQuoteRepository $vippsQuoteRepository,
         CartRepositoryInterface $quoteRepository,
+        AttemptRepository $attemptRepository,
+        Status $status,
+        Registry $registry,
+        Data $priceHelper,
         Template\Context $context,
         array $data = []
     ) {
         parent::__construct($context, $data);
-        $this->vippsQuoteRepository = $monitoringQuoteRepository;
+        $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->quoteRepository = $quoteRepository;
+        $this->registry = $registry;
+        $this->priceHelper = $priceHelper;
+        $this->attemptRepository = $attemptRepository;
+        $this->status = $status;
+    }
+
+    /**
+     * @return Data
+     */
+    public function getPriceHelper()
+    {
+        return $this->priceHelper;
     }
 
     /**
@@ -68,41 +106,48 @@ class View extends Template
      */
     public function getQuote()
     {
-        if (!$this->quote) {
-            try {
-                $this->quote = $this->quoteRepository->get($this->getVippsQuote()->getQuoteId());
-            } catch (\Exception $e) {
-                $this->quoteLoadingError = $e->getMessage();
-            }
+        try {
+            return $this->quoteRepository->get($this->getVippsQuote()->getQuoteId());
+        } catch (\Exception $e) {
+            $this->quoteLoadingError = $e->getMessage();
         }
-
-        return $this->quote;
     }
 
     /**
      * @return \Vipps\Payment\Api\Data\QuoteInterface
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getVippsQuote()
     {
-        if (!$this->vippsQuote) {
-            try {
-                $this->vippsQuote = $this->vippsQuoteRepository->load($this->getRequest()->getParam('id'));
-            } catch (\Exception $e) {
-                // Display this error in template.
-            }
-        }
-
-        return $this->vippsQuote;
+        return $this->registry->registry('vipps_quote');
     }
 
     /**
      * Quote loading error.
      *
-     * @return string|null
+     * @return string
      */
     public function getQuoteLoadingError()
     {
         return $this->quoteLoadingError;
+    }
+
+    /**
+     * @return \Vipps\Payment\Model\ResourceModel\Quote\Attempt\Collection
+     */
+    public function getAttempts()
+    {
+        return $this
+            ->attemptRepository
+            ->getByVippsQuote($this->getVippsQuote())
+            ->load();
+    }
+
+    /**
+     * @param string $code
+     * @return string
+     */
+    public function getStatusLabel($code)
+    {
+        return $this->status->getLabel($code);
     }
 }

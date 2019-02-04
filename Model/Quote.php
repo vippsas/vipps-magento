@@ -130,61 +130,29 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
-     * @return bool
-     */
-    public function isCanceled()
-    {
-        return $this->getData(self::IS_CANCELED);
-    }
-
-    /**
-     * @param int $isCanceled
-     * @return Quote
-     */
-    public function setIsCanceled(int $isCanceled)
-    {
-        return $this->setData(self::IS_CANCELED, $isCanceled);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getCancelType()
-    {
-        return $this->getData(self::CANCEL_TYPE);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getCancelReason()
-    {
-        return $this->getData(self::CANCEL_REASON);
-    }
-
-    /**
-     * @param string $reason
-     */
-    public function setCancelReason(string $reason)
-    {
-        $this->setData(self::CANCEL_REASON, $reason);
-    }
-
-    /**
-     * @param string $type
-     * @return Quote
-     */
-    public function setCancelType($type)
-    {
-        return $this->setData(self::CANCEL_TYPE, $type);
-    }
-
-    /**
      * Clear attempts.
+     * @return Quote
      */
     public function clearAttempts()
     {
-        $this->setAttempts(0);
+        return $this->setAttempts(0);
+    }
+
+    /**
+     * @param string $status
+     * @return Quote
+     */
+    public function setStatus(string $status)
+    {
+        return $this->setData(self::FIELD_STATUS, $status);
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus()
+    {
+        return $this->getData(self::FIELD_STATUS);
     }
 
     /**

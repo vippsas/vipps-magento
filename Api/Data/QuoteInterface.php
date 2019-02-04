@@ -21,7 +21,7 @@ namespace Vipps\Payment\Api\Data;
  * Interface QuoteInterface
  * @api
  */
-interface QuoteInterface extends QuoteCancellationInterface
+interface QuoteInterface extends QuoteStatusInterface
 {
     /**
      * @const string
