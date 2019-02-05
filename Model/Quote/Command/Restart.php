@@ -39,7 +39,11 @@ class Restart
      */
     public function isAllowed()
     {
-        return $this->vippsQuote->getStatus() === QuoteStatusInterface::STATUS_PLACE_FAILED;
+        return in_array(
+            $this->vippsQuote->getStatus(),
+            [QuoteStatusInterface::STATUS_PLACE_FAILED, QuoteStatusInterface::STATUS_EXPIRED],
+            true
+        );
     }
 
     /**
@@ -52,7 +56,7 @@ class Restart
         $this
             ->vippsQuote
             ->clearAttempts()
-            ->setStatus(QuoteStatusInterface::STATUS_NEW);
+            ->setStatus(QuoteStatusInterface::STATUS_PROCESSING);
 
         $this->quoteRepository->save($this->vippsQuote);
     }

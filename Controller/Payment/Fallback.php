@@ -13,26 +13,38 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory, Controller\ResultInterface, Exception\CouldNotSaveException,
-    Exception\LocalizedException, Exception\NoSuchEntityException, Exception\InputException,
-    Session\SessionManagerInterface, Controller\Result\Redirect, App\Action\Action, App\Action\Context,
-    App\ResponseInterface
-};
-use Vipps\Payment\{
-    Api\CommandManagerInterface, Gateway\Exception\MerchantException, Gateway\Request\Initiate\MerchantDataBuilder,
-    Model\OrderLocator, Model\OrderPlace, Gateway\Transaction\TransactionBuilder, Model\QuoteLocator,
-    Model\Gdpr\Compliance
-};
-use Magento\Quote\{
-    Api\Data\CartInterface, Api\CartRepositoryInterface, Model\Quote
-};
 use Magento\Checkout\Model\Session;
+use Magento\Framework\{App\Action\Action,
+    App\Action\Context,
+    App\ResponseInterface,
+    Controller\Result\Redirect,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Exception\CouldNotSaveException,
+    Exception\InputException,
+    Exception\LocalizedException,
+    Exception\NoSuchEntityException,
+    Session\SessionManagerInterface};
+use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
 use Magento\Sales\Api\Data\OrderInterface;
-use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Data\QuoteStatusInterface,
+    Gateway\Exception\MerchantException,
+    Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\TransactionBuilder,
+    Model\Gdpr\Compliance,
+    Model\OrderLocator,
+    Model\OrderPlace,
+    Model\Quote as VippsQuote,
+    Model\Quote\Attempt,
+    Model\Quote\AttemptManagement,
+    Model\QuoteLocator,
+    Model\QuoteManagement};
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class Fallback
@@ -95,6 +107,14 @@ class Fallback extends Action
      * @var Compliance
      */
     private $gdprCompliance;
+    /**
+     * @var QuoteManagement
+     */
+    private $vippsQuoteManagement;
+    /**
+     * @var AttemptManagement
+     */
+    private $attemptManagement;
 
     /**
      * Fallback constructor.
@@ -106,6 +126,8 @@ class Fallback extends Action
      * @param OrderPlace $orderPlace
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteLocator $quoteLocator
+     * @param QuoteManagement $vippsQuoteManagement
+     * @param AttemptManagement $attemptManagement
      * @param OrderLocator $orderLocator
      * @param Compliance $compliance
      * @param LoggerInterface $logger
@@ -120,6 +142,8 @@ class Fallback extends Action
         OrderPlace $orderPlace,
         CartRepositoryInterface $cartRepository,
         QuoteLocator $quoteLocator,
+        QuoteManagement $vippsQuoteManagement,
+        AttemptManagement $attemptManagement,
         OrderLocator $orderLocator,
         Compliance $compliance,
         LoggerInterface $logger
@@ -134,10 +158,13 @@ class Fallback extends Action
         $this->orderLocator = $orderLocator;
         $this->logger = $logger;
         $this->gdprCompliance = $compliance;
+        $this->vippsQuoteManagement = $vippsQuoteManagement;
+        $this->attemptManagement = $attemptManagement;
     }
 
     /**
      * @return ResponseInterface|Redirect|ResultInterface
+     * @throws CouldNotSaveException
      */
     public function execute()
     {
@@ -148,25 +175,36 @@ class Fallback extends Action
 
             $quote = $this->getQuote();
             $order = $this->getOrder();
-
+            $vippsQuote = $this->vippsQuoteManagement->getByQuote($quote);
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PROCESSING);
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
             if (!$order) {
-                $order = $this->placeOrder($quote);
+                $order = $this->placeOrder($quote, $vippsQuote, $attempt);
             }
-
+            $attemptMessage = __('Placed');
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACED);
             $this->updateCheckoutSession($quote, $order);
             /** @var ZendResponse $result */
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } catch (LocalizedException $e) {
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage($e->getMessage());
+            $attemptMessage = $e->getMessage();
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
+            $attemptMessage = $e->getMessage();
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage(__('An error occurred during payment status update.'));
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getRequestString());
             $this->logger->debug($compliant);
+
+            if (isset($attempt)) {
+                $attempt->setMessage($attemptMessage);
+                $this->attemptManagement->save($attempt);
+                $this->vippsQuoteManagement->save($vippsQuote);
+            }
         }
         return $resultRedirect;
     }
@@ -239,13 +277,19 @@ class Fallback extends Action
     /**
      * @param CartInterface $quote
      *
+     * @param VippsQuote $vippsQuote
+     * @param Attempt $attempt
      * @return OrderInterface|null
      * @throws CouldNotSaveException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      * @throws InputException
+     * @throws LocalizedException
+     * @throws MerchantException
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Vipps\Payment\Gateway\Exception\VippsException
+     * @throws \Vipps\Payment\Gateway\Exception\WrongAmountException
      */
-    private function placeOrder(CartInterface $quote)
+    private function placeOrder(CartInterface $quote, VippsQuote $vippsQuote, Attempt $attempt)
     {
         try {
             $response = $this->commandManager->getOrderStatus(
@@ -253,6 +297,8 @@ class Fallback extends Action
             );
             $transaction = $this->transactionBuilder->setData($response)->build();
             if ($transaction->isTransactionAborted()) {
+                $attempt->setMessage('Transaction was cancelled in Vipps');
+                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
                 $this->restoreQuote();
             }
             $order = $this->orderPlace->execute($quote, $transaction);
