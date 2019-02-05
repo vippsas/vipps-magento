@@ -26,7 +26,6 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
-    Model\Quote as VippsQuote,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
@@ -167,7 +166,14 @@ class CancelQuoteByAttempts
             );
 
         // Filter processing cancelled quotes.
-        $collection->addFieldToFilter(QuoteStatusInterface::FIELD_STATUS, ['eq' => QuoteStatusInterface::STATUS_NEW]);
+        $collection->addFieldToFilter(
+            QuoteStatusInterface::FIELD_STATUS,
+            ['in' => [
+                QuoteStatusInterface::STATUS_NEW,
+                QuoteStatusInterface::STATUS_PLACE_FAILED,
+                QuoteStatusInterface::STATUS_PROCESSING
+            ]]
+        );
 
         return $collection;
     }

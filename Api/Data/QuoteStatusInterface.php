@@ -31,6 +31,7 @@ interface QuoteStatusInterface
     const STATUS_NEW = 'new';
     const STATUS_EXPIRED = 'expired';
     const STATUS_PLACED = 'placed';
+    const STATUS_PROCESSING = 'processing';
     const STATUS_PLACE_FAILED = 'place_failed';
     const STATUS_CANCELED = 'canceled';
     const STATUS_CANCEL_FAILED = 'cancel_failed';

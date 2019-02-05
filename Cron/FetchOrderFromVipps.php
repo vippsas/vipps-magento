@@ -21,7 +21,7 @@ use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Intl\DateTimeFactory;
 use Magento\Quote\Api\{Data\CartInterface};
-use Magento\Quote\Model\{Quote, QuoteRepository, ResourceModel\Quote\CollectionFactory};
+use Magento\Quote\Model\{QuoteRepository, ResourceModel\Quote\CollectionFactory};
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -213,7 +213,7 @@ class FetchOrderFromVipps
             )
             ->addFieldToFilter(
                 QuoteStatusInterface::FIELD_STATUS,
-                ['in' => [QuoteStatusInterface::STATUS_NEW, QuoteStatusInterface::STATUS_PLACE_FAILED]]
+                ['in' => [QuoteStatusInterface::STATUS_NEW, QuoteStatusInterface::STATUS_PROCESSING]]
             ); // Filter new and place failed quotes.
 
         return $collection;
@@ -225,34 +225,36 @@ class FetchOrderFromVipps
      */
     private function processQuote(VippsQuote $vippsQuote)
     {
-        $vippsQuoteStatus = '';
+        $vippsQuoteStatus = QuoteStatusInterface::STATUS_PROCESSING;
         $attemptMessage = '';
 
         try {
-            // Register empty attempt.
+            // Register new attempt.
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
             $this->prepareEnv($vippsQuote);
 
             // Get Magento Quote for processing.
             $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
-
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
             if ($transaction->isTransactionAborted()) {
-                $attemptMessage = 'Transaction was cancelled on Vipps side';
+                $attemptMessage = __('Transaction was cancelled in Vipps');
                 $vippsQuoteStatus = QuoteStatusInterface::STATUS_CANCELED;
             } else {
                 $order = $this->placeOrder($quote, $transaction);
-                $vippsQuoteStatus = $order
-                    ? QuoteStatusInterface::STATUS_PLACED
-                    : QuoteStatusInterface::STATUS_PLACE_FAILED;
+                if ($order) {
+                    $vippsQuoteStatus = QuoteStatusInterface::STATUS_PLACED;
+                    $attemptMessage = __('Placed');
+                }
 
                 if ($transaction->isInitiate() && $this->isQuoteExpired($vippsQuote)) {
                     $vippsQuoteStatus = QuoteStatusInterface::STATUS_EXPIRED;
-                    $attemptMessage = 'Transaction has been expired';
+                    $attemptMessage = __('Transaction has been expired');
                 }
             }
         } catch (\Throwable $e) {
-            $vippsQuoteStatus = QuoteStatusInterface::STATUS_PLACE_FAILED;
+            $vippsQuoteStatus = $this->isMaxAttemptsReached($vippsQuote)
+                ? QuoteStatusInterface::STATUS_PLACE_FAILED : QuoteStatusInterface::STATUS_PROCESSING;
+
             $this->logger->critical($e->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
             $attemptMessage = $e->getMessage();
         } finally {
@@ -335,5 +337,10 @@ class FetchOrderFromVipps
         $createdAt->add($interval);
 
         return !$createdAt->diff($this->dateTimeFactory->create())->invert;
+    }
+
+    private function isMaxAttemptsReached(VippsQuote $vippsQuote)
+    {
+        return $vippsQuote->getAttempts() >= $this->cancellationConfig->getAttemptsMaxCount();
     }
 }
