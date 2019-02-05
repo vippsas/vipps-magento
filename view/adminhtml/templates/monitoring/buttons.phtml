@@ -53,7 +53,8 @@ $vippsQuote = $block->getVippsQuote(); ?>
 <script>
     require([
         'jquery',
-        'Magento_Ui/js/modal/confirm'
+        'Magento_Ui/js/modal/confirm',
+        'mage/translate'
     ], function ($, confirmation) {
 
         $(function () {
@@ -61,8 +62,8 @@ $vippsQuote = $block->getVippsQuote(); ?>
             $('#action-cancel').click(function () {
 
                 confirmation({
-                    "title": "Are you sure?",
-                    "content": "This procedure can not be undone.",
+                    "title": $.mage.__("Are you sure?"),
+                    "content": $.mage.__("This procedure can not be undone."),
                     "actions": {
                         "confirm": $.proxy(function () {
                             window.location = $(this).data('url');

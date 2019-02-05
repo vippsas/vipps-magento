@@ -31,10 +31,12 @@ class Buttons extends Template
      * @var RestartFactory
      */
     private $restartFactory;
+
     /**
      * @var Registry
      */
     private $registry;
+
     /**
      * @var ManualCancelFactory
      */
@@ -54,7 +56,6 @@ class Buttons extends Template
         Template\Context $context,
         array $data = []
     ) {
-
         parent::__construct($context, $data);
 
         $this->restartFactory = $restartFactory;

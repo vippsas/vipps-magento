@@ -18,23 +18,18 @@
 namespace Vipps\Payment\Cron;
 
 use Magento\Framework\App\Config\ScopeCodeResolver;
-use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException};
+use Magento\Framework\Exception\{CouldNotSaveException};
 use Magento\Quote\Api\{CartRepositoryInterface};
 use Magento\Quote\Model\{Quote, ResourceModel\Quote\CollectionFactory};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteInterface,
+use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
-    Gateway\Exception\VippsException,
-    Gateway\Transaction\Transaction,
-    Gateway\Transaction\TransactionBuilder,
     Model\Order\Cancellation\Config,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
 use Vipps\Payment\Model\Quote\AttemptManagement;
-use Vipps\Payment\Model\QuoteManagement as QuoteMonitorManagement;
 
 /**
  * Class FetchOrderStatus
@@ -47,21 +42,6 @@ class CancelQuoteByAttempts
      * Order collection page size
      */
     const COLLECTION_PAGE_SIZE = 100;
-
-    /**
-     * @var CollectionFactory
-     */
-    private $quoteCollectionFactory;
-
-    /**
-     * @var CommandManagerInterface
-     */
-    private $commandManager;
-
-    /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
 
     /**
      * @var LoggerInterface
@@ -79,11 +59,6 @@ class CancelQuoteByAttempts
     private $scopeCodeResolver;
 
     /**
-     * @var QuoteMonitorManagement
-     */
-    private $quoteManagement;
-
-    /**
      * @var Config
      */
     private $cancellationConfig;
@@ -92,56 +67,47 @@ class CancelQuoteByAttempts
      * @var CancelFacade
      */
     private $cancellationFacade;
+
     /**
      * @var VippsQuoteCollectionFactory
      */
     private $vippsQuoteCollectionFactory;
+
     /**
      * @var CartRepositoryInterface
      */
     private $cartRepository;
+
     /**
      * @var AttemptManagement
      */
     private $attemptManagement;
-    /**
-     * @var AttemptRepository
-     */
-    private $attemptRepository;
 
     /**
      * FetchOrderFromVipps constructor.
      *
-     * @param CommandManagerInterface $commandManager
-     * @param TransactionBuilder $transactionBuilder
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
-     * @param QuoteMonitorManagement $quoteManagement
      * @param Config $cancellationConfig
      * @param CancelFacade $cancellationFacade
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
      * @param CartRepositoryInterface $cartRepository
+     * @param AttemptManagement $attemptManagement
      */
     public function __construct(
-        CommandManagerInterface $commandManager,
-        TransactionBuilder $transactionBuilder,
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
         ScopeCodeResolver $scopeCodeResolver,
-        QuoteMonitorManagement $quoteManagement,
         Config $cancellationConfig,
         CancelFacade $cancellationFacade,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         CartRepositoryInterface $cartRepository,
         AttemptManagement $attemptManagement
     ) {
-        $this->commandManager = $commandManager;
-        $this->transactionBuilder = $transactionBuilder;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->scopeCodeResolver = $scopeCodeResolver;
-        $this->quoteManagement = $quoteManagement;
         $this->cancellationConfig = $cancellationConfig;
         $this->cancellationFacade = $cancellationFacade;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
@@ -152,8 +118,7 @@ class CancelQuoteByAttempts
     /**
      * Create orders from Vipps that are not created in Magento yet
      *
-     * @throws NoSuchEntityException
-     * @throws \Exception
+     * @throws CouldNotSaveException
      */
     public function execute()
     {
@@ -256,17 +221,5 @@ class CancelQuoteByAttempts
         // set quote store as current store
         $this->scopeCodeResolver->clean();
         $this->storeManager->setCurrentStore($quote->getStore()->getId());
-    }
-
-    /**
-     * @param $orderId
-     *
-     * @return Transaction
-     * @throws VippsException
-     */
-    private function fetchOrderStatus($orderId)
-    {
-        $response = $this->commandManager->getOrderStatus($orderId);
-        return $this->transactionBuilder->setData($response)->build();
     }
 }
