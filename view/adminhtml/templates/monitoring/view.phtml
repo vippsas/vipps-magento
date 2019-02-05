@@ -26,12 +26,16 @@ $attempts = $block->getAttempts();
     <table class="admin__table-secondary">
         <tbody>
         <tr>
-            <th style="width: 30%;"><?= __('Vipps Quote Id'); ?></th>
+            <th style="width: 30%;"><?= __('Vipps Quote ID'); ?></th>
             <td><?= $vippsQuote->getEntityId(); ?></td>
         </tr>
         <tr>
-            <th><?= __('Reserved Order Id'); ?></th>
+            <th><?= __('Reserved Order ID'); ?></th>
             <td><?= $vippsQuote->getReservedOrderId(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Store ID'); ?></th>
+            <td><?= $vippsQuote->getStoreId(); ?></td>
         </tr>
         <tr>
             <th><?= __('Number Of Attempts'); ?></th>
@@ -66,15 +70,15 @@ $attempts = $block->getAttempts();
         <table class="admin__table-secondary">
             <tbody>
             <tr>
-                <th style="width: 30%;"><?= __('Quote Id'); ?></th>
+                <th style="width: 30%;"><?= __('Quote ID'); ?></th>
                 <td><?= $quote->getId(); ?></td>
             </tr>
             <tr>
-                <th style="width: 30%;"><?= __('Store Id'); ?></th>
+                <th style="width: 30%;"><?= __('Store ID'); ?></th>
                 <td><?= $quote->getStoreId(); ?></td>
             </tr>
             <tr>
-                <th><?= __('Reserved Order Id'); ?></th>
+                <th><?= __('Reserved Order ID'); ?></th>
                 <td><?= $quote->getReservedOrderId(); ?></td>
             </tr>
             <tr>

@@ -231,10 +231,10 @@ class FetchOrderFromVipps
         try {
             // Register empty attempt.
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+            $this->prepareEnv($vippsQuote);
 
             // Get Magento Quote for processing.
             $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
-            $this->prepareEnv($quote);
 
             $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
             if ($transaction->isTransactionAborted()) {
@@ -269,13 +269,14 @@ class FetchOrderFromVipps
     /**
      * Prepare environment.
      *
-     * @param Quote $quote
+     * @param VippsQuote $quote
      */
-    private function prepareEnv(Quote $quote)
+    private function prepareEnv(VippsQuote $quote)
     {
         // set quote store as current store
         $this->scopeCodeResolver->clean();
-        $this->storeManager->setCurrentStore($quote->getStore()->getId());
+
+        $this->storeManager->setCurrentStore($quote->getStoreId());
     }
 
     /**

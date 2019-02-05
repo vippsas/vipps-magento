@@ -17,6 +17,8 @@
 
 namespace Vipps\Payment\Api\Data;
 
+use Vipps\Payment\Model\Quote;
+
 /**
  * Interface QuoteInterface
  * @api
@@ -52,6 +54,11 @@ interface QuoteInterface extends QuoteStatusInterface
      * @const string
      */
     const ATTEMPTS = 'attempts';
+
+    /**
+     * @const string
+     */
+    const STORE_ID = 'store_id';
 
     /**
      * @param int $quoteId
@@ -112,4 +119,15 @@ interface QuoteInterface extends QuoteStatusInterface
      * @return int
      */
     public function getEntityId();
+
+    /**
+     * @return self
+     */
+    public function getStoreId();
+
+    /**
+     * @param int $storeId
+     * @return self
+     */
+    public function setStoreId(int $storeId);
 }

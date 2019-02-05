@@ -43,6 +43,10 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $this->addStatusToQuote($installer);
         }
 
+        if (version_compare($context->getVersion(), '1.2.1', '<')) {
+            $this->addStoreIdToQuote($installer);
+        }
+
         $installer->endSetup();
     }
 
@@ -197,6 +201,31 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                     'comment'  => 'Status',
                     'after'    => 'reserved_order_id',
                     'default'  => 'new'
+                ]
+            );
+    }
+
+    /**
+     * Create cancellation table.
+     *
+     * @param SchemaSetupInterface $installer
+     */
+    private function addStoreIdToQuote(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $connection->getTableName('vipps_quote');
+
+        $connection
+            ->addColumn(
+                $tableName,
+                'store_id',
+                [
+                    'type'     => Table::TYPE_SMALLINT,
+                    'length'   => 5,
+                    'nullable' => false,
+                    'comment'  => 'Store ID',
+                    'after'    => 'quote_id',
+                    'default'  => '0'
                 ]
             );
     }
