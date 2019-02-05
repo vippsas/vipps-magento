@@ -20,12 +20,13 @@ namespace Vipps\Payment\Cron;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{CouldNotSaveException};
 use Magento\Quote\Api\{CartRepositoryInterface};
-use Magento\Quote\Model\{Quote, ResourceModel\Quote\CollectionFactory};
+use Magento\Quote\Model\{ResourceModel\Quote\CollectionFactory};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
+    Model\Quote as VippsQuote,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
@@ -184,11 +185,11 @@ class CancelQuoteByAttempts
         $this->logger->info('Start quote cancelling', ['vipps_quote_id' => $vippsQuote->getId()]);
 
         try {
+            $this->prepareEnv($vippsQuote);
+
             $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
 
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
-
-            $this->prepareEnv($quote);
 
             $attempt
                 ->setMessage(__(
@@ -214,12 +215,12 @@ class CancelQuoteByAttempts
     /**
      * Prepare environment.
      *
-     * @param Quote $quote
+     * @param QuoteInterface $quote
      */
-    private function prepareEnv(Quote $quote)
+    private function prepareEnv(QuoteInterface $quote)
     {
         // set quote store as current store
         $this->scopeCodeResolver->clean();
-        $this->storeManager->setCurrentStore($quote->getStore()->getId());
+        $this->storeManager->setCurrentStore($quote->getStoreId());
     }
 }

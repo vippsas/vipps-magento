@@ -63,6 +63,7 @@ class QuoteManagement implements QuoteManagementInterface
 
         $monitoringQuote
             ->setQuoteId($cart->getId())
+            ->setStoreId($cart->getStoreId())
             ->setReservedOrderId($cart->getReservedOrderId());
 
         return $this->quoteRepository->save($monitoringQuote);
