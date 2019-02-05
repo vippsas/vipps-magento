@@ -48,6 +48,7 @@
                 <type>manual</type>
                 <attempts_count>3</attempts_count>
                 <customer_inactivity_time>10</customer_inactivity_time>
+                <quote_storage_period>60</quote_storage_period>
             </order_cancellation>
         </vipps>
     </default>

@@ -39,6 +39,15 @@
             <config_path>vipps/order_cancellation/type</config_path>
         </field>
 
+        <field id="quote_storage_period" translate="label" type="text" showInDefault="1" sortOrder="20">
+            <label>Storage Period</label>
+            <validate>validate-number required-entry</validate>
+            <comment>
+                <![CDATA[Number of days to store quotes information. 0 value to keep all records.]]>
+            </comment>
+            <config_path>vipps/order_cancellation/quote_storage_period</config_path>
+        </field>
+
         <field id="customer_inactivity_time" translate="label" type="text" showInDefault="1" showInWebsite="1"
                showInStore="1"
                sortOrder="20">
@@ -49,5 +58,6 @@
             </comment>
             <config_path>vipps/order_cancellation/customer_inactivity_time</config_path>
         </field>
+
     </group>
 </include>

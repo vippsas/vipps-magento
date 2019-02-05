@@ -42,6 +42,11 @@ class Config
     const XML_PATH_INACTIVITY_TIME = 'vipps/order_cancellation/customer_inactivity_time';
 
     /**
+     * @const string
+     */
+    const XML_PATH_QUOTE_STORAGE_PERIOD = 'vipps/order_cancellation/quote_storage_period';
+
+    /**
      * @var ScopeConfigInterface
      */
     private $scopeConfig;
@@ -61,15 +66,6 @@ class Config
     public function isAutomatic($storeId = null)
     {
         return $this->getType($storeId) === Type::AUTOMATIC;
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return bool
-     */
-    public function isManual($storeId = null)
-    {
-        return $this->getType($storeId) === Type::MANUAL;
     }
 
     /**
@@ -96,6 +92,15 @@ class Config
     }
 
     /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isManual($storeId = null)
+    {
+        return $this->getType($storeId) === Type::MANUAL;
+    }
+
+    /**
      * Number of failed attempts.
      *
      * @return int
@@ -113,5 +118,15 @@ class Config
     public function getInactivityTime()
     {
         return $this->getStoreConfig(self::XML_PATH_INACTIVITY_TIME);
+    }
+
+    /**
+     * Number of days to store quotes information.
+     *
+     * @return int
+     */
+    public function getQuoteStoragePeriod()
+    {
+        return $this->getStoreConfig(self::XML_PATH_QUOTE_STORAGE_PERIOD);
     }
 }

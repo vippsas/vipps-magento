@@ -397,6 +397,18 @@
         </arguments>
     </type>
 
+    <type name="Vipps\Payment\Cron\CancelQuoteByAttempts">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\ClearQuotesHistory">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Gateway\Response\InitiateHandler">
         <arguments>
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
