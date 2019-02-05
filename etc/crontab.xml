@@ -20,5 +20,11 @@
         <job name="vipps_fetch_order_from_vipps" instance="Vipps\Payment\Cron\FetchOrderFromVipps" method="execute">
             <schedule>*/10 * * * *</schedule>
         </job>
+        <job name="vipps_cancel_order_by_attempts" instance="Vipps\Payment\Cron\CancelQuoteByAttempts" method="execute">
+            <schedule>0 0 * * *</schedule>
+        </job>
+        <job name="vipps_clear_quotes_history" instance="Vipps\Payment\Cron\ClearQuotesHistory" method="execute">
+            <schedule>0 0 * * *</schedule>
+        </job>
     </group>
 </config>

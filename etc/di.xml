@@ -48,6 +48,7 @@
     <type name="Vipps\Payment\Model\OrderPlace">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 
@@ -382,7 +383,27 @@
         </arguments>
     </type>
 
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Quote\GridCollection</item>
+            </argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Cron\FetchOrderFromVipps">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\CancelQuoteByAttempts">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\ClearQuotesHistory">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>

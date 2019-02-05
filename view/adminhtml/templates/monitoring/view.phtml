@@ -1,0 +1,132 @@
+<?php
+/**
+ * Copyright 2018 Vipps
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ *  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ *  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ *  and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ *  TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+ *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ *  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ *  IN THE SOFTWARE.
+ *
+ */
+
+/** @var \Vipps\Payment\Block\Monitoring\View $block */
+$vippsQuote = $block->getVippsQuote();
+$attempts = $block->getAttempts();
+?>
+<div class="fieldset-wrapper">
+    <div class="fieldset-wrapper-title">
+        <span class="title"><?= __('Vipps Information'); ?></span>
+    </div>
+    <table class="admin__table-secondary">
+        <tbody>
+        <tr>
+            <th style="width: 30%;"><?= __('Vipps Quote Id'); ?></th>
+            <td><?= $vippsQuote->getEntityId(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Reserved Order Id'); ?></th>
+            <td><?= $vippsQuote->getReservedOrderId(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Number Of Attempts'); ?></th>
+            <td><?php /* @escapeVerified */
+                echo $vippsQuote->getAttempts(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Status'); ?></th>
+            <td><?= /* @escapeVerified */
+                $block->getStatusLabel($vippsQuote->getStatus()) ?>
+            </td>
+        </tr>
+        <tr>
+            <th><?= __('Created At'); ?></th>
+            <td><?= $block->formatDate($vippsQuote->getCreatedAt()); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Last Updated At'); ?></th>
+            <td><?= $block->formatDate($vippsQuote->getUpdatedAt()); ?></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <div class="fieldset-wrapper-title">
+        <span class="title"><?= __('Quote Information'); ?></span>
+    </div>
+    <?php if ($loadingError = $block->getQuoteLoadingError()): ?>
+        <?= $loadingError; ?>
+    <?php else: ?>
+        <?php $quote = $block->getQuote(); ?>
+        <table class="admin__table-secondary">
+            <tbody>
+            <tr>
+                <th style="width: 30%;"><?= __('Quote Id'); ?></th>
+                <td><?= $quote->getId(); ?></td>
+            </tr>
+            <tr>
+                <th style="width: 30%;"><?= __('Store Id'); ?></th>
+                <td><?= $quote->getStoreId(); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Reserved Order Id'); ?></th>
+                <td><?= $quote->getReservedOrderId(); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Customer Email'); ?></th>
+                <td><?= $quote->getCustomerEmail(); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Customer Full Name'); ?></th>
+                <td><?= $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname(); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Grand Total'); ?></th>
+                <td><?= /* @escapeVerified */
+                    $block->getPriceHelper()->currencyByStore($quote->getGrandTotal(), $quote->getStoreId()); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Is Active'); ?></th>
+                <td><?= /* @escapeVerified */
+                    $quote->getIsActive() ? 'Yes' : 'No'; ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Created At'); ?></th>
+                <td><?= $block->formatDate($quote->getCreatedAt()); ?></td>
+            </tr>
+            <tr>
+                <th><?= __('Last Updated At'); ?></th>
+                <td><?= $block->formatDate($quote->getUpdatedAt()); ?></td>
+            </tr>
+            </tbody>
+        </table>
+    <?php endif; ?>
+
+    <?php if ($attempts->count()): ?>
+        <div class="fieldset-wrapper-title">
+            <span class="title"><?= __('Attempts'); ?></span>
+        </div>
+        <table class="admin__table-secondary">
+            <tbody>
+            <?php
+            /** @var \Vipps\Payment\Model\Quote\Attempt $attempt */
+            foreach ($attempts as $attempt): ?>
+                <tr>
+                    <th><?= $attempt->getMessage(); ?></th>
+                    <td><?= $block->formatDate($attempt->getCreatedAt()); ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <div class="fieldset-wrapper-title">
+            <span class="title"><?= __('No attempts found.') ?></span>
+        </div>
+    <?php endif; ?>
+
+</div>

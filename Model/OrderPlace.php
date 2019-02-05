@@ -13,30 +13,25 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\Exception\{
-    CouldNotSaveException, NoSuchEntityException, AlreadyExistsException, InputException
-};
+use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Payment\Helper\Formatter;
 use Magento\Payment\Gateway\ConfigInterface;
-use Magento\Sales\Api\{
-    OrderManagementInterface, Data\OrderInterface, OrderRepositoryInterface
-};
-use Magento\Sales\Model\{
-    Order, Order\Payment\Transaction as PaymentTransaction,
-    Order\Payment\Processor, Order\Payment
-};
-use Magento\Quote\Api\{
-    CartRepositoryInterface, CartManagementInterface, Data\CartInterface
-};
+use Magento\Payment\Helper\Formatter;
+use Magento\Quote\Api\{CartManagementInterface, CartRepositoryInterface, Data\CartInterface};
 use Magento\Quote\Model\Quote;
+use Magento\Sales\Api\{Data\OrderInterface, OrderManagementInterface, OrderRepositoryInterface};
+use Magento\Sales\Model\{Order,
+    Order\Payment,
+    Order\Payment\Processor,
+    Order\Payment\Transaction as PaymentTransaction};
+use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Data\QuoteStatusInterface;
+use Vipps\Payment\Gateway\{Exception\VippsException, Transaction\Transaction};
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
-use Vipps\Payment\Gateway\{
-    Transaction\Transaction, Exception\VippsException
-};
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 
 /**
@@ -104,6 +99,16 @@ class OrderPlace
     private $commandManager;
 
     /**
+     * @var QuoteManagement
+     */
+    private $quoteManagement;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * OrderPlace constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -117,6 +122,8 @@ class OrderPlace
      * @param LockManager $lockManager
      * @param ConfigInterface $config
      * @param CommandManagerInterface $commandManager
+     * @param QuoteManagement $quoteManagement
+     * @param LoggerInterface $logger
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -130,7 +137,9 @@ class OrderPlace
         QuoteUpdater $quoteUpdater,
         LockManager $lockManager,
         ConfigInterface $config,
-        CommandManagerInterface $commandManager
+        CommandManagerInterface $commandManager,
+        QuoteManagement $quoteManagement,
+        LoggerInterface $logger
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -143,6 +152,8 @@ class OrderPlace
         $this->lockManager = $lockManager;
         $this->config = $config;
         $this->commandManager = $commandManager;
+        $this->quoteManagement = $quoteManagement;
+        $this->logger = $logger;
     }
 
     /**
@@ -171,7 +182,9 @@ class OrderPlace
 
         try {
             $order = $this->placeOrder($quote, $transaction);
+
             if ($order) {
+                $this->updateVippsQuote($quote);
                 $paymentAction = $this->config->getValue('vipps_payment_action');
                 switch ($paymentAction) {
                     case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
@@ -186,6 +199,18 @@ class OrderPlace
         } finally {
             $this->releaseLock($lockName);
         }
+    }
+
+    /**
+     * Check can we place order or not based on transaction object
+     *
+     * @param Transaction $transaction
+     *
+     * @return bool
+     */
+    private function canPlaceOrder(Transaction $transaction)
+    {
+        return $transaction->isTransactionReserved();
     }
 
     /**
@@ -205,29 +230,6 @@ class OrderPlace
             }
         }
         return false;
-    }
-
-    /**
-     * @param $lockName
-     *
-     * @return bool
-     * @throws InputException
-     */
-    private function releaseLock($lockName)
-    {
-        return $this->lockManager->unlock($lockName);
-    }
-
-    /**
-     * Check can we place order or not based on transaction object
-     *
-     * @param Transaction $transaction
-     *
-     * @return bool
-     */
-    private function canPlaceOrder(Transaction $transaction)
-    {
-        return $transaction->isTransactionReserved();
     }
 
     /**
@@ -294,38 +296,36 @@ class OrderPlace
     }
 
     /**
-     * Authorize action
+     * Check if reserved Order amount in vipps is the same as in Magento.
      *
-     * @param OrderInterface $order
+     * @param CartInterface $quote
      * @param Transaction $transaction
+     *
+     * @return bool
      */
-    private function authorize(OrderInterface $order, Transaction $transaction)
+    private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
-        if ($order->getState() !== Order::STATE_NEW) {
-            return;
+        $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
+        $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
+
+        return $quoteAmount == $vippsAmount;
+    }
+
+    /**
+     * Update vipps quote with success.
+     *
+     * @param CartInterface $cart
+     */
+    private function updateVippsQuote(CartInterface $cart)
+    {
+        try {
+            $vippsQuote = $this->quoteManagement->getByQuote($cart);
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACED);
+            $this->quoteManagement->save($vippsQuote);
+        } catch (\Throwable $e) {
+            // Order is submitted but failed to update Vipps Quote. It should not affect order flow.
+            $this->logger->error($e->getMessage());
         }
-
-        /** @var Payment $payment */
-        $payment = $order->getPayment();
-        $transactionId = $transaction->getTransactionId();
-        $payment->setTransactionId($transactionId);
-        $payment->setIsTransactionClosed(false);
-        $payment->setTransactionAdditionalInfo(
-            PaymentTransaction::RAW_DETAILS,
-            $transaction->getTransactionInfo()->getData()
-        );
-
-        // preconditions
-        $totalDue = $order->getTotalDue();
-        $baseTotalDue = $order->getBaseTotalDue();
-
-        // do authorize
-        $this->processor->authorize($payment, false, $baseTotalDue);
-        // base amount will be set inside
-        $payment->setAmountAuthorized($totalDue);
-        $this->orderRepository->save($order);
-
-        $this->notify($order);
     }
 
     /**
@@ -378,18 +378,48 @@ class OrderPlace
     }
 
     /**
-     * Check if reserved Order amount in vipps is the same as in Magento.
+     * Authorize action
      *
-     * @param CartInterface $quote
+     * @param OrderInterface $order
      * @param Transaction $transaction
+     */
+    private function authorize(OrderInterface $order, Transaction $transaction)
+    {
+        if ($order->getState() !== Order::STATE_NEW) {
+            return;
+        }
+
+        /** @var Payment $payment */
+        $payment = $order->getPayment();
+        $transactionId = $transaction->getTransactionId();
+        $payment->setTransactionId($transactionId);
+        $payment->setIsTransactionClosed(false);
+        $payment->setTransactionAdditionalInfo(
+            PaymentTransaction::RAW_DETAILS,
+            $transaction->getTransactionInfo()->getData()
+        );
+
+        // preconditions
+        $totalDue = $order->getTotalDue();
+        $baseTotalDue = $order->getBaseTotalDue();
+
+        // do authorize
+        $this->processor->authorize($payment, false, $baseTotalDue);
+        // base amount will be set inside
+        $payment->setAmountAuthorized($totalDue);
+        $this->orderRepository->save($order);
+
+        $this->notify($order);
+    }
+
+    /**
+     * @param $lockName
      *
      * @return bool
+     * @throws InputException
      */
-    private function validateAmount(CartInterface $quote, Transaction $transaction)
+    private function releaseLock($lockName)
     {
-        $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
-        $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
-
-        return $quoteAmount == $vippsAmount;
+        return $this->lockManager->unlock($lockName);
     }
 }
