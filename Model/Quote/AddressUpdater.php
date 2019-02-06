@@ -16,13 +16,9 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use \Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
-
-use Magento\Quote\{
-    Model\Quote, Model\Quote\Address
-};
-
+use Magento\Quote\{Model\Quote, Model\Quote\Address};
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
+use Vipps\Payment\Model\Helper\AbstractHelper;
 
 /**
  * Class AddressUpdater
