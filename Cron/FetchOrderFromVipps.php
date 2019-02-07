@@ -215,7 +215,7 @@ class FetchOrderFromVipps
     private function processQuote(VippsQuote $vippsQuote)
     {
         $vippsQuoteStatus = QuoteStatusInterface::STATUS_PROCESSING;
-        $attemptMessage = __('Waiting for customer action');
+        $attemptMessage = __('Waiting while customer accept payment');
 
         try {
             // Register new attempt.
