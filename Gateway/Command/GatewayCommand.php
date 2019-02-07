@@ -159,6 +159,7 @@ class GatewayCommand implements CommandInterface
             $this->logger->critical($message);
             throw $exception;
         }
+
         /** Validating Success response body by specific command validators */
         if ($this->validator !== null) {
             $validationResult = $this->validator->validate(
@@ -171,10 +172,12 @@ class GatewayCommand implements CommandInterface
                 );
             }
         }
+
         /** Handling response after validation is success */
         if ($this->handler) {
             $this->handler->handle($commandSubject, $responseBody);
         }
+
         return $responseBody;
     }
     /**
