@@ -180,6 +180,7 @@ class GatewayCommand implements CommandInterface
 
         return $responseBody;
     }
+
     /**
      * @param Phrase[] $fails
      *
