@@ -202,11 +202,11 @@ class GatewayCommand implements CommandInterface
 
     /**
      * @param TransferInterface $transfer
-     * @param $responseBody
+     * @param array $responseBody
      *
      * @return string|null
      */
-    private function extractOrderId(TransferInterface $transfer, $responseBody)
+    private function extractOrderId($transfer, $responseBody)
     {
         $orderId = null;
         if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
