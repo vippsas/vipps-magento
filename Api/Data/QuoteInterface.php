@@ -121,7 +121,7 @@ interface QuoteInterface extends QuoteStatusInterface
     public function getEntityId();
 
     /**
-     * @return self
+     * @return int
      */
     public function getStoreId();
 

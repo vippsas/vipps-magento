@@ -30,6 +30,6 @@ class RestartFactory
      */
     public function create(QuoteInterface $vippsQuote)
     {
-        return $this->objectManager->create(Restart::class, ['vippsQuote' => $vippsQuote]);
+        return $this->objectManager->create(Restart::class, ['vippsQuote' => $vippsQuote]); //@codingStandardsIgnoreLine
     }
 }

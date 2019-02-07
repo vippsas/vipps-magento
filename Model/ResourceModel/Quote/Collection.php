@@ -28,14 +28,14 @@ class Collection extends AbstractCollection
     /**
      * @var string
      */
-    protected $_idFieldName = 'entity_id';
+    protected $_idFieldName = 'entity_id';  //@codingStandardsIgnoreLine
 
     /**
      * Define resource model
      *
      * @return void
      */
-    protected function _construct()
+    protected function _construct()  //@codingStandardsIgnoreLine
     {
         $this->_init(QuoteModel::class, QuoteResource::class);
     }

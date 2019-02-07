@@ -30,6 +30,6 @@ class ManualCancelFactory
      */
     public function create(QuoteInterface $vippsQuote)
     {
-        return $this->objectManager->create(ManualCancel::class, ['vippsQuote' => $vippsQuote]);
+        return $this->objectManager->create(ManualCancel::class, ['vippsQuote' => $vippsQuote]); //@codingStandardsIgnoreLine
     }
 }

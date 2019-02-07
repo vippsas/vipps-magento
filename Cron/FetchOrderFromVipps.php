@@ -52,11 +52,6 @@ class FetchOrderFromVipps
     const COLLECTION_PAGE_SIZE = 100;
 
     /**
-     * @var CollectionFactory
-     */
-    private $quoteCollectionFactory;
-
-    /**
      * @var CommandManagerInterface
      */
     private $commandManager;
@@ -133,7 +128,6 @@ class FetchOrderFromVipps
      * @param AttemptManagement $attemptManagement
      */
     public function __construct(
-        CollectionFactory $quoteCollectionFactory,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         VippsQuoteRepository $vippsQuoteRepository,
         QuoteRepository $quoteRepository,
@@ -147,7 +141,6 @@ class FetchOrderFromVipps
         DateTimeFactory $dateTimeFactory,
         AttemptManagement $attemptManagement
     ) {
-        $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
         $this->orderPlace = $orderManagement;
@@ -165,8 +158,7 @@ class FetchOrderFromVipps
     /**
      * Create orders from Vipps that are not created in Magento yet
      *
-     * @throws NoSuchEntityException
-     * @throws \Exception
+     * @throws CouldNotSaveException
      */
     public function execute()
     {
@@ -175,10 +167,7 @@ class FetchOrderFromVipps
             $currentPage = 1;
             do {
                 $vippsQuoteCollection = $this->createCollection($currentPage);
-                $this->logger->debug(
-                    'Fetched payment details',
-                    ['page' => $currentPage, 'count' => $vippsQuoteCollection->count()]
-                );
+                $this->logger->debug('Fetched payment details');
                 /** @var VippsQuote $vippsQuote */
                 foreach ($vippsQuoteCollection as $vippsQuote) {
                     $this->processQuote($vippsQuote);
@@ -332,7 +321,7 @@ class FetchOrderFromVipps
     {
         $createdAt = $this->dateTimeFactory->create($vippsQuote->getCreatedAt());
 
-        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");
+        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");  //@codingStandardsIgnoreLine
 
         $createdAt->add($interval);
 

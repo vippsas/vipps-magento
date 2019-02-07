@@ -39,7 +39,7 @@ class Quote extends AbstractDb
      *
      * @return void
      */
-    protected function _construct()
+    protected function _construct() //@codingStandardsIgnoreLine
     {
         $this->_init(self::TABLE_NAME, self::INDEX_FIELD);
     }

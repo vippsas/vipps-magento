@@ -71,22 +71,24 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
         $collection
             ->addFieldToSelect('entity_id', 'quote_id')
             ->addFieldToSelect('reserved_order_id')
-            ->join(
-                ['p' => $collection->getTable('quote_payment')],
+            ->join( //@codingStandardsIgnoreLine
+                ['p' => $collection->getTable('quote_payment')], //@codingStandardsIgnoreLine
                 'main_table.entity_id = p.quote_id and p.method = "vipps"',
                 []
             )
-            // Taking all old-style quotes that were valid for processing. Adding Vipps quote monitoring records for them.
+            // Taking all old-style quotes that were valid for processing.
+            // Adding Vipps quote monitoring records for them.
             ->addFieldToFilter('main_table.is_active', ['in' => ['0']])
             ->addFieldToFilter('main_table.updated_at', ['to' => date("Y-m-d H:i:s", time() - 300)])// 5 min
             ->addFieldToFilter('main_table.reserved_order_id', ['neq' => '']);
 
         $updateSql = $connection
-            ->insertFromSelect(
+            ->insertFromSelect( //@codingStandardsIgnoreLine
                 $collection->getSelect(),
                 $tableName,
                 ['quote_id', 'reserved_order_id']
             );
-        $connection->query($updateSql);
+
+        $connection->query($updateSql); //@codingStandardsIgnoreLine
     }
 }

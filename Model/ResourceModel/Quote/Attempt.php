@@ -37,7 +37,7 @@ class Attempt extends AbstractDb
     /**
      * Initialize resource model
      */
-    protected function _construct()
+    protected function _construct() //@codingStandardsIgnoreLine
     {
         $this->_init(self::TABLE_NAME, self::INDEX_FIELD);
     }

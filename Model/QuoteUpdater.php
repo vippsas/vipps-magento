@@ -13,23 +13,20 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Model;
 
-use Magento\Quote\{
-    Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote, Model\Quote\Address
-};
-use Vipps\Payment\Model\Helper\AbstractHelper;
+use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\{
-    ShippingDetails, Transaction, TransactionBuilder
-};
+use Vipps\Payment\Gateway\Transaction\{Transaction, TransactionBuilder};
+use Vipps\Payment\Model\Helper\Utility;
 
 /**
  * Class QuoteUpdater
  * @package Vipps\Payment\Model\Helper
  */
-class QuoteUpdater extends AbstractHelper
+class QuoteUpdater
 {
     /**
      * @var CartRepositoryInterface
@@ -45,6 +42,10 @@ class QuoteUpdater extends AbstractHelper
      * @var TransactionBuilder
      */
     private $transactionBuilder;
+    /**
+     * @var Utility
+     */
+    private $utility;
 
     /**
      * QuoteUpdater constructor.
@@ -52,15 +53,18 @@ class QuoteUpdater extends AbstractHelper
      * @param CartRepositoryInterface $cartRepository
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param TransactionBuilder $transactionBuilder
+     * @param Utility $utility
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder
+        TransactionBuilder $transactionBuilder,
+        Utility $utility
     ) {
         $this->cartRepository = $cartRepository;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->transactionBuilder = $transactionBuilder;
+        $this->utility = $utility;
     }
 
     /**
@@ -81,7 +85,7 @@ class QuoteUpdater extends AbstractHelper
         $quote->setMayEditShippingMethod(true);
 
         $this->updateQuoteAddress($quote, $transaction);
-        $this->disabledQuoteAddressValidation($quote);
+        $this->utility->disabledQuoteAddressValidation($quote);
 
         /**
          * Unset shipping assignment to prevent from saving / applying outdated data

@@ -88,10 +88,11 @@ class ClearQuotesHistory
         }
 
         $dateRemoveTo = $this->dateTimeFactory->create();
-        $dateRemoveTo->sub(new \DateInterval("P{$days}D"));
-        $dateTimeFormatted = $dateRemoveTo->format(Mysql::DATETIME_FORMAT);
 
         try {
+            $dateRemoveTo->sub(new \DateInterval("P{$days}D"));  //@codingStandardsIgnoreLine
+            $dateTimeFormatted = $dateRemoveTo->format(Mysql::DATETIME_FORMAT);
+
             $this->logger->debug('Remove quotes information till ' . $dateTimeFormatted);
 
             /** @var VippsQuoteCollection $collection */
@@ -103,7 +104,7 @@ class ClearQuotesHistory
                 ->getSelect()
                 ->deleteFromSelect('main_table');
 
-            $collection->getConnection()->query($query);
+            $collection->getConnection()->query($query);  //@codingStandardsIgnoreLine
 
             $this->logger->debug('Deleted records: ' . $query);
         } catch (\Throwable $exception) {

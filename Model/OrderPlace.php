@@ -307,7 +307,9 @@ class OrderPlace
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
         if ($quoteAmount != $vippsAmount) {
-            throw new WrongAmountException(__("Quote Grand Total {$quoteAmount} does not match Transaction Amount {$vippsAmount}"));
+            throw new WrongAmountException(
+                __("Quote Grand Total {$quoteAmount} does not match Transaction Amount {$vippsAmount}")
+            );
         }
     }
 

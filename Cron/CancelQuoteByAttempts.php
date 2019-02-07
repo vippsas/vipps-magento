@@ -127,11 +127,7 @@ class CancelQuoteByAttempts
             $currentPage = 1;
             do {
                 $quoteCollection = $this->createCollection($currentPage);
-                $this->logger->debug(
-                    'Fetched quote collection to cancel',
-                    ['current page' => $currentPage],
-                    ['collection count' => $quoteCollection->count()]
-                );
+                $this->logger->debug('Fetched quote collection to cancel');
                 foreach ($quoteCollection as $quote) {
                     $this->processQuote($quote);
                     usleep(1000000); //delay for 1 second
@@ -187,14 +183,12 @@ class CancelQuoteByAttempts
      */
     private function processQuote(QuoteInterface $vippsQuote)
     {
-        $transaction = null;
         $this->logger->info('Start quote cancelling', ['vipps_quote_id' => $vippsQuote->getId()]);
 
         try {
             $this->prepareEnv($vippsQuote);
 
             if ($this->cancellationConfig->isAutomatic($vippsQuote->getStoreId())) {
-
                 $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
 
                 $attempt = $this->attemptManagement->createAttempt($vippsQuote, true);

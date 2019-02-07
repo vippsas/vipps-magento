@@ -160,7 +160,7 @@ class View extends Template
      * @param null|string $timezone
      * @return string
      */
-    public function formatDate(
+    public function formatDate(  //@codingStandardsIgnoreLine
         $date = null,
         $format = \IntlDateFormatter::MEDIUM,
         $showTime = true,

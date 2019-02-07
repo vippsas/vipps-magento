@@ -41,7 +41,8 @@ class Hint extends Template implements RendererInterface
             $html .= '<td colspan="1"><p class="note"><span>';
             $html .= sprintf(
                 '<a href="%s" target="_blank">%s</a>',
-                $url, $label
+                $url,
+                $label
             );
             $html .= '</span></p></td></tr>';
         }
