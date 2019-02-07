@@ -18,7 +18,7 @@ namespace Vipps\Payment\Model;
 use Magento\Quote\{
     Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote, Model\Quote\Address
 };
-use Magento\Braintree\Model\Paypal\Helper\AbstractHelper;
+use Vipps\Payment\Model\Helper\AbstractHelper;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\{

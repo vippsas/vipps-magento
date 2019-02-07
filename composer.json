@@ -9,7 +9,6 @@
         "magento/module-sales": "101.0.*",
         "magento/module-payment": "100.2.*",
         "magento/module-checkout": "100.2.*",
-        "magento/module-paypal": "~100.2.0||~100.3.0",
         "psr/log": "~1.0"
     },
     "autoload": {
