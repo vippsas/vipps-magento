@@ -124,12 +124,12 @@ class ShippingDetails extends DataObject
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getPostcode()
     {
         //Added condition to support zipCode in special cases
-        return $this->_data[self::ADDRESS][self::POST_CODE] ?? $this->_data[self::ADDRESS][self::ZIP_CODE];
+        return $this->_data[self::ADDRESS][self::POST_CODE] ?? $this->_data[self::ADDRESS][self::ZIP_CODE] ?? null;
     }
 
     /**

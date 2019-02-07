@@ -15,7 +15,8 @@
  * IN THE SOFTWARE.
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <payment>
             <vipps>
@@ -35,12 +36,20 @@
                 <can_cancel>1</can_cancel>
                 <can_use_internal>1</can_use_internal>
                 <environment>develop</environment>
-                <client_secret backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <subscription_key1 backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <subscription_key2 backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <client_id backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <merchant_serial_number backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
+                <client_secret backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <subscription_key1 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <subscription_key2 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <client_id backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <merchant_serial_number backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
             </vipps>
         </payment>
+        <vipps>
+            <order_cancellation>
+                <type>manual</type>
+                <attempts_count>3</attempts_count>
+                <customer_inactivity_time>10</customer_inactivity_time>
+                <quote_storage_period>60</quote_storage_period>
+            </order_cancellation>
+        </vipps>
     </default>
 </config>

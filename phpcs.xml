@@ -15,8 +15,8 @@
  * IN THE SOFTWARE.
  */
 -->
-<ruleset name="Verktoy_PengVinIntegration">
-    <description>Code Sniffer Configuration for Verktoy_PengVinIntegration</description>
+<ruleset name="Vipps_Payment">
+    <description>Code Sniffer Configuration for Vipps Payment </description>
     <file>Api/</file>
     <file>Controller/</file>
     <file>Cron/</file>
