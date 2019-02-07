@@ -26,10 +26,10 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
+    Model\Quote\AttemptManagement,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
-use Vipps\Payment\Model\Quote\AttemptManagement;
 
 /**
  * Class FetchOrderStatus
@@ -127,11 +127,7 @@ class CancelQuoteByAttempts
             $currentPage = 1;
             do {
                 $quoteCollection = $this->createCollection($currentPage);
-                $this->logger->debug(
-                    'Fetched quote collection to cancel',
-                    ['current page' => $currentPage],
-                    ['collection count' => $quoteCollection->count()]
-                );
+                $this->logger->debug('Fetched quote collection to cancel');
                 foreach ($quoteCollection as $quote) {
                     $this->processQuote($quote);
                     usleep(1000000); //delay for 1 second
@@ -187,23 +183,22 @@ class CancelQuoteByAttempts
      */
     private function processQuote(QuoteInterface $vippsQuote)
     {
-        $transaction = null;
         $this->logger->info('Start quote cancelling', ['vipps_quote_id' => $vippsQuote->getId()]);
 
         try {
             $this->prepareEnv($vippsQuote);
 
-            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+            if ($this->cancellationConfig->isAutomatic($vippsQuote->getStoreId())) {
+                $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
 
-            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+                $attempt = $this->attemptManagement->createAttempt($vippsQuote, true);
 
-            $attempt
-                ->setMessage(__(
-                    'Max number of attempts reached (%1)',
-                    $this->cancellationConfig->getAttemptsMaxCount()
-                ));
+                $attempt
+                    ->setMessage(__(
+                        'Max number of attempts reached (%1)',
+                        $this->cancellationConfig->getAttemptsMaxCount()
+                    ));
 
-            if ($this->cancellationConfig->isAutomatic($quote->getStoreId())) {
                 $this
                     ->cancellationFacade
                     ->cancel($vippsQuote, $quote);

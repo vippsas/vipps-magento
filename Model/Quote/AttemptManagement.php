@@ -60,10 +60,11 @@ class AttemptManagement
      * Create new saved attempt. Increment attempt count. Fill it with message later.
      *
      * @param VippsQuote $quote
+     * @param bool $ignoreIncrement
      * @return Attempt
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
-    public function createAttempt(VippsQuote $quote)
+    public function createAttempt(VippsQuote $quote, $ignoreIncrement = false)
     {
         $attempt = $this
             ->attemptFactory
@@ -73,9 +74,11 @@ class AttemptManagement
         // Saving attempt right immediately after creation cause it's already happened.
         $this->attemptRepository->save($attempt);
 
-        // Increase attempt counter.
-        $quote->incrementAttempt();
-        $this->quoteMonitorRepository->save($quote);
+        if (!$ignoreIncrement) {
+            // Increase attempt counter.
+            $quote->incrementAttempt();
+            $this->quoteMonitorRepository->save($quote);
+        }
 
         return $attempt;
     }

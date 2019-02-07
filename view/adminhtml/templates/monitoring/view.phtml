@@ -14,7 +14,7 @@
  *  IN THE SOFTWARE.
  *
  */
-
+//@codingStandardsIgnoreFile
 /** @var \Vipps\Payment\Block\Monitoring\View $block */
 $vippsQuote = $block->getVippsQuote();
 $attempts = $block->getAttempts();
@@ -39,13 +39,11 @@ $attempts = $block->getAttempts();
         </tr>
         <tr>
             <th><?= __('Number Of Attempts'); ?></th>
-            <td><?php /* @escapeVerified */
-                echo $vippsQuote->getAttempts(); ?></td>
+            <td><?= $vippsQuote->getAttempts(); ?></td>
         </tr>
         <tr>
             <th><?= __('Status'); ?></th>
-            <td><?= /* @escapeVerified */
-                $block->getStatusLabel($vippsQuote->getStatus()) ?>
+            <td><?= $block->getStatusLabel($vippsQuote->getStatus()) ?>
             </td>
         </tr>
         <tr>
@@ -63,9 +61,9 @@ $attempts = $block->getAttempts();
     <div class="fieldset-wrapper-title">
         <span class="title"><?= __('Quote Information'); ?></span>
     </div>
-    <?php if ($loadingError = $block->getQuoteLoadingError()): ?>
+    <?php if ($loadingError = $block->getQuoteLoadingError()) : ?>
         <?= $loadingError; ?>
-    <?php else: ?>
+    <?php else : ?>
         <?php $quote = $block->getQuote(); ?>
         <table class="admin__table-secondary">
             <tbody>
@@ -91,8 +89,7 @@ $attempts = $block->getAttempts();
             </tr>
             <tr>
                 <th><?= __('Grand Total'); ?></th>
-                <td><?= /* @escapeVerified */
-                    $block->getPriceHelper()->currencyByStore($quote->getGrandTotal(), $quote->getStoreId()); ?></td>
+                <td><?= $block->getPriceHelper()->currencyByStore($quote->getGrandTotal(), $quote->getStoreId()); ?></td>
             </tr>
             <tr>
                 <th><?= __('Is Active'); ?></th>
@@ -111,7 +108,7 @@ $attempts = $block->getAttempts();
         </table>
     <?php endif; ?>
 
-    <?php if ($attempts->count()): ?>
+    <?php if ($attempts->count()) : ?>
         <div class="fieldset-wrapper-title">
             <span class="title"><?= __('Attempts'); ?></span>
         </div>
@@ -119,7 +116,7 @@ $attempts = $block->getAttempts();
             <tbody>
             <?php
             /** @var \Vipps\Payment\Model\Quote\Attempt $attempt */
-            foreach ($attempts as $attempt): ?>
+            foreach ($attempts as $attempt) : ?>
                 <tr>
                     <th><?= $attempt->getMessage(); ?></th>
                     <td><?= $block->formatDate($attempt->getCreatedAt()); ?></td>
@@ -127,10 +124,9 @@ $attempts = $block->getAttempts();
             <?php endforeach; ?>
             </tbody>
         </table>
-    <?php else: ?>
+    <?php else : ?>
         <div class="fieldset-wrapper-title">
             <span class="title"><?= __('No attempts found.') ?></span>
         </div>
     <?php endif; ?>
-
 </div>

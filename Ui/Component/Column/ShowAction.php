@@ -61,7 +61,6 @@ class ShowAction extends Column
     public function prepareDataSource(array $dataSource)
     {
         if (isset($dataSource['data']['items'])) {
-
             $path = $this->getData('config/urlPath') ?? '#';
 
             foreach ($dataSource['data']['items'] as & $item) {

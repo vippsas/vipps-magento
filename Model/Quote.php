@@ -165,7 +165,7 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
-     * @return self
+     * @return int
      */
     public function getStoreId()
     {
@@ -175,7 +175,7 @@ class Quote extends AbstractModel implements QuoteInterface
     /**
      * Constructor.
      */
-    protected function _construct()
+    protected function _construct() //@codingStandardsIgnoreLine
     {
         $this->_init(QuoteResource::class);
     }

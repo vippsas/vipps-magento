@@ -80,7 +80,7 @@ class Attempt extends AbstractModel implements QuoteAttemptInterface
     /**
      * Constructor.
      */
-    protected function _construct()
+    protected function _construct() //@codingStandardsIgnoreLine
     {
         $this->_init(AttemptResource::class);
     }

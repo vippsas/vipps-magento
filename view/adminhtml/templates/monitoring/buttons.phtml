@@ -14,7 +14,7 @@
  *  IN THE SOFTWARE.
  *
  */
-
+//@codingStandardsIgnoreFile
 /** @var \Vipps\Payment\Block\Monitoring\Buttons $block */
 $vippsQuote = $block->getVippsQuote(); ?>
 <div class="page-actions" data-ui-id="page-actions-toolbar-content-header">
@@ -25,24 +25,24 @@ $vippsQuote = $block->getVippsQuote(); ?>
                     title="Back"
                     type="button"
                     class="action- scalable back"
-                    onclick="location.href='<?php echo $block->getUrl('*/*'); ?>'"
+                    onclick="location.href='<?= $block->getUrl('*/*'); ?>'"
                     data-ui-id="back-button">
-                <span><?= __('Back') ?></span>
+                <span><?=  __('Back') ?></span>
             </button>
-            <?php if ($block->isRestartVisible()): ?>
+            <?php if ($block->isRestartVisible()) : ?>
                 <button
                         id="action-restart"
                         title type="button"
                         class="action-default primary"
-                        onclick="location.href='<?php echo $block->getUrl('*/*/restart', ['entity_id' => $vippsQuote->getEntityId()]); ?>'">
-                    <span><?= __('Restart Processing') ?></span>
+                        onclick="location.href='<?= $block->getUrl('*/*/restart', ['entity_id' => $vippsQuote->getEntityId()]); ?>'">
+                    <span><?=  __('Restart Processing') ?></span>
                 </button>
             <?php endif; ?>
-            <?php if ($block->isCancelVisible()): ?>
+            <?php if ($block->isCancelVisible()) : ?>
                 <button
                         id="action-cancel"
                         title type="button"
-                        data-url="<?php echo $block->getUrl('*/*/cancel', ['entity_id' => $vippsQuote->getEntityId()]); ?>"
+                        data-url="<?= $block->getUrl('*/*/cancel', ['entity_id' => $vippsQuote->getEntityId()]); ?>"
                         class="action-scalable action-secondary">
                     <span><?= __('Cancel') ?></span>
                 </button>
@@ -73,7 +73,5 @@ $vippsQuote = $block->getVippsQuote(); ?>
 
             });
         });
-
-
     });
 </script>

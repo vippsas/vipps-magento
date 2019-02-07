@@ -18,7 +18,7 @@ namespace Vipps\Payment\Model\Helper;
 
 use Magento\Quote\Model\Quote;
 
-class AbstractHelper
+class Utility
 {
     /**
      * Make sure addresses will be saved without validation errors
@@ -26,7 +26,7 @@ class AbstractHelper
      * @param Quote $quote
      * @return void
      */
-    protected function disabledQuoteAddressValidation(Quote $quote)
+    public function disabledQuoteAddressValidation(Quote $quote)
     {
         $billingAddress = $quote->getBillingAddress();
         $billingAddress->setShouldIgnoreValidation(true);

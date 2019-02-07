@@ -52,11 +52,6 @@ class FetchOrderFromVipps
     const COLLECTION_PAGE_SIZE = 100;
 
     /**
-     * @var CollectionFactory
-     */
-    private $quoteCollectionFactory;
-
-    /**
      * @var CommandManagerInterface
      */
     private $commandManager;
@@ -133,7 +128,6 @@ class FetchOrderFromVipps
      * @param AttemptManagement $attemptManagement
      */
     public function __construct(
-        CollectionFactory $quoteCollectionFactory,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         VippsQuoteRepository $vippsQuoteRepository,
         QuoteRepository $quoteRepository,
@@ -147,7 +141,6 @@ class FetchOrderFromVipps
         DateTimeFactory $dateTimeFactory,
         AttemptManagement $attemptManagement
     ) {
-        $this->quoteCollectionFactory = $quoteCollectionFactory;
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
         $this->orderPlace = $orderManagement;
@@ -165,8 +158,7 @@ class FetchOrderFromVipps
     /**
      * Create orders from Vipps that are not created in Magento yet
      *
-     * @throws NoSuchEntityException
-     * @throws \Exception
+     * @throws CouldNotSaveException
      */
     public function execute()
     {
@@ -175,10 +167,7 @@ class FetchOrderFromVipps
             $currentPage = 1;
             do {
                 $vippsQuoteCollection = $this->createCollection($currentPage);
-                $this->logger->debug(
-                    'Fetched payment details',
-                    ['page' => $currentPage, 'count' => $vippsQuoteCollection->count()]
-                );
+                $this->logger->debug('Fetched payment details');
                 /** @var VippsQuote $vippsQuote */
                 foreach ($vippsQuoteCollection as $vippsQuote) {
                     $this->processQuote($vippsQuote);
@@ -226,7 +215,7 @@ class FetchOrderFromVipps
     private function processQuote(VippsQuote $vippsQuote)
     {
         $vippsQuoteStatus = QuoteStatusInterface::STATUS_PROCESSING;
-        $attemptMessage = '';
+        $attemptMessage = __('Waiting while customer accept payment');
 
         try {
             // Register new attempt.
@@ -235,7 +224,7 @@ class FetchOrderFromVipps
 
             // Get Magento Quote for processing.
             $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
-            $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+            $transaction = $this->fetchOrderStatus($vippsQuote->getReservedOrderId());
             if ($transaction->isTransactionAborted()) {
                 $attemptMessage = __('Transaction was cancelled in Vipps');
                 $vippsQuoteStatus = QuoteStatusInterface::STATUS_CANCELED;
@@ -332,13 +321,19 @@ class FetchOrderFromVipps
     {
         $createdAt = $this->dateTimeFactory->create($vippsQuote->getCreatedAt());
 
-        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");
+        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");  //@codingStandardsIgnoreLine
 
         $createdAt->add($interval);
 
         return !$createdAt->diff($this->dateTimeFactory->create())->invert;
     }
 
+    /**
+     * Check for attempts count.
+     *
+     * @param VippsQuote $vippsQuote
+     * @return bool
+     */
     private function isMaxAttemptsReached(VippsQuote $vippsQuote)
     {
         return $vippsQuote->getAttempts() >= $this->cancellationConfig->getAttemptsMaxCount();

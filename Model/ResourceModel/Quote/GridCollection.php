@@ -34,7 +34,7 @@ class GridCollection extends SearchResult
     /**
      * @var string
      */
-    protected $document = Document::class;
+    protected $document = Document::class;  //@codingStandardsIgnoreLine
 
     /**
      * Collection constructor.
@@ -46,7 +46,7 @@ class GridCollection extends SearchResult
      * @param string $resourceModel
      * @throws LocalizedException
      */
-    public function __construct(
+    public function __construct(  //@codingStandardsIgnoreLine
         EntityFactory $entityFactory,
         Logger $logger,
         FetchStrategy $fetchStrategy,

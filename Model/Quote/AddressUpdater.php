@@ -18,14 +18,28 @@ namespace Vipps\Payment\Model\Quote;
 
 use Magento\Quote\{Model\Quote, Model\Quote\Address};
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
-use Vipps\Payment\Model\Helper\AbstractHelper;
+use Vipps\Payment\Model\Helper\Utility;
 
 /**
  * Class AddressUpdater
  * @package Vipps\Payment\Model\Quote
  */
-class AddressUpdater extends AbstractHelper
+class AddressUpdater
 {
+    /**
+     * @var Utility
+     */
+    private $utility;
+
+    /**
+     * AddressUpdater constructor.
+     * @param Utility $utility
+     */
+    public function __construct(Utility $utility)
+    {
+        $this->utility = $utility;
+    }
+
     /**
      * Update quote addresses from source address.
      *
@@ -36,8 +50,7 @@ class AddressUpdater extends AbstractHelper
     public function fromSourceAddress(Quote $quote, Address $sourceAddress)
     {
         $quote->setMayEditShippingAddress(false);
-        $this->disabledQuoteAddressValidation($quote);
-
+        $this->utility->disabledQuoteAddressValidation($quote);
         $this->updateQuoteAddresses($quote, $sourceAddress);
     }
 

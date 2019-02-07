@@ -266,15 +266,12 @@ class OrderPlace
             $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
             $clonedQuote->collectTotals();
 
-            if ($this->validateAmount($clonedQuote, $transaction)) {
-                // set quote active, collect totals and place order
-                $clonedQuote->setIsActive(true);
-                $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
-                $order = $this->orderRepository->get($orderId);
-            } else {
-                // cancel order on vipps side
-                $this->commandManager->cancel($clonedQuote->getPayment());
-            }
+            $this->validateAmount($clonedQuote, $transaction);
+
+            // set quote active, collect totals and place order
+            $clonedQuote->setIsActive(true);
+            $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+            $order = $this->orderRepository->get($orderId);
         }
 
         $clonedQuote->setReservedOrderId(null);
@@ -301,14 +298,19 @@ class OrderPlace
      * @param CartInterface $quote
      * @param Transaction $transaction
      *
-     * @return bool
+     * @return void
+     * @throws WrongAmountException
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
         $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
-        return $quoteAmount == $vippsAmount;
+        if ($quoteAmount != $vippsAmount) {
+            throw new WrongAmountException(
+                __("Quote Grand Total {$quoteAmount} does not match Transaction Amount {$vippsAmount}")
+            );
+        }
     }
 
     /**

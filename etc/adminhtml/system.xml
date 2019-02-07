@@ -21,8 +21,8 @@
             <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Vipps</label>
                 <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Vipps</label>
-                    <comment><![CDATA[Vipps payment method]]></comment>
+                    <label></label>
+                    <comment><![CDATA[Accept payments with Vipps in your Magento store. Make it easier for your customers to pay, and increase your conversion rates with Vipps. No setup fee or monthly fees.]]></comment>
                     <fieldset_css>complex vipps-section</fieldset_css>
                     <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
                     <attribute type="activity_path">payment/vipps/active</attribute>

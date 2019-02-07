@@ -128,6 +128,5 @@ class InitiateHandler implements HandlerInterface
             $connection->rollBack();
             throw $e;
         }
-
     }
 }
