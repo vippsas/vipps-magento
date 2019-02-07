@@ -26,10 +26,10 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
+    Model\Quote\AttemptManagement,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
-use Vipps\Payment\Model\Quote\AttemptManagement;
 
 /**
  * Class FetchOrderStatus
@@ -193,17 +193,18 @@ class CancelQuoteByAttempts
         try {
             $this->prepareEnv($vippsQuote);
 
-            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+            if ($this->cancellationConfig->isAutomatic($vippsQuote->getStoreId())) {
 
-            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+                $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
 
-            $attempt
-                ->setMessage(__(
-                    'Max number of attempts reached (%1)',
-                    $this->cancellationConfig->getAttemptsMaxCount()
-                ));
+                $attempt = $this->attemptManagement->createAttempt($vippsQuote, true);
 
-            if ($this->cancellationConfig->isAutomatic($quote->getStoreId())) {
+                $attempt
+                    ->setMessage(__(
+                        'Max number of attempts reached (%1)',
+                        $this->cancellationConfig->getAttemptsMaxCount()
+                    ));
+
                 $this
                     ->cancellationFacade
                     ->cancel($vippsQuote, $quote);

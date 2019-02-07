@@ -226,7 +226,7 @@ class FetchOrderFromVipps
     private function processQuote(VippsQuote $vippsQuote)
     {
         $vippsQuoteStatus = QuoteStatusInterface::STATUS_PROCESSING;
-        $attemptMessage = '';
+        $attemptMessage = __('Waiting for customer action');
 
         try {
             // Register new attempt.
@@ -235,7 +235,7 @@ class FetchOrderFromVipps
 
             // Get Magento Quote for processing.
             $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
-            $transaction = $this->fetchOrderStatus($quote->getReservedOrderId());
+            $transaction = $this->fetchOrderStatus($vippsQuote->getReservedOrderId());
             if ($transaction->isTransactionAborted()) {
                 $attemptMessage = __('Transaction was cancelled in Vipps');
                 $vippsQuoteStatus = QuoteStatusInterface::STATUS_CANCELED;
@@ -339,6 +339,12 @@ class FetchOrderFromVipps
         return !$createdAt->diff($this->dateTimeFactory->create())->invert;
     }
 
+    /**
+     * Check for attempts count.
+     *
+     * @param VippsQuote $vippsQuote
+     * @return bool
+     */
     private function isMaxAttemptsReached(VippsQuote $vippsQuote)
     {
         return $vippsQuote->getAttempts() >= $this->cancellationConfig->getAttemptsMaxCount();
