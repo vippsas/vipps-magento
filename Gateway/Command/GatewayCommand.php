@@ -135,16 +135,20 @@ class GatewayCommand implements CommandInterface
         $transfer = $this->transferFactory->create(
             $this->requestBuilder->build($commandSubject)
         );
+
         $result = $this->client->placeRequest($transfer);
+
         /** @var ZendResponse $response */
         $response = $result['response'];
         $responseBody = $this->jsonDecoder->decode($response->getContent());
+
         $this->profiler->save($transfer, $response);
+
         if (!$response->isSuccess()) {
             $error = $this->extractError($responseBody);
             $orderId = $this->extractOrderId($transfer, $responseBody);
-            $errorCode = $error['code'] ?: $response->getStatusCode();
-            $errorMessage = $error['message'] ?:  $response->getReasonPhrase();
+            $errorCode = $error['code'] ?? $response->getStatusCode();
+            $errorMessage = $error['message'] ?? $response->getReasonPhrase();
             $exception = $this->exceptionFactory->create($errorCode, $errorMessage);
             $message = sprintf(
                 'Request error. Code: "%s", message: "%s", order id: "%s"',
