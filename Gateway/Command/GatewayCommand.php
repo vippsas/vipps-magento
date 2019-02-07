@@ -135,51 +135,50 @@ class GatewayCommand implements CommandInterface
         $transfer = $this->transferFactory->create(
             $this->requestBuilder->build($commandSubject)
         );
-
         $result = $this->client->placeRequest($transfer);
-
         /** @var ZendResponse $response */
         $response = $result['response'];
         $responseBody = $this->jsonDecoder->decode($response->getContent());
-
         $this->profiler->save($transfer, $response);
-
         if (!$response->isSuccess()) {
             $error = $this->extractError($responseBody);
-            $exception = $this->exceptionFactory->create(
-                $error['code'] ?: $response->getStatusCode(),
-                $error['message'] ?:  $response->getReasonPhrase()
+            $orderId = $this->extractOrderId($transfer, $responseBody);
+            $errorCode = $error['code'] ?: $response->getStatusCode();
+            $errorMessage = $error['message'] ?:  $response->getReasonPhrase();
+            $exception = $this->exceptionFactory->create($errorCode, $errorMessage);
+            $message = sprintf(
+                'Request error. Code: "%s", message: "%s", order id: "%s"',
+                $errorCode,
+                $errorMessage,
+                $orderId
             );
+            $this->logger->critical($message);
             throw $exception;
         }
-
         /** Validating Success response body by specific command validators */
         if ($this->validator !== null) {
             $validationResult = $this->validator->validate(
                 array_merge($commandSubject, ['jsonData' => $responseBody])
             );
             if (!$validationResult->isValid()) {
-                $this->logExceptions($validationResult->getFailsDescription());
+                $this->logValidationFails($validationResult->getFailsDescription());
                 throw new CommandException(
                     __('Transaction validation failed.')
                 );
             }
         }
-
         /** Handling response after validation is success */
         if ($this->handler) {
             $this->handler->handle($commandSubject, $responseBody);
         }
-
         return $responseBody;
     }
-
     /**
      * @param Phrase[] $fails
      *
      * @return void
      */
-    private function logExceptions(array $fails)
+    private function logValidationFails(array $fails)
     {
         foreach ($fails as $failPhrase) {
             $this->logger->critical((string) $failPhrase);
@@ -199,5 +198,20 @@ class GatewayCommand implements CommandInterface
             'code' => isset($responseBody[0]['errorCode']) ? $responseBody[0]['errorCode'] : null,
             'message' => isset($responseBody[0]['errorMessage']) ? $responseBody[0]['errorMessage'] : null,
         ];
+    }
+
+    /**
+     * @param TransferInterface $transfer
+     * @param $responseBody
+     *
+     * @return string|null
+     */
+    private function extractOrderId(TransferInterface $transfer, $responseBody)
+    {
+        $orderId = null;
+        if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
+            $orderId = $matches[2] ?? null;
+        }
+        return $orderId ?? ($transfer->getBody()['transaction']['orderId'] ?? ($responseBody['orderId'] ?? null));
     }
 }

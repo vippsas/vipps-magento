@@ -25,7 +25,7 @@ interface ProfilerInterface
      * @param TransferInterface $transfer
      * @param Response $response
      *
-     * @return bool
+     * @return string|null
      */
     public function save(TransferInterface $transfer, Response $response);
 }
