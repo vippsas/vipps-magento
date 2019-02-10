@@ -2,7 +2,9 @@
 
 ## About Vipps Payment for Magento 2
 
-Vipps Payment offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out. <br /> Vipps Payment is used by large and small companies.  From years of shopping safely with Vipps, customers trust their personal information will remain secure.  <br />Businesses have the reassurance of our advanced fraud protection and payment protection policy.
+Vipps Payment offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
+
+Vipps Payment is used by large and small companies.  From years of shopping safely with Vipps, customers trust their personal information will remain secure.  Businesses have the reassurance of our advanced fraud protection and payment protection policy.
 
 For more information about Vipps Payment and Magento 2, please visit our [Vipps Payment for Magento](https://www.vipps.no/bedrift/vipps-pa-nett) site.
 

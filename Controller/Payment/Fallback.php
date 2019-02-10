@@ -35,13 +35,18 @@ use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Qu
 use Magento\Sales\Api\Data\OrderInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\CommandManagerInterface,
+    Api\Data\QuoteStatusInterface,
     Gateway\Exception\MerchantException,
     Gateway\Request\Initiate\MerchantDataBuilder,
     Gateway\Transaction\TransactionBuilder,
     Model\Gdpr\Compliance,
     Model\OrderLocator,
     Model\OrderPlace,
-    Model\QuoteLocator};
+    Model\Quote as VippsQuote,
+    Model\Quote\Attempt,
+    Model\Quote\AttemptManagement,
+    Model\QuoteLocator,
+    Model\QuoteManagement};
 use Zend\Http\Response as ZendResponse;
 
 /**
@@ -105,6 +110,14 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @var Compliance
      */
     private $gdprCompliance;
+    /**
+     * @var QuoteManagement
+     */
+    private $vippsQuoteManagement;
+    /**
+     * @var AttemptManagement
+     */
+    private $attemptManagement;
 
     /**
      * Fallback constructor.
@@ -116,6 +129,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @param OrderPlace $orderPlace
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteLocator $quoteLocator
+     * @param QuoteManagement $vippsQuoteManagement
+     * @param AttemptManagement $attemptManagement
      * @param OrderLocator $orderLocator
      * @param Compliance $compliance
      * @param LoggerInterface $logger
@@ -130,6 +145,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
         OrderPlace $orderPlace,
         CartRepositoryInterface $cartRepository,
         QuoteLocator $quoteLocator,
+        QuoteManagement $vippsQuoteManagement,
+        AttemptManagement $attemptManagement,
         OrderLocator $orderLocator,
         Compliance $compliance,
         LoggerInterface $logger
@@ -144,10 +161,13 @@ class Fallback extends Action implements CsrfAwareActionInterface
         $this->orderLocator = $orderLocator;
         $this->logger = $logger;
         $this->gdprCompliance = $compliance;
+        $this->vippsQuoteManagement = $vippsQuoteManagement;
+        $this->attemptManagement = $attemptManagement;
     }
 
     /**
      * @return ResponseInterface|Redirect|ResultInterface
+     * @throws CouldNotSaveException
      */
     public function execute()
     {
@@ -158,25 +178,36 @@ class Fallback extends Action implements CsrfAwareActionInterface
 
             $quote = $this->getQuote();
             $order = $this->getOrder();
-
+            $vippsQuote = $this->vippsQuoteManagement->getByQuote($quote);
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PROCESSING);
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
             if (!$order) {
-                $order = $this->placeOrder($quote);
+                $order = $this->placeOrder($quote, $vippsQuote, $attempt);
             }
-
+            $attemptMessage = __('Placed');
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_PLACED);
             $this->updateCheckoutSession($quote, $order);
             /** @var ZendResponse $result */
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } catch (LocalizedException $e) {
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage($e->getMessage());
+            $attemptMessage = $e->getMessage();
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
+            $attemptMessage = $e->getMessage();
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage(__('An error occurred during payment status update.'));
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getRequestString());
             $this->logger->debug($compliant);
+
+            if (isset($attempt)) {
+                $attempt->setMessage($attemptMessage);
+                $this->attemptManagement->save($attempt);
+                $this->vippsQuoteManagement->save($vippsQuote);
+            }
         }
         return $resultRedirect;
     }
@@ -249,13 +280,19 @@ class Fallback extends Action implements CsrfAwareActionInterface
     /**
      * @param CartInterface $quote
      *
+     * @param VippsQuote $vippsQuote
+     * @param Attempt $attempt
      * @return OrderInterface|null
      * @throws CouldNotSaveException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      * @throws InputException
+     * @throws LocalizedException
+     * @throws MerchantException
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Vipps\Payment\Gateway\Exception\VippsException
+     * @throws \Vipps\Payment\Gateway\Exception\WrongAmountException
      */
-    private function placeOrder(CartInterface $quote)
+    private function placeOrder(CartInterface $quote, VippsQuote $vippsQuote, Attempt $attempt)
     {
         try {
             $response = $this->commandManager->getOrderStatus(
@@ -263,6 +300,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
             );
             $transaction = $this->transactionBuilder->setData($response)->build();
             if ($transaction->isTransactionAborted()) {
+                $attempt->setMessage('Transaction was cancelled in Vipps');
+                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
                 $this->restoreQuote();
             }
             $order = $this->orderPlace->execute($quote, $transaction);

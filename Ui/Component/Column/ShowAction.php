@@ -13,7 +13,8 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Ui\Component\Profiling\Column;
+
+namespace Vipps\Payment\Ui\Component\Column;
 
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
@@ -60,12 +61,14 @@ class ShowAction extends Column
     public function prepareDataSource(array $dataSource)
     {
         if (isset($dataSource['data']['items'])) {
+            $path = $this->getData('config/urlPath') ?? '#';
+
             foreach ($dataSource['data']['items'] as & $item) {
                 if (isset($item['entity_id'])) {
                     $item[$this->getData('name')] = [
                         'edit' => [
-                            'href' => $this->urlBuilder
-                                ->getUrl('vipps/profiling/view', ['entity_id' => $item['entity_id']]),
+                            'href'  => $this->urlBuilder
+                                ->getUrl($path, ['entity_id' => $item['entity_id']]),
                             'label' => __('Show')
                         ]
                     ];
