@@ -110,6 +110,7 @@ class FetchOrderFromVipps
      * @var DateTimeFactory
      */
     private $dateTimeFactory;
+
     /**
      * @var OrderLocator
      */
