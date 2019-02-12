@@ -13,6 +13,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Transaction;
 
 /**
@@ -170,27 +171,11 @@ class Transaction
     }
 
     /**
-     * @return TransactionInfo
-     */
-    public function getTransactionInfo()
-    {
-        return $this->transactionInfo;
-    }
-
-    /**
      * @return TransactionSummary
      */
     public function getTransactionSummary()
     {
         return $this->transactionSummary;
-    }
-
-    /**
-     * @return TransactionLogHistory
-     */
-    public function getTransactionLogHistory()
-    {
-        return $this->transactionLogHistory;
     }
 
     /**
@@ -214,7 +199,25 @@ class Transaction
      */
     public function isExpressCheckout()
     {
-        return $this->userDetails === null  ? false : true;
+        return $this->userDetails === null ? false : true;
+    }
+
+    /**
+     * Is initiate transaction.
+     *
+     * @return bool
+     */
+    public function isInitiate()
+    {
+        return $this->getTransactionInfo()->getStatus() === Transaction::TRANSACTION_STATUS_INITIATE;
+    }
+
+    /**
+     * @return TransactionInfo
+     */
+    public function getTransactionInfo()
+    {
+        return $this->transactionInfo;
     }
 
     /**
@@ -227,13 +230,11 @@ class Transaction
             Transaction::TRANSACTION_STATUS_CANCELLED,
             Transaction::TRANSACTION_STATUS_AUTOCANCEL,
             Transaction::TRANSACTION_STATUS_REJECTED,
-            Transaction::TRANSACTION_STATUS_FAILED
+            Transaction::TRANSACTION_STATUS_FAILED,
+            Transaction::TRANSACTION_STATUS_VOID
         ];
-        if (in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses)) {
-            return true;
-        }
 
-        return false;
+        return in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses);
     }
 
     /**
@@ -263,5 +264,13 @@ class Transaction
     {
         return $this->getTransactionInfo()->getTransactionId() ?:
             $this->getTransactionLogHistory()->getLastTransactionId();
+    }
+
+    /**
+     * @return TransactionLogHistory
+     */
+    public function getTransactionLogHistory()
+    {
+        return $this->transactionLogHistory;
     }
 }

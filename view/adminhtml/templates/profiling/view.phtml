@@ -13,40 +13,39 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+//@codingStandardsIgnoreFile
 /** @var \Vipps\Payment\Block\Profiling\View $block */
-$item = $block->getItem();
-?>
+$item = $block->getItem(); ?>
 <div class="fieldset-wrapper">
     <div class="fieldset-wrapper-title">
-        <span class="title"><?php echo __('Profiling Item Information'); ?></span>
+        <span class="title"><?= __('Profiling Item Information'); ?></span>
     </div>
     <table class="admin__table-secondary">
         <tbody>
-            <tr>
-                <th style="width: 30%;"><?php echo __('Increment Id'); ?></th>
-                <td><?php echo $item->getIncrementId(); ?></td>
-            </tr>
-            <tr>
-                <th><?php echo __('Created At'); ?></th>
-                <td><?php echo $item->getCreatedAt(); ?></td>
-            </tr>
-            <tr>
-                <th><?php echo __('Request Type'); ?></th>
-                <td><?php echo $item->getRequestType(); ?></td>
-            </tr>
-            <tr>
-                <th><?php echo __('Response Code'); ?></th>
-                <td><?php echo $item->getStatusCode(); ?></td>
-            </tr>
-            <tr>
-                <th><?php echo __('Request'); ?></th>
-                <td><?php /* @escapeVerified */ echo $item->getFormattedRequest(); ?></td>
-            </tr>
-            <tr>
-                <th><?php echo __('Response'); ?></th>
-                <td><?php /* @escapeVerified */ echo $item->getFormattedResponse(); ?></td>
-            </tr>
+        <tr>
+            <th style="width: 30%;"><?php echo __('Increment Id'); ?></th>
+            <td><?= $item->getIncrementId(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Created At'); ?></th>
+            <td><?= $item->getCreatedAt(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Request Type'); ?></th>
+            <td><?= $item->getRequestType(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Response Code'); ?></th>
+            <td><?= $item->getStatusCode(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Request'); ?></th>
+            <td><?= $item->getFormattedRequest(); ?></td>
+        </tr>
+        <tr>
+            <th><?= __('Response'); ?></th>
+            <td><?= $item->getFormattedResponse(); ?></td>
+        </tr>
         </tbody>
     </table>
 </div>

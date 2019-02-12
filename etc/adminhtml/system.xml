@@ -21,10 +21,10 @@
             <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Vipps</label>
                 <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Vipps</label>
-                    <comment><![CDATA[Vipps payment method]]></comment>
+                    <label></label>
+                    <comment><![CDATA[Accept payments with Vipps in your Magento store. Make it easier for your customers to pay, and increase your conversion rates with Vipps. No setup fee or monthly fees.]]></comment>
                     <fieldset_css>complex vipps-section</fieldset_css>
-                    <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
+                    <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
                     <attribute type="activity_path">payment/vipps/active</attribute>
                     <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Enable this Solution</label>
@@ -34,12 +34,18 @@
                             <group id="vipps_required"/>
                         </requires>
                     </field>
-                    <group id="configuration_details" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
-                        <comment>Link to documentation with vipps configuration details</comment>
-                        <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
+                    <group id="vipps_hint1" translate="text" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+                        <comment>https://www.vipps.no/</comment>
+                        <label>Vipps.no</label>
+                        <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
+                    </group>
+                    <group id="vipps_hint2" translate="text" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+                        <comment>https://github.com/vippsas/vipps-magento</comment>
+                        <label>Github</label>
+                        <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
                     </group>
                     <group id="vipps_required" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
-                        <label>Basic Vipps Settings</label>
+                        <label>Basic Settings</label>
                         <attribute type="expanded">1</attribute>
                         <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
                         <field id="environment" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -98,6 +104,7 @@
                         </field>
                     </group>
                     <include path="Vipps_Payment::system/express_checkout.xml"/>
+                    <include path="Vipps_Payment::system/order_cancellation.xml"/>
                 </group>
             </group>
         </section>

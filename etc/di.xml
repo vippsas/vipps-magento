@@ -48,6 +48,7 @@
     <type name="Vipps\Payment\Model\OrderPlace">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 
@@ -123,13 +124,13 @@
     <virtualType name="VippsInitiateCommand" type="Vipps\Payment\Gateway\Command\GatewayCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsInitiateRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsInitiateTransferFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsInitiateTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\Gateway\Response\InitiateHandler</argument>
             <argument name="validator" xsi:type="object">VippsInitiateValidator</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsInitiateTransferFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsInitiateTransferFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments</argument>
@@ -151,13 +152,13 @@
     <virtualType name="VippsCaptureCommand" type="Vipps\Payment\Gateway\Command\CaptureCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsCaptureRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsCaptureTransferFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCaptureTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\Gateway\Response\TransactionHandler</argument>
             <argument name="validator" xsi:type="object">VippsCaptureValidator</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsCaptureTransferFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsCaptureTransferFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/capture</argument>
@@ -181,13 +182,13 @@
     <virtualType name="VippsRefundCommand" type="Vipps\Payment\Gateway\Command\RefundCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsRefundRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsRefundTransferFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsRefundTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\Gateway\Response\TransactionHandler</argument>
             <argument name="validator" xsi:type="object">VippsRefundValidator</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsRefundTransferFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsRefundTransferFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/refund</argument>
@@ -211,7 +212,7 @@
     <virtualType name="VippsGetOrderStatusCommand" type="Vipps\Payment\Gateway\Command\GatewayCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsGetOrderStatusRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsGetOrderStatusTransportFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsGetOrderStatusTransportFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="validator" xsi:type="object">VippsGetOrderStatusValidator</argument>
         </arguments>
@@ -223,7 +224,7 @@
             </argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsGetOrderStatusTransportFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsGetOrderStatusTransportFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">GET</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/status</argument>
@@ -237,7 +238,7 @@
     <virtualType name="VippsGetPaymentDetailsCommand" type="Vipps\Payment\Gateway\Command\GatewayCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsGetPaymentDetailsRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsGetPaymentDetailsTransportFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsGetPaymentDetailsTransportFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="validator" xsi:type="object">VippsGetPaymentDetailsValidator</argument>
         </arguments>
@@ -249,7 +250,7 @@
             </argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsGetPaymentDetailsTransportFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsGetPaymentDetailsTransportFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">GET</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/details</argument>
@@ -263,13 +264,13 @@
     <virtualType name="VippsCancelCommand" type="Vipps\Payment\Gateway\Command\CancelCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">VippsCancelRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsCancelTransferFactory</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCancelTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\Gateway\Response\TransactionHandler</argument>
             <argument name="validator" xsi:type="object">VippsCancelValidator</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsCancelTransferFactory" type="Vipps\Payment\Gateway\Http\TransferFactory">
+    <virtualType name="VippsCancelTransferFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">PUT</argument>
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/cancel</argument>
@@ -382,7 +383,27 @@
         </arguments>
     </type>
 
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Quote\GridCollection</item>
+            </argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Cron\FetchOrderFromVipps">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\CancelQuoteByAttempts">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\ClearQuotesHistory">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
@@ -391,6 +412,11 @@
     <type name="Vipps\Payment\Gateway\Response\InitiateHandler">
         <arguments>
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Model\ResourceModel\Profiling\Item">
+        <arguments>
+            <argument name="connectionName" xsi:type="string">vipps</argument>
         </arguments>
     </type>
 </config>

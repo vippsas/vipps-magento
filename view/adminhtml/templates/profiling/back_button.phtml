@@ -24,9 +24,9 @@
                 title="Back"
                 type="button"
                 class="action- scalable back"
-                onclick="location.href='<?php echo $block->getUrl('*/*'); ?>'"
+                onclick="location.href='<?= $block->getUrl('*/*');  //@codingStandardsIgnoreLine ?>'"
                 data-ui-id="back-button">
-                <span>Back</span>
+                <span><?= __('Back') //@codingStandardsIgnoreLine ?></span>
             </button>
         </div>
     </div>

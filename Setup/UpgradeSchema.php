@@ -16,14 +16,17 @@
 
 namespace Vipps\Payment\Setup;
 
-use Magento\Framework\Setup\{SchemaSetupInterface, UpgradeSchemaInterface, ModuleContextInterface};
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\Setup\{ModuleContextInterface, SchemaSetupInterface, UpgradeSchemaInterface};
 
 class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreLine
 {
     /**
-     * @param SchemaSetupInterface $setup
-     * @param ModuleContextInterface $context
+     * Schema changes on the module upgrade.
+     *
+     * @param SchemaSetupInterface $setup Setup interface.
+     * @param ModuleContextInterface $context Module context.
+     * @throws \Zend_Db_Exception
      */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context) // @codingStandardsIgnoreLine
     {
@@ -31,22 +34,199 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
         $installer->startSetup();
 
         if (version_compare($context->getVersion(), '1.1.0', '<')) {
-            $tableName = $installer->getTable('vipps_payment_jwt');
-            $installer->getConnection()->addColumn(
-                $tableName,
-                'scope',
-                [
-                    'type' => Table::TYPE_TEXT,
-                    'length' => 8,
-                    'after' => 'token_id',
-                    'nullable' => false,
-                    'default' => 'default',
-                    'comment' => 'Scope'
-                ]
-            );
-            $installer->getConnection()->truncateTable($tableName);
+            $this->addPaymentJwtScope($installer);
+        }
+
+        if (version_compare($context->getVersion(), '1.2.0', '<')) {
+            $this->createVippsQuoteTable($installer);
+            $this->createVippsAttemptsTable($installer);
+            $this->addStatusToQuote($installer);
+        }
+
+        if (version_compare($context->getVersion(), '1.2.1', '<')) {
+            $this->addStoreIdToQuote($installer);
         }
 
         $installer->endSetup();
+    }
+
+    /**
+     * @param SchemaSetupInterface $installer
+     */
+    private function addPaymentJwtScope(SchemaSetupInterface $installer)
+    {
+        $tableName = $installer->getTable('vipps_payment_jwt');
+        $installer->getConnection()->addColumn(
+            $tableName,
+            'scope',
+            [
+                'type'     => Table::TYPE_TEXT,
+                'length'   => 8,
+                'after'    => 'token_id',
+                'nullable' => false,
+                'default'  => 'default',
+                'comment'  => 'Scope'
+            ]
+        );
+        $installer->getConnection()->truncateTable($tableName);
+    }
+
+    /**
+     * Install Vipps quote monitoring table.
+     *
+     * @param SchemaSetupInterface $installer
+     * @throws \Zend_Db_Exception
+     */
+    private function createVippsQuoteTable(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+
+        $table = $connection->newTable($connection->getTableName('vipps_quote'))
+            ->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
+                'Entity Id'
+            )->addColumn(
+                'quote_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['nullable' => true, 'unsigned' => true],
+                'Quote Id'
+            )->addColumn(
+                'reserved_order_id',
+                Table::TYPE_TEXT,
+                32,
+                ['nullable' => false, 'default' => ''],
+                'Order Increment Id'
+            )->addColumn(
+                'attempts',
+                Table::TYPE_INTEGER,
+                3,
+                ['nullable' => false, 'default' => '0'],
+                'Attempts Number'
+            )
+            ->addColumn(
+                'created_at',
+                Table::TYPE_TIMESTAMP,
+                null,
+                ['default' => Table::TIMESTAMP_INIT, 'nullable' => false],
+                'Created at'
+            )->addColumn(
+                'updated_at',
+                Table::TYPE_TIMESTAMP,
+                null,
+                ['default' => Table::TIMESTAMP_INIT_UPDATE, 'nullable' => false],
+                'Updated at'
+            )
+            ->addIndex($installer->getIdxName('vipps_quote', 'quote_id'), 'quote_id')
+            ->addForeignKey(
+                $installer->getFkName('vipps_quote', 'quote_id', 'quote', 'entity_id'),
+                'quote_id',
+                'quote',
+                'entity_id',
+                Table::ACTION_SET_NULL
+            );
+
+        $installer->getConnection()->createTable($table);
+    }
+
+    /**
+     * Install Quote submitting attempts table.
+     *
+     * @param SchemaSetupInterface $installer Schema installer.
+     * @throws \Zend_Db_Exception
+     */
+    private function createVippsAttemptsTable(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+
+        $table = $connection->newTable($connection->getTableName('vipps_quote_attempt'))
+            ->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
+                'Entity Id'
+            )->addColumn(
+                'parent_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['nullable' => false, 'unsigned' => true],
+                'Vipps Quote Id'
+            )->addColumn(
+                'message',
+                Table::TYPE_TEXT,
+                null,
+                [],
+                'Message'
+            )->addColumn(
+                'created_at',
+                Table::TYPE_TIMESTAMP,
+                null,
+                ['nullable' => false, 'default' => Table::TIMESTAMP_INIT],
+                'Created at'
+            )
+            ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
+            ->addForeignKey(
+                $installer->getFkName('vipps_quote_attempts', 'parent_id', 'vipps_quote', 'entity_id'),
+                'parent_id',
+                'vipps_quote',
+                'entity_id',
+                Table::ACTION_CASCADE
+            );
+
+        $installer->getConnection()->createTable($table);
+    }
+
+    /**
+     * Create cancellation table.
+     *
+     * @param SchemaSetupInterface $installer
+     */
+    private function addStatusToQuote(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $connection->getTableName('vipps_quote');
+
+        $connection
+            ->addColumn(
+                $tableName,
+                'status',
+                [
+                    'type'     => Table::TYPE_TEXT,
+                    'length'   => 20,
+                    'nullable' => false,
+                    'comment'  => 'Status',
+                    'after'    => 'reserved_order_id',
+                    'default'  => 'new'
+                ]
+            );
+    }
+
+    /**
+     * Create cancellation table.
+     *
+     * @param SchemaSetupInterface $installer
+     */
+    private function addStoreIdToQuote(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $connection->getTableName('vipps_quote');
+
+        $connection
+            ->addColumn(
+                $tableName,
+                'store_id',
+                [
+                    'type'     => Table::TYPE_SMALLINT,
+                    'length'   => 5,
+                    'nullable' => false,
+                    'comment'  => 'Store ID',
+                    'after'    => 'quote_id',
+                    'default'  => '0'
+                ]
+            );
     }
 }

@@ -116,7 +116,6 @@ class Callback extends Action implements CsrfAwareActionInterface
             $requestData = $this->jsonDecoder->unserialize($this->getRequest()->getContent());
 
             $this->authorize($requestData);
-
             $transaction = $this->transactionBuilder->setData($requestData)->build();
             $this->orderPlace->execute($this->getQuote($requestData), $transaction);
 
