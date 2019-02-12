@@ -37,6 +37,29 @@ From Magento Admin navigate to `Store` -> `Configuration` -> `Sales` -> `Payment
 
 By clicking the `Configure` button, all configuration module settings will be shown. Once you have finished with the configuration simply click `Close` and `Save` button for your convenience.
 
+## Add a separate connection for Vipps resources
+* Duplicate 'default' connection in app/etc/env.php and name it 'vipps'. It should look like:
+```         
+         'vipps' =>
+         array (
+           'host' => 'your_DB_host',
+           'dbname' => 'your_DB_name',
+           'username' => 'your_user',
+           'password' => 'your_password',
+           'model' => 'mysql4',
+           'engine' => 'innodb',
+           'initStatements' => 'SET NAMES utf8;',
+           'active' => '1',
+         ),
+```
+* Add also the following configuration to 'resource' array in the same file:
+```
+   'vipps' =>
+   array (
+      'connection' => 'vipps',
+   ),
+```
+
 # Settings
 
 Vipps Payments configuration is divided by sections. It helps to quickly find and manage settings of each module feature:
