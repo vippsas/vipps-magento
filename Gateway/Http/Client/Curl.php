@@ -160,11 +160,13 @@ class Curl implements ClientInterface
      */
     private function preparePostFields($fields)
     {
-        foreach ($fields as $name => $value) {
-            if (!in_array($name, $this->knownFields)) {
-                unset($fields[$name]);
-            }
-        }
+        $knownFields = $this->knownFields;
+        $fields = array_filter(
+            $fields,
+            function ($key) use ($knownFields) { return in_array($key, $knownFields, false);},
+            ARRAY_FILTER_USE_KEY
+        );
+
         return $fields;
     }
 
