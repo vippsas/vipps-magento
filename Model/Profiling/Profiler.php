@@ -103,6 +103,7 @@ class Profiler implements ProfilerInterface
         $itemDO->setStatusCode($response->getStatusCode());
         $itemDO->setIncrementId($orderId);
         $itemDO->setResponse($this->packArray($this->parseResponse($response)));
+        $itemDO->setCreatedAt(date('Y-m-d H:i:s'));
 
         $item = $this->itemRepository->save($itemDO);
         return $item->getEntityId();
