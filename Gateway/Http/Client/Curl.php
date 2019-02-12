@@ -60,7 +60,7 @@ class Curl implements ClientInterface
     /**
      * @var array
      */
-    private $knownFields =[
+    private $knownFields = [
         'orderId',
         'customerInfo',
         'merchantInfo',
