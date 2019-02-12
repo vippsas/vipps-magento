@@ -59,6 +59,7 @@ By clicking the `Configure` button, all configuration module settings will be sh
       'connection' => 'vipps',
    ),
 ```
+These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.
 
 # Settings
 
