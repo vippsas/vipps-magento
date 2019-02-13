@@ -60,7 +60,7 @@ class Curl implements ClientInterface
     /**
      * @var array
      */
-    private $knownFields = [
+    private $allowedFields = [
         'orderId',
         'customerInfo',
         'merchantInfo',
@@ -160,10 +160,10 @@ class Curl implements ClientInterface
      */
     private function preparePostFields($fields)
     {
-        $knownFields = $this->knownFields;
+        $allowedFields = $this->allowedFields;
         $fields = array_filter(
             $fields,
-            function ($key) use ($knownFields) { return in_array($key, $knownFields, false);},
+            function ($key) use ($allowedFields) { return in_array($key, $allowedFields);},
             ARRAY_FILTER_USE_KEY
         );
 

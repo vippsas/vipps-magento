@@ -103,7 +103,7 @@ class Profiler implements ProfilerInterface
         $itemDO->setStatusCode($response->getStatusCode());
         $itemDO->setIncrementId($orderId);
         $itemDO->setResponse($this->packArray($this->parseResponse($response)));
-        $itemDO->setCreatedAt(date(\Magento\Framework\Stdlib\DateTime::DATETIME_PHP_FORMAT));
+        $itemDO->setCreatedAt(gmdate(\Magento\Framework\Stdlib\DateTime::DATETIME_PHP_FORMAT));
 
         $item = $this->itemRepository->save($itemDO);
         return $item->getEntityId();
