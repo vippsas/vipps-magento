@@ -414,4 +414,9 @@
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
         </arguments>
     </type>
+    <type name="Vipps\Payment\Model\ResourceModel\Profiling\Item">
+        <arguments>
+            <argument name="connectionName" xsi:type="string">vipps</argument>
+        </arguments>
+    </type>
 </config>

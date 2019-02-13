@@ -58,6 +58,16 @@ class Curl implements ClientInterface
     private $logger;
 
     /**
+     * @var array
+     */
+    private $allowedFields = [
+        'orderId',
+        'customerInfo',
+        'merchantInfo',
+        'transaction',
+    ];
+
+    /**
      * Curl constructor.
      *
      * @param ConfigInterface $config
@@ -115,12 +125,13 @@ class Curl implements ClientInterface
             /** @var MagentoCurl $adapter */
             $adapter = $this->adapterFactory->create();
             $options = $this->getBasicOptions();
+            $requestBody = $this->preparePostFields($transfer->getBody());
             if ($transfer->getMethod() === Request::METHOD_PUT) {
                 $options = $options +
                     [
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_CUSTOMREQUEST => Request::METHOD_PUT,
-                        CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($transfer->getBody())
+                        CURLOPT_POSTFIELDS => $this->jsonEncoder->encode($requestBody)
                     ];
             }
             $adapter->setOptions($options);
@@ -139,6 +150,24 @@ class Curl implements ClientInterface
         } finally {
             $adapter ? $adapter->close() : null;
         }
+    }
+
+    /**
+     * Remove all fields that are not marked as known.
+     *
+     * @param array $fields
+     * @return array
+     */
+    private function preparePostFields($fields)
+    {
+        $allowedFields = $this->allowedFields;
+        $fields = array_filter(
+            $fields,
+            function ($key) use ($allowedFields) { return in_array($key, $allowedFields);},
+            ARRAY_FILTER_USE_KEY
+        );
+
+        return $fields;
     }
 
     /**

@@ -132,4 +132,10 @@ interface ItemInterface
      * @return string
      */
     public function getCreatedAt();
+
+    /**
+     * @param string $value
+     * @return $this
+     */
+    public function setCreatedAt($value);
 }
