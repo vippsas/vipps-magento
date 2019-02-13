@@ -44,6 +44,15 @@ class Item extends AbstractModel implements ItemInterface
     }
 
     /**
+     * @param string $value
+     * @return $this
+     */
+    public function setCreatedAt($value)
+    {
+        return $this->setData(self::CREATED_AT, $value);
+    }
+
+    /**
      * Return increment id value
      *
      * @return string|null
