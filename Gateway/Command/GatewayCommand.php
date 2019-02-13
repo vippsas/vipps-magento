@@ -146,10 +146,17 @@ class GatewayCommand implements CommandInterface
 
         if (!$response->isSuccess()) {
             $error = $this->extractError($responseBody);
-            $exception = $this->exceptionFactory->create(
-                $error['code'] ?: $response->getStatusCode(),
-                $error['message'] ?:  $response->getReasonPhrase()
+            $orderId = $this->extractOrderId($transfer, $responseBody);
+            $errorCode = $error['code'] ?? $response->getStatusCode();
+            $errorMessage = $error['message'] ?? $response->getReasonPhrase();
+            $exception = $this->exceptionFactory->create($errorCode, $errorMessage);
+            $message = sprintf(
+                'Request error. Code: "%s", message: "%s", order id: "%s"',
+                $errorCode,
+                $errorMessage,
+                $orderId
             );
+            $this->logger->critical($message);
             throw $exception;
         }
 
@@ -159,7 +166,7 @@ class GatewayCommand implements CommandInterface
                 array_merge($commandSubject, ['jsonData' => $responseBody])
             );
             if (!$validationResult->isValid()) {
-                $this->logExceptions($validationResult->getFailsDescription());
+                $this->logValidationFails($validationResult->getFailsDescription());
                 throw new CommandException(
                     __('Transaction validation failed.')
                 );
@@ -179,7 +186,7 @@ class GatewayCommand implements CommandInterface
      *
      * @return void
      */
-    private function logExceptions(array $fails)
+    private function logValidationFails(array $fails)
     {
         foreach ($fails as $failPhrase) {
             $this->logger->critical((string) $failPhrase);
@@ -199,5 +206,20 @@ class GatewayCommand implements CommandInterface
             'code' => isset($responseBody[0]['errorCode']) ? $responseBody[0]['errorCode'] : null,
             'message' => isset($responseBody[0]['errorMessage']) ? $responseBody[0]['errorMessage'] : null,
         ];
+    }
+
+    /**
+     * @param TransferInterface $transfer
+     * @param array $responseBody
+     *
+     * @return string|null
+     */
+    private function extractOrderId($transfer, $responseBody)
+    {
+        $orderId = null;
+        if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
+            $orderId = $matches[2] ?? null;
+        }
+        return $orderId ?? ($transfer->getBody()['transaction']['orderId'] ?? ($responseBody['orderId'] ?? null));
     }
 }

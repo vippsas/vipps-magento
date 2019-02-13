@@ -230,7 +230,8 @@ class Transaction
             Transaction::TRANSACTION_STATUS_CANCELLED,
             Transaction::TRANSACTION_STATUS_AUTOCANCEL,
             Transaction::TRANSACTION_STATUS_REJECTED,
-            Transaction::TRANSACTION_STATUS_FAILED
+            Transaction::TRANSACTION_STATUS_FAILED,
+            Transaction::TRANSACTION_STATUS_VOID
         ];
 
         return in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses);

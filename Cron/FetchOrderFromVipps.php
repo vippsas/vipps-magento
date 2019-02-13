@@ -20,7 +20,6 @@ use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Intl\DateTimeFactory;
-use Magento\Quote\Api\{Data\CartInterface};
 use Magento\Quote\Model\{QuoteRepository, ResourceModel\Quote\CollectionFactory};
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -31,6 +30,7 @@ use Vipps\Payment\{Api\CommandManagerInterface,
     Gateway\Transaction\Transaction,
     Gateway\Transaction\TransactionBuilder,
     Model\Order\Cancellation\Config,
+    Model\OrderLocator,
     Model\OrderPlace,
     Model\Quote as VippsQuote,
     Model\Quote\AttemptManagement,
@@ -112,8 +112,12 @@ class FetchOrderFromVipps
     private $dateTimeFactory;
 
     /**
+     * @var OrderLocator
+     */
+    private $orderLocator;
+
+    /**
      * FetchOrderFromVipps constructor.
-     * @param CollectionFactory $quoteCollectionFactory
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
      * @param VippsQuoteRepository $vippsQuoteRepository
      * @param QuoteRepository $quoteRepository
@@ -126,6 +130,7 @@ class FetchOrderFromVipps
      * @param Config $cancellationConfig
      * @param DateTimeFactory $dateTimeFactory
      * @param AttemptManagement $attemptManagement
+     * @param OrderLocator $orderLocator
      */
     public function __construct(
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
@@ -139,7 +144,8 @@ class FetchOrderFromVipps
         ScopeCodeResolver $scopeCodeResolver,
         Config $cancellationConfig,
         DateTimeFactory $dateTimeFactory,
-        AttemptManagement $attemptManagement
+        AttemptManagement $attemptManagement,
+        OrderLocator $orderLocator
     ) {
         $this->commandManager = $commandManager;
         $this->transactionBuilder = $transactionBuilder;
@@ -153,6 +159,7 @@ class FetchOrderFromVipps
         $this->quoteRepository = $quoteRepository;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->dateTimeFactory = $dateTimeFactory;
+        $this->orderLocator = $orderLocator;
     }
 
     /**
@@ -223,13 +230,12 @@ class FetchOrderFromVipps
             $this->prepareEnv($vippsQuote);
 
             // Get Magento Quote for processing.
-            $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
             $transaction = $this->fetchOrderStatus($vippsQuote->getReservedOrderId());
             if ($transaction->isTransactionAborted()) {
                 $attemptMessage = __('Transaction was cancelled in Vipps');
                 $vippsQuoteStatus = QuoteStatusInterface::STATUS_CANCELED;
             } else {
-                $order = $this->placeOrder($quote, $transaction);
+                $order = $this->placeOrder($vippsQuote, $transaction);
                 if ($order) {
                     $vippsQuoteStatus = QuoteStatusInterface::STATUS_PLACED;
                     $attemptMessage = __('Placed');
@@ -283,21 +289,25 @@ class FetchOrderFromVipps
     }
 
     /**
-     * @param CartInterface $quote
+     * @param VippsQuote $vippsQuote
      * @param Transaction $transaction
      *
      * @return OrderInterface|null
      * @throws AlreadyExistsException
      * @throws CouldNotSaveException
      * @throws InputException
+     * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws VippsException
-     * @throws LocalizedException
      * @throws WrongAmountException
      */
-    private function placeOrder(CartInterface $quote, Transaction $transaction)
+    private function placeOrder(VippsQuote $vippsQuote, Transaction $transaction)
     {
-        $order = $this->orderPlace->execute($quote, $transaction);
+        $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
+
+        $existentOrder = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+
+        $order = $existentOrder ?? $this->orderPlace->execute($quote, $transaction);
         if ($order) {
             $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
         } else {
