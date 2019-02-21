@@ -55,6 +55,16 @@ class TransferFactory implements TransferFactoryInterface
     private $urlParams = [];
 
     /**
+     * @var array
+     */
+    private $allowedFields = [
+        'orderId',
+        'customerInfo',
+        'merchantInfo',
+        'transaction',
+    ];
+
+    /**
      * TransferFactory constructor.
      *
      * @param TransferBuilder $transferBuilder
@@ -91,9 +101,7 @@ class TransferFactory implements TransferFactoryInterface
             ClientInterface::HEADER_PARAM_X_REQUEST_ID => $request['requestId'] ?? $this->generateRequestId()
         ]);
 
-        if (isset($request['requestId'])) {
-            unset($request['requestId']);
-        }
+        $request = $this->filterPostFields($request);
 
         $this->transferBuilder
             ->setBody($this->getBody($request))
@@ -101,6 +109,24 @@ class TransferFactory implements TransferFactoryInterface
             ->setUri($this->getUrl($request));
 
         return $this->transferBuilder->build();
+    }
+
+    /**
+     * Remove all fields that are not marked as allowed.
+     *
+     * @param array $fields
+     * @return array
+     */
+    private function filterPostFields($fields)
+    {
+        $allowedFields = $this->allowedFields;
+        $fields = array_filter(
+            $fields,
+            function ($key) use ($allowedFields) { return in_array($key, $allowedFields);},
+            ARRAY_FILTER_USE_KEY
+        );
+
+        return $fields;
     }
 
     /**
