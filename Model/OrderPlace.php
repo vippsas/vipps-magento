@@ -303,7 +303,7 @@ class OrderPlace
      */
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
-        $quoteAmount = (int)($this->formatPrice($quote->getGrandTotal()) * 100);
+        $quoteAmount = (int)round($this->formatPrice($quote->getGrandTotal()) * 100);
         $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
 
         if ($quoteAmount != $vippsAmount) {

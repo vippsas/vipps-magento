@@ -184,7 +184,7 @@ class RefundCommand extends GatewayCommand
     public function execute(array $commandSubject)
     {
         $amount = $this->subjectReader->readAmount($commandSubject);
-        $amount = (int)($this->formatPrice($amount) * 100);
+        $amount = (int)round($this->formatPrice($amount) * 100);
 
         $response = $this->paymentDetailsProvider->get($commandSubject);
         $transaction = $this->transactionBuilder->setData($response)->build();
@@ -220,14 +220,14 @@ class RefundCommand extends GatewayCommand
     {
         $payment = $this->subjectReader->readPayment($commandSubject);
         $amount = $this->subjectReader->readAmount($commandSubject);
-        $amount = (int)($this->formatPrice($amount) * 100);
+        $amount = (int)round($this->formatPrice($amount) * 100);
 
         $orderAdapter = $payment->getOrder();
         $orderIncrementId = $orderAdapter->getOrderIncrementId();
 
         $order = $this->orderRepository->get($orderAdapter->getId());
 
-        $magentoTotalRefunded = (int)($this->formatPrice($order->getTotalRefunded()) * 100);
+        $magentoTotalRefunded = (int)round($this->formatPrice($order->getTotalRefunded()) * 100);
         $vippsTotalRefunded = $transaction->getTransactionSummary()->getRefundedAmount();
 
         $deltaTotalRefunded = $vippsTotalRefunded - $magentoTotalRefunded;
