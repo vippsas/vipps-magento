@@ -55,10 +55,17 @@ This page displays all orders that were attempted to be placed.
 Each record in the list provides detailed information about order creation flow: current status, list of attempts, each attempt results.
 
 Monitoring quote statuses explanation:
+
 New - payment is initiated on the Vipps side.
+
 Processing - Magento has started processing for initiated payment.
+
 Placed - The order has been placed.
+
 Expired - The customer has not approved payment for some time.
+
 Placement Failed - All attempts were unsuccessful.
+
 Canceled - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
+
 Cancel Failed - Means failed to cancel payment. Record in this status require admin/developer interaction.
