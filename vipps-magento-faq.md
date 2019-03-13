@@ -43,3 +43,22 @@ WHERE (t1.reserved_order_id = '{insert_order_id_here}'
 *You have to replace '{insert_order_id_here}' with your real order id.
  
 The result output contains two columns `order_id` and `additional_information` that should be analyzed to find a reason why the order was not placed on Magento side.
+
+## Quote Monitoring Tool
+
+From 1.2.1 version we released Quote Monitoring.
+
+It simplifies detection of failed order placement and identifies the root causes in cases of failure.
+
+The monitoring tool is located under **System -> Vipps Payment -> Quote Monitoring**.
+This page displays all orders that were attempted to be placed.
+Each record in the list provides detailed information about order creation flow: current status, list of attempts, each attempt results.
+
+Monitoring quote statuses explanation:
+New - payment is initiated on the Vipps side.
+Processing - Magento has started processing for initiated payment.
+Placed - The order has been placed.
+Expired - The customer has not approved payment for some time.
+Placement Failed - All attempts were unsuccessful.
+Canceled - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
+Cancel Failed - Means failed to cancel payment. Record in this status require admin/developer interaction.
