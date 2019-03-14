@@ -25,7 +25,7 @@ use Magento\Framework\{App\Action\Action,
     Controller\ResultFactory,
     Controller\ResultInterface,
     Exception\LocalizedException,
-    Serialize\Serializer\Json,};
+    Serialize\Serializer\Json};
 use Magento\Quote\Api\{CartRepositoryInterface,
     Data\AddressInterfaceFactory,
     Data\CartInterface,
