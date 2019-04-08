@@ -28,6 +28,6 @@ Magento Inc is an Adobe company: https://magento.com/about
 
 # Vipps contact information
 
-The Magento team at Vipps can be reached at magento@vipps.no
+Please follow this [instruction](https://github.com/vippsas/vipps-developers/blob/master/contact.md) to contact us.
 
 See the Vipps Developers repository for Vipps contact information, etc: https://github.com/vippsas/vipps-developers
