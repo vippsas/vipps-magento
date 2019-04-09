@@ -296,7 +296,7 @@ class FallbackTestTest extends TestCase
                                   'shippingCost' => '5.00',
                                   'shippingMethodId' => 'flatrate_flatrate',],
             'userDetails' => ['userId' => '10002778', 'firstName' => 'Laila', 'lastName' => 'Myller',
-                              'mobileNumber' => '96750317', 'email' => 'integration@vipps.no',],
+                              'mobileNumber' => '12345678', 'email' => 'person@example.com',],
         ];
         $accessToken1 = 'token1';
         $additionalInfo1 = [MerchantDataBuilder::FALLBACK_AUTH_TOKEN => $accessToken1];
