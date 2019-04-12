@@ -224,6 +224,9 @@ class CaptureCommand extends GatewayCommand
         $orderAdapter = $payment->getOrder();
         $orderIncrementId = $orderAdapter->getOrderIncrementId();
 
+        if($orderAdapter->getId() === null) {
+            return false;
+        }
         $order = $this->orderRepository->get($orderAdapter->getId());
 
         $magentoTotalDue = (int)round($this->formatPrice($order->getTotalDue()) * 100);
