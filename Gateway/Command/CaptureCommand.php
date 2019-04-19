@@ -224,7 +224,7 @@ class CaptureCommand extends GatewayCommand
         $orderAdapter = $payment->getOrder();
         $orderIncrementId = $orderAdapter->getOrderIncrementId();
 
-        if($orderAdapter->getId() === null) {
+        if ($orderAdapter->getId() === null) {
             return false;
         }
         $order = $this->orderRepository->get($orderAdapter->getId());
