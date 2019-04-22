@@ -353,13 +353,6 @@ class OrderPlace
         $payment->setAmountAuthorized($totalDue);
         $payment->setBaseAmountAuthorized($baseTotalDue);
 
-        $transactionId = $transaction->getTransactionId();
-        $payment->setTransactionId($transactionId);
-        $payment->setTransactionAdditionalInfo(
-            PaymentTransaction::RAW_DETAILS,
-            $transaction->getTransactionInfo()->getData()
-        );
-
         // do capture
         $this->processor->capture($payment, null);
         $this->orderRepository->save($order);
@@ -391,22 +384,14 @@ class OrderPlace
             return;
         }
 
-        /** @var Payment $payment */
-        $payment = $order->getPayment();
-        $transactionId = $transaction->getTransactionId();
-        $payment->setTransactionId($transactionId);
-        $payment->setIsTransactionClosed(false);
-        $payment->setTransactionAdditionalInfo(
-            PaymentTransaction::RAW_DETAILS,
-            $transaction->getTransactionInfo()->getData()
-        );
-
         // preconditions
         $totalDue = $order->getTotalDue();
         $baseTotalDue = $order->getBaseTotalDue();
 
         // do authorize
         $this->processor->authorize($payment, false, $baseTotalDue);
+        // Do not close the transaction.
+        $payment->setIsTransactionClosed(false);
         // base amount will be set inside
         $payment->setAmountAuthorized($totalDue);
         $this->orderRepository->save($order);
