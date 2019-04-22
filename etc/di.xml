@@ -111,6 +111,7 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="initiate" xsi:type="string">VippsInitiateCommand</item>
+                <item name="authorize" xsi:type="string">VippsAuthorizeCommand</item>
                 <item name="getOrderStatus" xsi:type="string">VippsGetOrderStatusCommand</item>
                 <item name="capture" xsi:type="string">VippsCaptureCommand</item>
                 <item name="refund" xsi:type="string">VippsRefundCommand</item>
@@ -145,6 +146,17 @@
                 <item name="transaction" xsi:type="string">Vipps\Payment\Gateway\Request\Initiate\TransactionDataBuilder</item>
                 <item name="transactionText" xsi:type="string">Vipps\Payment\Gateway\Request\TransactionTextDataBuilder</item>
             </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Vipps Authorize command declaration -->
+    <virtualType name="VippsAuthorizeCommand" type="Vipps\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsGetOrderStatusRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsGetOrderStatusTransportFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\Gateway\Response\TransactionHandler</argument>
+            <argument name="validator" xsi:type="object">VippsGetOrderStatusValidator</argument>
         </arguments>
     </virtualType>
 
