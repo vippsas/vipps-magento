@@ -18,6 +18,7 @@
 /** @var \Vipps\Payment\Block\Monitoring\View $block */
 $vippsQuote = $block->getVippsQuote();
 $attempts = $block->getAttempts();
+$quote = $block->getQuote();
 ?>
 <div class="fieldset-wrapper">
     <div class="fieldset-wrapper-title">
@@ -61,10 +62,9 @@ $attempts = $block->getAttempts();
     <div class="fieldset-wrapper-title">
         <span class="title"><?= __('Quote Information'); ?></span>
     </div>
-    <?php if ($loadingError = $block->getQuoteLoadingError()) : ?>
-        <?= $loadingError; ?>
-    <?php else : ?>
-        <?php $quote = $block->getQuote(); ?>
+    <?php if (!isset($quote)) : ?>
+        <?= $block->getQuoteLoadingError(); ?>
+    <?php else: ?>
         <table class="admin__table-secondary">
             <tbody>
             <tr>
