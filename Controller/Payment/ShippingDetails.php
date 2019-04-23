@@ -13,30 +13,35 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory, Exception\LocalizedException, Serialize\Serializer\Json,
-    Controller\ResultInterface, App\ResponseInterface, App\Action\Action, App\Action\Context
-};
-use Magento\Quote\Api\{
-    CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
-};
+use Magento\Framework\{App\Action\Action,
+    App\Action\Context,
+    App\CsrfAwareActionInterface,
+    App\Request\InvalidRequestException,
+    App\RequestInterface,
+    App\ResponseInterface,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Exception\LocalizedException,
+    Serialize\Serializer\Json};
+use Magento\Quote\Api\{CartRepositoryInterface,
+    Data\AddressInterfaceFactory,
+    Data\CartInterface,
+    ShipmentEstimationInterface};
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\Model\Gdpr\Compliance;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\{
-    QuoteLocator, Quote\AddressUpdater
-};
-use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
+use Vipps\Payment\Model\{Gdpr\Compliance, Quote\AddressUpdater, QuoteLocator};
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class ShippingDetails
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ShippingDetails extends Action
+class ShippingDetails extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var CartRepositoryInterface
@@ -207,5 +212,29 @@ class ShippingDetails extends Action
             throw new LocalizedException(__('Requested quote not found'));
         }
         return $quote;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }
