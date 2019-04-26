@@ -19,6 +19,9 @@ namespace Vipps\Payment\Controller\Payment;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\{App\Action\Action,
     App\Action\Context,
+    App\CsrfAwareActionInterface,
+    App\Request\InvalidRequestException,
+    App\RequestInterface,
     App\ResponseInterface,
     Controller\Result\Redirect,
     Controller\ResultFactory,
@@ -51,7 +54,7 @@ use Zend\Http\Response as ZendResponse;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Fallback extends Action
+class Fallback extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var CommandManagerInterface
@@ -351,5 +354,29 @@ class Fallback extends Action
             $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
             $this->checkoutSession->setLastOrderStatus($order->getStatus());
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 }
