@@ -33,6 +33,10 @@ class Uninstall implements UninstallInterface
      */
     private $config;
 
+    /**
+     * Uninstall constructor.
+     * @param Config $config
+     */
     public function __construct(Config $config)
     {
         $this->config = $config;
@@ -56,16 +60,13 @@ class Uninstall implements UninstallInterface
             $connection->dropTable($table);
         }, $tables);
 
-        $paths = ['vipps/order_cancellation', 'payment/vipps'];
-
         $tableName = $this->config->getMainTable();
-        array_map(function ($path) use ($connection, $tableName) {
-            $select = $connection
-                ->select()
-                ->from($tableName)
-                ->where('path like "%?%"', $path);
+        $select = $connection
+            ->select()
+            ->from($tableName)
+            ->where('path like "%?%"', 'payment/vipps');
 
-            $connection->deleteFromSelect($select, $tableName);
-        }, $paths);
+        $connection->deleteFromSelect($select, $tableName);
+
     }
 }
