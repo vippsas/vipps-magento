@@ -26,7 +26,7 @@
             <comment>
                 <![CDATA[Number of failed attempts before order has been canceled.]]>
             </comment>
-            <config_path>payment/vipps/cancellation/attempts_count</config_path>
+            <config_path>payment/vipps/cancellation_attempts_count</config_path>
         </field>
 
         <field id="type" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1"
@@ -36,7 +36,7 @@
             <comment>
                 <![CDATA[]]>
             </comment>
-            <config_path>payment/vipps/cancellation/type</config_path>
+            <config_path>payment/vipps/cancellation_type</config_path>
         </field>
 
         <field id="quote_storage_period" translate="label" type="text" showInDefault="1" sortOrder="20">
@@ -45,7 +45,7 @@
             <comment>
                 <![CDATA[Number of days to store quotes information. 0 value to keep all records.]]>
             </comment>
-            <config_path>payment/vipps/cancellation/quote_storage_period</config_path>
+            <config_path>payment/vipps/cancellation_quote_storage_period</config_path>
         </field>
 
         <field id="customer_inactivity_time" translate="label" type="text" showInDefault="1" showInWebsite="1"
@@ -56,7 +56,7 @@
             <comment>
                 <![CDATA[Developers only. Number of minutes that customer is idle before Vipps order has been canceled in Magento.]]>
             </comment>
-            <config_path>payment/vipps/cancellation/customer_inactivity_time</config_path>
+            <config_path>payment/vipps/cancellation_customer_inactivity_time</config_path>
         </field>
 
     </group>
