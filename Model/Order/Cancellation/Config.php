@@ -29,22 +29,22 @@ class Config
     /**
      * @const string
      */
-    const XML_PATH_TYPE = 'payment/vipps/cancellation/type';
+    const XML_PATH_TYPE = 'payment/vipps/cancellation_type';
 
     /**
      * @const string
      */
-    const XML_PATH_ATTEMPT_COUNT = 'payment/vipps/cancellation/attempts_count';
+    const XML_PATH_ATTEMPT_COUNT = 'payment/vipps/cancellation_attempts_count';
 
     /**
      * @const string
      */
-    const XML_PATH_INACTIVITY_TIME = 'payment/vipps/cancellation/customer_inactivity_time';
+    const XML_PATH_INACTIVITY_TIME = 'payment/vipps/cancellation_customer_inactivity_time';
 
     /**
      * @const string
      */
-    const XML_PATH_QUOTE_STORAGE_PERIOD = 'payment/vipps/cancellation/quote_storage_period';
+    const XML_PATH_QUOTE_STORAGE_PERIOD = 'payment/vipps/cancellation_quote_storage_period';
 
     /**
      * @var ScopeConfigInterface
