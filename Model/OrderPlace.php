@@ -185,7 +185,7 @@ class OrderPlace
 
             if ($order) {
                 $this->updateVippsQuote($quote);
-                $paymentAction = $this->config->getValue('vipps_payment_action');
+                $paymentAction = $this->config->getValue('payment_action');
                 switch ($paymentAction) {
                     case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
                         $this->capture($order, $transaction);
@@ -383,15 +383,14 @@ class OrderPlace
         if ($order->getState() !== Order::STATE_NEW) {
             return;
         }
-
+        
         // preconditions
         $totalDue = $order->getTotalDue();
         $baseTotalDue = $order->getBaseTotalDue();
+        $payment = $order->getPayment();
 
         // do authorize
         $this->processor->authorize($payment, false, $baseTotalDue);
-        // Do not close the transaction.
-        $payment->setIsTransactionClosed(false);
         // base amount will be set inside
         $payment->setAmountAuthorized($totalDue);
         $this->orderRepository->save($order);

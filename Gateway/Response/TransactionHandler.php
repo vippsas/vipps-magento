@@ -69,9 +69,15 @@ class TransactionHandler implements HandlerInterface
             $status = $transaction->getTransactionInfo()->getStatus();
             $transactionId = $transaction->getTransactionInfo()->getTransactionId();
 
-            if ($status == Transaction::TRANSACTION_STATUS_CANCELLED) {
-                $transactionId .= '-void';
+            switch ($status) {
+                case Transaction::TRANSACTION_STATUS_CANCELLED:
+                    $transactionId .= '-void';
+                    break;
+                case Transaction::TRANSACTION_OPERATION_RESERVE:
+                    $payment->setIsTransactionClosed(false);
+                    break;
             }
+
             $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(
                 PaymentTransaction::RAW_DETAILS,
