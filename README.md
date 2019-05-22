@@ -8,6 +8,8 @@ Vipps Payment is used by large and small companies.  From years of shopping safe
 
 For more information about Vipps Payment and Magento 2, please visit our [Vipps Payment for Magento](https://www.vipps.no/bedrift/vipps-pa-nett) site.
 
+See also the Magento documentation for order management: https://docs.magento.com/m2/ce/user_guide/sales/order-management.html
+
 ### Magento 1
 
 Please see: https://github.com/vippsas/vipps-magento-v1
