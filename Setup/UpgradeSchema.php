@@ -81,7 +81,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
     {
         $connection = $installer->getConnection();
 
-        $table = $connection->newTable($connection->getTableName('vipps_quote'))
+        $table = $connection->newTable($installer->getTable('vipps_quote'))
             ->addColumn(
                 'entity_id',
                 Table::TYPE_INTEGER,
@@ -142,7 +142,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
     {
         $connection = $installer->getConnection();
 
-        $table = $connection->newTable($connection->getTableName('vipps_quote_attempt'))
+        $table = $connection->newTable($installer->getTable('vipps_quote_attempt'))
             ->addColumn(
                 'entity_id',
                 Table::TYPE_INTEGER,
@@ -188,7 +188,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
     private function addStatusToQuote(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
-        $tableName = $connection->getTableName('vipps_quote');
+        $tableName = $installer->getTable('vipps_quote');
 
         $connection
             ->addColumn(
@@ -213,7 +213,7 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
     private function addStoreIdToQuote(SchemaSetupInterface $installer)
     {
         $connection = $installer->getConnection();
-        $tableName = $connection->getTableName('vipps_quote');
+        $tableName = $installer->getTable('vipps_quote');
 
         $connection
             ->addColumn(
