@@ -73,7 +73,8 @@ class TransactionHandler implements HandlerInterface
                 case Transaction::TRANSACTION_STATUS_CANCELLED:
                     $transactionId .= '-void';
                     break;
-                case Transaction::TRANSACTION_OPERATION_RESERVE:
+                case Transaction::TRANSACTION_STATUS_RESERVE:
+                case Transaction::TRANSACTION_STATUS_RESERVED:
                     $payment->setIsTransactionClosed(false);
                     break;
             }
