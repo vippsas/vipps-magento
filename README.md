@@ -16,10 +16,12 @@ Please see: https://github.com/vippsas/vipps-magento-v1
 
 ## Pre-Requisites
 * Magento 2.2+
-    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
+   * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
 * Supported protocols HTTP1/HTTP1.1
-* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)!
+   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
+   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
+* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)
 
 ## Installation and Configuration
 
