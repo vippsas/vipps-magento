@@ -311,7 +311,7 @@ class FetchOrderFromVipps
         if ($order) {
             $this->logger->debug(sprintf('Order placed: "%s"', $order->getIncrementId()));
         } else {
-            $this->logger->critical(sprintf(
+            $this->logger->debug(sprintf(
                 'Order has not been placed, quote id: "%s", reserved_order_id: "%s"',
                 $quote->getId(),
                 $quote->getReservedOrderId()
