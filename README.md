@@ -14,7 +14,7 @@ See also the Magento documentation for order management: https://docs.magento.co
 
 Please see: https://github.com/vippsas/vipps-magento-v1
 
-## Pre-Requisites
+## Prerequisites
 * Magento 2.2+
    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
