@@ -151,7 +151,7 @@ class ShippingDetails extends Action
                     'isDefault' => 'N',
                     'priority' => $key,
                     'shippingCost' => $shippingMethod->getAmount(),
-                    'shippingMethod' => $shippingMethod->getMethodCode(),
+                    'shippingMethod' => $shippingMethod->getMethodTitle(),
                     'shippingMethodId' => $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode(),
                 ];
             }
