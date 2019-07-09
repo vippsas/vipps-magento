@@ -103,6 +103,7 @@
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
                     </group>
+                    <include path="Vipps_Payment::system/checkout.xml"/>
                     <include path="Vipps_Payment::system/express_checkout.xml"/>
                     <include path="Vipps_Payment::system/cancellation.xml"/>
                 </group>
