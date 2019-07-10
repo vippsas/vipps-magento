@@ -63,7 +63,7 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
     private function fillVippsQuotes(ModuleDataSetupInterface $installer)
     {
         $connection = $installer->getConnection();
-        $tableName = $connection->getTableName('vipps_quote');
+        $tableName = $installer->getTable('vipps_quote');
 
         /** @var Collection $collection */
         $collection = $this->quoteCollectionFactory->create();
