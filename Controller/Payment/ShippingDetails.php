@@ -143,11 +143,10 @@ class ShippingDetails extends Action
              */
             $quote = $this->cartRepository->get($quote->getId());
             $this->addressUpdater->fromSourceAddress($quote, $address);
-            $address = $quote->getShippingAddress();
             $quote->setIsActive(true);
             $shippingMethods = $this->shipmentEstimation->estimateByExtendedAddress($quote->getId(), $address);
             $responseData = [
-                'addressId' => 1,
+                'addressId' => $vippsAddress['addressId'],
                 'orderId' => $reservedOrderId,
                 'shippingDetails' => []
             ];
