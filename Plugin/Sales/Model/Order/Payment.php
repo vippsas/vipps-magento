@@ -79,7 +79,7 @@ class Payment
      * @throws LocalizedException
      * @throws VippsException
      */
-    public function beforeCancel(MagentoPayment $payment): void
+    public function beforeCancel(MagentoPayment $payment)
     {
         if ($payment->getMethod() === 'vipps') {
             $paymentDataObject = $this->dataObjectFactory->create($payment);

@@ -63,7 +63,7 @@ class SendMail
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\MailException
      */
-    public function send(OrderInterface $order): void
+    public function send(OrderInterface $order)
     {
         $transport = $this->transportBuilder
             ->setTemplateIdentifier($this->config->getEmailTemplate($order->getStoreId()))
