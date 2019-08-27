@@ -105,6 +105,7 @@
                     </group>
                     <include path="Vipps_Payment::system/express_checkout.xml"/>
                     <include path="Vipps_Payment::system/cancellation.xml"/>
+                    <include path="Vipps_Payment::system/partial_void.xml"/>
                 </group>
             </group>
         </section>
