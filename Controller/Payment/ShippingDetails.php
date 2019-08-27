@@ -156,7 +156,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                     'isDefault' => 'N',
                     'priority' => $key,
                     'shippingCost' => $shippingMethod->getAmount(),
-                    'shippingMethod' => $shippingMethod->getMethodCode(),
+                    'shippingMethod' => $shippingMethod->getMethodTitle(),
                     'shippingMethodId' => $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode(),
                 ];
             }

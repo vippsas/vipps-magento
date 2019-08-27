@@ -97,6 +97,7 @@
         <arguments>
             <argument name="handlers" xsi:type="array">
                 <item name="default" xsi:type="string">VippsConfigValueHandler</item>
+                <item name="can_void" xsi:type="string">Vipps\Payment\Gateway\Config\CanVoidHandler</item>
             </argument>
         </arguments>
     </virtualType>
@@ -430,5 +431,9 @@
         <arguments>
             <argument name="connectionName" xsi:type="string">vipps</argument>
         </arguments>
+    </type>
+
+    <type name="Magento\Sales\Model\Order\Payment">
+        <plugin name="Vipps\Payment\Plugin\Sales\Model\Order\Payment" type="Vipps\Payment\Plugin\Sales\Model\Order\Payment" />
     </type>
 </config>
