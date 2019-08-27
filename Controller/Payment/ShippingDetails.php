@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -25,9 +25,7 @@ use Magento\Quote\Api\{
 use Magento\Quote\Model\Quote;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\{
-    QuoteLocator, Quote\AddressUpdater
-};
+use Vipps\Payment\Model\{Quote\ShippingMethodValidator, QuoteLocator, Quote\AddressUpdater};
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
@@ -77,6 +75,10 @@ class ShippingDetails extends Action
      * @var AddressUpdater
      */
     private $addressUpdater;
+    /**
+     * @var ShippingMethodValidator
+     */
+    private $shippingMethodValidator;
 
     /**
      * ShippingDetails constructor.
@@ -98,6 +100,7 @@ class ShippingDetails extends Action
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         AddressUpdater $addressUpdater,
+        ShippingMethodValidator $shippingMethodValidator,
         Compliance $compliance,
         Json $serializer,
         LoggerInterface $logger
@@ -111,6 +114,7 @@ class ShippingDetails extends Action
         $this->logger = $logger;
         $this->addressUpdater = $addressUpdater;
         $this->gdprCompliance = $compliance;
+        $this->shippingMethodValidator = $shippingMethodValidator;
     }
 
     /**
@@ -147,12 +151,18 @@ class ShippingDetails extends Action
                 'shippingDetails' => []
             ];
             foreach ($shippingMethods as $key => $shippingMethod) {
+
+                $methodFullCode = $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode();
+                if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
+                    continue;
+                }
+
                 $responseData['shippingDetails'][] = [
                     'isDefault' => 'N',
                     'priority' => $key,
                     'shippingCost' => $shippingMethod->getAmount(),
                     'shippingMethod' => $shippingMethod->getMethodTitle(),
-                    'shippingMethodId' => $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode(),
+                    'shippingMethodId' => $methodFullCode,
                 ];
             }
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
