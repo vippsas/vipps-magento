@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<!--
+<?php
 /**
  * Copyright Vipps
  *
@@ -14,12 +13,38 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
--->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="payment_method_is_active">
-        <observer name="vippsUpdateAvailability" instance="Vipps\Payment\Observer\AvailabilityByShippingMethod"/>
-    </event>
-    <event name="order_cancel_after">
-        <observer name="vipps_offline_void_email" instance="Vipps\Payment\Observer\SendOfflineVoidEmail"/>
-    </event>
-</config>
+
+namespace Vipps\Payment\Model\Quote;
+
+use Vipps\Payment\Gateway\Config\Config;
+
+/**
+ * Validate shipping method on allowance for Vipps payment.
+ */
+class ShippingMethodValidator
+{
+    /**
+     * @var Config
+     */
+    private $config;
+
+    /**
+     * ShippingMethodValidator constructor.
+     * @param Config $config
+     */
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * @param string $methodCode
+     * @return bool
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function isValid($methodCode)
+    {
+        $disabledShippingMethods = explode(',', $this->config->getValue('disallowed_shipping_methods'));
+        return !in_array($methodCode, $disabledShippingMethods);
+    }
+}
