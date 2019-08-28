@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright 2018 Vipps
+ * Copyright Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -17,11 +17,13 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <type name="Magento\Sales\Model\Order\Invoice">
-        <plugin name="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" type="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" sortOrder="10"/>
+        <!-- This pluging was just disabled, not removed for backward compatibility -->
+        <plugin name="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" type="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" sortOrder="10" disabled="true"/>
     </type>
 
     <type name="Magento\Sales\Model\Service\CreditmemoService">
-        <plugin name="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" type="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" sortOrder="10"/>
+        <!-- This pluging was just disabled, not removed for backward compatibility -->
+        <plugin name="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" type="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" sortOrder="10" disabled="true"/>
     </type>
 
     <type name="Magento\Config\Model\Config">
