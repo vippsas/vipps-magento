@@ -25,8 +25,8 @@ Please follow the instructions in [INSTALL.md](INSTALL.md)
 
 ### Quote Processing Flow
 
-1. When payment was initiated a new record creates on Vipps Quote Monitoring page with status `New`.
-1. Using cron job Magento asks Vipps about each order that requires to be processed.
+1. When payment was initiated a new record is created on Vipps Quote Monitoring page with status `New`.
+1. Magento polls Vipps for orders to process by cron.
 1. When order was accepted on Vipps side, Magento is trying to place an order and marks a record as `Placed`
 1. When order was cancelled on Vipps side, Magento marks such record as `Cancelled`
 1. If order has not been accepted on Vipps side within some period of time so it marked as expired, Magento marks it as `Expired`
