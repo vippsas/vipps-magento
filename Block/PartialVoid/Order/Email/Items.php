@@ -38,7 +38,7 @@ class Items extends OrderItems
     public function getOrder(): Order
     {
         if (!$this->order) {
-            $this->order = $this->getData('order');
+            $this->order = clone $this->getData('order');
             $items = $this->order->getItems();
             foreach ($items as $key => $item) {
                 if (!$item->getQtyCanceled()) {
