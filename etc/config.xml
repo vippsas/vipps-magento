@@ -47,6 +47,9 @@
                 <cancellation_attempts_count>3</cancellation_attempts_count>
                 <cancellation_customer_inactivity_time>10</cancellation_customer_inactivity_time>
                 <cancellation_quote_storage_period>60</cancellation_quote_storage_period>
+                <partial_void_sender_email>sales</partial_void_sender_email>
+                <partial_void_email_template>payment_vipps_partial_void_email_template</partial_void_email_template>
+                <partial_void_mail_message><![CDATA[Just want to inform you that some items from your order was canceled. Unfortunately Vipps don't support partial void yet, but no worries, all your money will get back after authorization will be canceled by your bank automatically.]]></partial_void_mail_message>
             </vipps>
         </payment>
     </default>

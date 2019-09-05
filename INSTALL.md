@@ -7,27 +7,13 @@
 1. You must have a Vipps merchant account. See [Vipps på Nett](https://www.vipps.no/bedrift/vipps-pa-nett)
 1. As with _all_ Magento extensions, it is highly recommended to backup your site before installation and to install and test on a staging environment prior to production deployments.
 
-# Installation via Composer (recommended)
+# Installation via Composer
 
 1. Navigate to your [Magento root directory](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/build/module-file-structure.html).
 1. Enter command: `composer require vipps/module-payment`
 1. Enter command: `php bin/magento module:enable Vipps_Payment` 
 1. Enter command: `php bin/magento setup:upgrade`
 1. Put your Magento in production mode if it’s required.
-
-# Installation via Marketplace
-
-**Please note:** _This extension is not yet available on Magento Marketplace. This notice will be removed when it is._
-
-Here are steps required to install Payments extension via Component Manager.
-
-1. Make a purchase for the Vipps extension on [Magento Marketplace](https://marketplace.magento.com).
-1. From your `Magento Admin` access `System` -> `Web Setup Wizard` page.
-1. Enter Marketplace authentication keys. Please read about authentication keys generation. 
-1. Navigate to `Component Manager` page.
-1. On the `Component Manager` page click the `Sync button to update your new purchased extensions.
-1. Click `Install` in the `Action` column for `Realex Payments` component.
-1. . Follow Web Setup Wizard instructions.
 
 # Configuration
 
@@ -38,6 +24,7 @@ From Magento Admin navigate to `Store` -> `Configuration` -> `Sales` -> `Payment
 By clicking the `Configure` button, all configuration module settings will be shown. Once you have finished with the configuration simply click `Close` and `Save` button for your convenience.
 
 ## Add a separate connection for Vipps resources
+These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.
 * Duplicate 'default' connection in app/etc/env.php and name it 'vipps'. It should look like:
 ```         
          'vipps' =>
@@ -59,7 +46,6 @@ By clicking the `Configure` button, all configuration module settings will be sh
       'connection' => 'vipps',
    ),
 ```
-These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.
 
 # Settings
 
@@ -68,7 +54,7 @@ Vipps Payments configuration is divided by sections. It helps to quickly find an
 1. Basic Vipps Settings.
 1. Express Checkout Settings.
 
-![Screenshot of Vipps Settings](docs/vipps_method.png)
+![Screenshot of Vipps Settings](docs/images/vipps_method.png)
 
 Please ensure you check all configuration settings prior to using Vipps Payment. Pay attention to the Vipps Basic Settings section, namely `Saleunit Serial Number`, `Client ID`, `Client Secret`, `Subscription Key 1`, `Subscription Key 2`.
 
@@ -76,11 +62,20 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 # Basic Vipps Settings
 
-![Screenshot of Basic Vipps Settings](docs/vipps_basic.png)
+![Screenshot of Basic Vipps Settings](docs/images/vipps_basic.png)
 
 # Express Checkout Settings
 
-![Screenshot of Express Vipps Settings](docs/express_vipps_settings.png)
+![Screenshot of Express Vipps Settings](docs/images/express_vipps_settings.png)
+
+# Quote Monitoring
+
+Quote it is a cart contents in Magento. Theoretically the quote is an offer and if the user accepts it (by checking out) it converts to order.
+
+When payment was initiated (customer was redirected to Vipps) Magento creates a new record on `Vipps Quote Monitoring` page and starts tracking an Vipps order.
+To do that Magento has a cron job that runs by schedule/each 10 min.
+
+You can find this page under `System -> Vipps` menu section. Under `Store -> Sales -> Payment Methods -> Vipps -> Cancellation` you can find appropriate configuration settings.
 
 # Support
 
