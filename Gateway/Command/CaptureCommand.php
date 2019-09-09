@@ -255,7 +255,7 @@ class CaptureCommand extends GatewayCommand
                 $message = __(
                     'Captured amount is not the same as you are trying to capture.'
                     . PHP_EOL . ' Payment information was not synced correctly between Magento and Vipps.'
-                    . PHP_EOL . ' It might be happened that previous operation was successfully completed in Vipps'
+                    . PHP_EOL . ' It might be that the previous operation was successfully completed in Vipps'
                     . PHP_EOL . ' but Magento did not receive a response.'
                     . PHP_EOL . ' To be in sync you have to capture the same amount that has been already captured'
                     . PHP_EOL . ' in Vipps: %1',

@@ -253,7 +253,7 @@ class RefundCommand extends GatewayCommand
                 $message = __(
                     'Refunded amount is not the same as you are trying to refund.'
                     . PHP_EOL . ' Payment information was not synced correctly between Magento and Vipps.'
-                    . PHP_EOL . ' It might be happened that previous operation was successfully completed in Vipps'
+                    . PHP_EOL . ' It might be that the previous operation was successfully completed in Vipps'
                     . PHP_EOL . ' but Magento did not receive a response.'
                     . PHP_EOL . ' To be in sync you have to refund the same amount that has been already refunded'
                     . PHP_EOL . ' in Vipps: %1',
