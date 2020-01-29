@@ -32,10 +32,6 @@
     opacity: 0.9;
 }
 
-.vipps-express-checkout:hover svg {
-    opacity: 0.9;
-}
-
 .vipps-express-checkout {
     max-width: 100%;
     vertical-align: top;
