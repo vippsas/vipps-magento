@@ -14,6 +14,7 @@
 */
 
 .block-minicart .block-content > .actions .vipps-express-checkout {
+    display: block;
     margin-top: 15px;
     text-align: center;
 }
