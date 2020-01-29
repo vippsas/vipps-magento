@@ -13,7 +13,7 @@
 * IN THE SOFTWARE.
 */
 
-.block-minicart .block-content > .actions .vipps-express-checkout, .actions .vipps-express-checkout1 {
+.block-minicart .block-content > .actions .vipps-express-checkout {
     margin-top: 15px;
     text-align: center;
 }
