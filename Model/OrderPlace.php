@@ -185,14 +185,7 @@ class OrderPlace
 
             if ($order) {
                 $this->updateVippsQuote($quote);
-                $paymentAction = $this->config->getValue('payment_action');
-                switch ($paymentAction) {
-                    case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
-                        $this->capture($order, $transaction);
-                        break;
-                    default:
-                        $this->authorize($order, $transaction);
-                }
+                $this->notify($order);
             }
 
             return $order;
@@ -331,36 +324,6 @@ class OrderPlace
     }
 
     /**
-     * Capture
-     *
-     * @param OrderInterface $order
-     * @param Transaction $transaction
-     *
-     * @throws LocalizedException
-     */
-    private function capture(OrderInterface $order, Transaction $transaction)
-    {
-        if ($order->getState() !== Order::STATE_NEW) {
-            return;
-        }
-
-        // preconditions
-        $totalDue = $order->getTotalDue();
-        $baseTotalDue = $order->getBaseTotalDue();
-
-        /** @var Payment $payment */
-        $payment = $order->getPayment();
-        $payment->setAmountAuthorized($totalDue);
-        $payment->setBaseAmountAuthorized($baseTotalDue);
-
-        // do capture
-        $this->processor->capture($payment, null);
-        $this->orderRepository->save($order);
-
-        $this->notify($order);
-    }
-
-    /**
      * Send order conformation email if not sent
      *
      * @param Order|OrderInterface $order
@@ -370,32 +333,6 @@ class OrderPlace
         if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
             $this->orderManagement->notify($order->getEntityId());
         }
-    }
-
-    /**
-     * Authorize action
-     *
-     * @param OrderInterface $order
-     * @param Transaction $transaction
-     */
-    private function authorize(OrderInterface $order, Transaction $transaction)
-    {
-        if ($order->getState() !== Order::STATE_NEW) {
-            return;
-        }
-        
-        // preconditions
-        $totalDue = $order->getTotalDue();
-        $baseTotalDue = $order->getBaseTotalDue();
-        $payment = $order->getPayment();
-
-        // do authorize
-        $this->processor->authorize($payment, false, $baseTotalDue);
-        // base amount will be set inside
-        $payment->setAmountAuthorized($totalDue);
-        $this->orderRepository->save($order);
-
-        $this->notify($order);
     }
 
     /**
