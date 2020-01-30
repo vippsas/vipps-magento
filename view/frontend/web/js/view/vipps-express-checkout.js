@@ -33,8 +33,8 @@ define([
          * @private
          */
         _create: function () {
-            this.element.on('click', '[data-action="checkout-form-submit"]', $.proxy(function (e) {
-                var $target = $(e.target),
+            this.element.on('click', $.proxy(function (e) {
+                var $target = $(e.currentTarget),
                     returnUrl = $target.data('redirect-url'),
                     productId = $target.closest('form').find(this.options.productId).val(),
                     originalForm = this.options.originalForm.replace('%1', productId);
