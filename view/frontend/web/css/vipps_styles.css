@@ -14,6 +14,7 @@
 */
 
 .block-minicart .block-content > .actions .vipps-express-checkout {
+    display: block;
     margin-top: 15px;
     text-align: center;
 }
@@ -22,12 +23,20 @@
     display: inline-block;
 }
 
-.vipps-checkout svg {
+.vipps-express-checkout svg {
     max-width: 100%;
     vertical-align: top;
     filter: drop-shadow( 0px 1px 2px #d7d7d7);
 }
 
-.vipps-checkout:hover svg {
+.vipps-express-checkout:hover svg {
     opacity: 0.9;
+}
+
+.vipps-express-checkout {
+    max-width: 100%;
+    vertical-align: top;
+    cursor: pointer;
+    background-color: inherit;
+    filter: drop-shadow( 0px 1px 2px #d7d7d7);
 }
