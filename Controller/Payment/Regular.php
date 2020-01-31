@@ -84,14 +84,14 @@ class Regular extends Action
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
             $responseData = $this->initiatePayment();
-            $this->session->clearStorage();
+            $this->getSession()->clearStorage();
 
             $response->setData($responseData);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->getLogger()->critical($e->getMessage());
             $response->setData(['errorMessage' => $e->getMessage()]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->getLogger()->critical($e->getMessage());
             $response->setData([
                 'errorMessage' => __('An error occurred during request to Vipps. Please try again later.')
             ]);
@@ -109,7 +109,7 @@ class Regular extends Action
      */
     protected function initiatePayment()
     {
-        $quote = $this->session->getQuote();
+        $quote = $this->getSession()->getQuote();
         $responseData = $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
