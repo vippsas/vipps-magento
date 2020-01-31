@@ -15,8 +15,11 @@
  */
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\{Controller\Result\Redirect,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Exception\LocalizedException,
+    App\ResponseInterface};
 
 /**
  * Class RegularRedirect
@@ -25,14 +28,30 @@ use Magento\Framework\Controller\ResultInterface;
 class RegularRedirect extends Regular
 {
     /**
-     * @param ResponseInterface|ResultInterface $response
-     * @param $responseData
+     * {@inheritdoc}
      *
-     * @return mixed|void
+     * @return ResponseInterface|ResultInterface
      */
-    protected function prepareResponse($response, $responseData)
+    public function execute()
     {
-        $this->getResponse()->setRedirect($responseData['url']);
-        return;
+        /** @var Redirect $response */
+        $response = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        try {
+            $responseData = $this->initiatePayment();
+            $this->getSession()->clearStorage();
+
+            $response->setUrl($responseData['url']);
+        } catch (LocalizedException $e) {
+            $this->getLogger()->critical($e->getMessage());
+            $this->messageManager->addErrorMessage($e->getMessage());
+            $response->setPath('checkout/cart');
+        } catch (\Exception $e) {
+            $this->getLogger()->critical($e->getMessage());
+            $this->messageManager
+                ->addErrorMessage(__('An error occurred during request to Vipps. Please try again later.'));
+            $response->setPath('checkout/cart');
+        }
+
+        return $response;
     }
 }
