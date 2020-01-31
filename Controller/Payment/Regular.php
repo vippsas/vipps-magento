@@ -92,7 +92,7 @@ class Regular extends Action
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
             $response->setData([
-                'errorMessage' => __('An error occurred during request to Vipps. Please try again later.' . $e->getMessage())
+                'errorMessage' => __('An error occurred during request to Vipps. Please try again later.')
             ]);
         }
 
