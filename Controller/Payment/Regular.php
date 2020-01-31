@@ -77,17 +77,9 @@ class Regular extends Action
     {
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $quote = $this->session->getQuote();
-            $responseData = $this->commandManager->initiatePayment(
-                $quote->getPayment(),
-                [
-                    'amount' => $quote->getGrandTotal(),
-                    InitiateBuilderInterface::PAYMENT_TYPE_KEY
-                        => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
-                ]
-            );
+            $responseData = $this->initiatePayment();
             $this->session->clearStorage();
-            $response->setData($responseData);
+            return $this->prepareResponse($response, $responseData);
         } catch (VippsException $e) {
             $this->logger->critical($e->getMessage());
             $response->setData([
@@ -100,9 +92,45 @@ class Regular extends Action
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
             $response->setData([
-                'errorMessage' => __('An error occurred during request to Vipps. Please try again later.')
+                'errorMessage' => __('An error occurred during request to Vipps. Please try again later.' . $e->getMessage())
             ]);
         }
+
         return $response;
+    }
+
+    /**
+     * Prepare response object
+     *
+     * @param ResponseInterface|ResultInterface $response
+     * @param $responseData
+     *
+     * @return mixed
+     */
+    protected function prepareResponse($response, $responseData)
+    {
+        $response->setData($responseData);
+        return $response;
+    }
+
+    /**
+     * Initiate payment on Vipps side
+     *
+     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    private function initiatePayment()
+    {
+        $quote = $this->session->getQuote();
+        $responseData = $this->commandManager->initiatePayment(
+            $quote->getPayment(),
+            [
+                'amount' => $quote->getGrandTotal(),
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY
+                => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+            ]
+        );
+        return $responseData;
     }
 }
