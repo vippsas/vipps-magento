@@ -15,15 +15,20 @@
  */
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory, Controller\ResultInterface, App\Action\Context, App\Action\Action,
-    Exception\LocalizedException,App\ResponseInterface,Session\SessionManagerInterface
-};
+use Magento\Framework\{Controller\Result\Json,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    App\Action\Context,
+    App\Action\Action,
+    Exception\LocalizedException,
+    Exception\NoSuchEntityException,
+    App\ResponseInterface,
+    Session\SessionManagerInterface};
 use Vipps\Payment\{
     Api\CommandManagerInterface,
-    Gateway\Exception\VippsException,
     Gateway\Request\Initiate\InitiateBuilderInterface
 };
+use Magento\Checkout\Model\Session;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +44,7 @@ class Regular extends Action
     private $commandManager;
 
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var SessionManagerInterface
      */
     private $session;
 
@@ -75,34 +80,59 @@ class Regular extends Action
      */
     public function execute()
     {
+        /** @var Json $response */
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $quote = $this->session->getQuote();
-            $responseData = $this->commandManager->initiatePayment(
-                $quote->getPayment(),
-                [
-                    'amount' => $quote->getGrandTotal(),
-                    InitiateBuilderInterface::PAYMENT_TYPE_KEY
-                        => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
-                ]
-            );
-            $this->session->clearStorage();
+            $responseData = $this->initiatePayment();
+            $this->getSession()->clearStorage();
+
             $response->setData($responseData);
-        } catch (VippsException $e) {
-            $this->logger->critical($e->getMessage());
-            $response->setData([
-                'errorMessage' => $e->getMessage()
-            ]);
         } catch (LocalizedException $e) {
-            $response->setData([
-                'errorMessage' => $e->getMessage()
-            ]);
+            $this->getLogger()->critical($e->getMessage());
+            $response->setData(['errorMessage' => $e->getMessage()]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->getLogger()->critical($e->getMessage());
             $response->setData([
                 'errorMessage' => __('An error occurred during request to Vipps. Please try again later.')
             ]);
         }
+
         return $response;
+    }
+
+    /**
+     * Initiate payment on Vipps side
+     *
+     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    protected function initiatePayment()
+    {
+        $quote = $this->getSession()->getQuote();
+        $responseData = $this->commandManager->initiatePayment(
+            $quote->getPayment(),
+            [
+                'amount' => $quote->getGrandTotal(),
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+            ]
+        );
+        return $responseData;
+    }
+
+    /**
+     * @return Session|SessionManagerInterface
+     */
+    protected function getSession()
+    {
+        return $this->session;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    protected function getLogger()
+    {
+        return $this->logger;
     }
 }
