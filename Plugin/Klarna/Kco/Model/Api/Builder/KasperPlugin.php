@@ -51,7 +51,12 @@ class KasperPlugin
         if ($methods) {
             foreach ($methods as &$method) {
                 if (strtolower($method['name']) == 'vipps') {
-                    $method['image_url'] = $this->assetRepository->getUrl($method['image_url']);
+                    if (isset($method['image_url'])) {
+                        $method['image_url'] = $this->assetRepository->getUrl($method['image_url']);
+                    }
+                    if (isset($method['image_uri'])) {
+                        $method['image_uri'] = $this->assetRepository->getUrl($method['image_uri']);
+                    }
                     break;
                 }
             }
