@@ -436,4 +436,9 @@
     <type name="Magento\Sales\Model\Order\Payment">
         <plugin name="Vipps\Payment\Plugin\Sales\Model\Order\Payment" type="Vipps\Payment\Plugin\Sales\Model\Order\Payment" />
     </type>
+    <type name="Klarna\Kco\Model\Api\Builder\Kasper">
+        <plugin
+            name="Vipps\Payment\Plugin\Klarna\Kco\Model\Api\Builder\KasperPlugin"
+            type="Vipps\Payment\Plugin\Klarna\Kco\Model\Api\Builder\KasperPlugin" />
+    </type>
 </config>
