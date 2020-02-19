@@ -74,10 +74,7 @@ class ManualCancel
     {
         try {
             $quote = $this->cartRepository->get($this->vippsQuote->getQuoteId());
-
-            $this
-                ->cancelFacade
-                ->cancel($this->vippsQuote, $quote);
+            $this->cancelFacade->cancel($this->vippsQuote, $quote);
         } catch (\Throwable $exception) {
             throw new LocalizedException(__('Failed to cancel the order. Please contact support team.'));
         }

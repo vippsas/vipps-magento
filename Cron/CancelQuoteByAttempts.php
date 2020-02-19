@@ -22,11 +22,10 @@ use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException};
 use Magento\Quote\Api\{CartRepositoryInterface};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteInterface,
+use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
-    Model\QuoteRepository,
+    Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
 
@@ -73,14 +72,9 @@ class CancelQuoteByAttempts
     private $cartRepository;
 
     /**
-     * @var CommandManagerInterface
+     * @var CancelFacade
      */
-    private $commandManager;
-
-    /**
-     * @var QuoteRepository
-     */
-    private $quoteRepository;
+    private $cancelFacade;
 
     /**
      * CancelQuoteByAttempts constructor.
@@ -91,8 +85,7 @@ class CancelQuoteByAttempts
      * @param Config $cancellationConfig
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
      * @param CartRepositoryInterface $cartRepository
-     * @param CommandManagerInterface $commandManager
-     * @param QuoteRepository $quoteRepository
+     * @param CancelFacade $cancelFacade
      */
     public function __construct(
         LoggerInterface $logger,
@@ -101,8 +94,7 @@ class CancelQuoteByAttempts
         Config $cancellationConfig,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         CartRepositoryInterface $cartRepository,
-        CommandManagerInterface $commandManager,
-        QuoteRepository $quoteRepository
+        CancelFacade $cancelFacade
     ) {
         $this->logger = $logger;
         $this->storeManager = $storeManager;
@@ -110,8 +102,7 @@ class CancelQuoteByAttempts
         $this->cancellationConfig = $cancellationConfig;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
         $this->cartRepository = $cartRepository;
-        $this->commandManager = $commandManager;
-        $this->quoteRepository = $quoteRepository;
+        $this->cancelFacade = $cancelFacade;
     }
 
     /**
@@ -190,17 +181,10 @@ class CancelQuoteByAttempts
 
             if ($this->cancellationConfig->isAutomatic($vippsQuote->getStoreId())) {
                 $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-
-                $this->commandManager->cancel($quote->getPayment());
-
-                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-                $this->quoteRepository->save($vippsQuote);
+                $this->cancelFacade->cancel($vippsQuote, $quote);
             }
         } catch (\Throwable $e) {
             $this->logger->critical($e->getMessage(), ['quote_id' => $vippsQuote->getId()]);
-
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
-            $this->quoteRepository->save($vippsQuote);
         }
     }
 
