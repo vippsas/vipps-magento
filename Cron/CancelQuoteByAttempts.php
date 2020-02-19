@@ -167,7 +167,7 @@ class CancelQuoteByAttempts
             ['in' => [
                 QuoteStatusInterface::STATUS_NEW,
                 QuoteStatusInterface::STATUS_PLACE_FAILED,
-                QuoteStatusInterface::STATUS_PROCESSING
+                QuoteStatusInterface::STATUS_PENDING
             ]]
         );
 

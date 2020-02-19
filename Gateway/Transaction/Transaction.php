@@ -100,6 +100,11 @@ class Transaction
     /**
      * @var string
      */
+    const TRANSACTION_OPERATION_INITIATE = 'initiate';
+
+    /**
+     * @var string
+     */
     const TRANSACTION_OPERATION_RESERVE = 'reserve';
 
     /**
@@ -229,6 +234,67 @@ class Transaction
     }
 
     /**
+     * Is initiate transaction.
+     *
+     * @return bool
+     */
+    public function transactionWasInitiated()
+    {
+        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
+            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_INITIATE) {
+                continue;
+            }
+
+            return $item->isOperationSuccess();
+        }
+        return false;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTransactionStatus()
+    {
+        if ($this->transactionWasCancelled()) {
+            return self::TRANSACTION_STATUS_CANCELLED;
+        }
+
+        if ($this->transactionWasReserved()) {
+            return self::TRANSACTION_STATUS_RESERVED;
+        }
+
+        if ($this->transactionWasInitiated()) {
+            return self::TRANSACTION_STATUS_INITIATED;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function isTransactionCancelled()
+    {
+        return $this->transactionWasCancelled();
+    }
+
+    /**
+     * @return string|null
+     */
+    public function isTransactionReserved()
+    {
+        return $this->getTransactionStatus() == self::TRANSACTION_STATUS_RESERVED;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function isTransactionInitiated()
+    {
+        return $this->getTransactionStatus() == self::TRANSACTION_STATUS_INITIATED;
+    }
+
+    /**
      * @return TransactionInfo
      */
     public function getTransactionInfo()
@@ -237,31 +303,19 @@ class Transaction
     }
 
     /**
-     * @return bool
-     */
-    public function isTransactionAborted()
-    {
-        $abortedStatuses = [
-            Transaction::TRANSACTION_STATUS_CANCEL,
-            Transaction::TRANSACTION_STATUS_CANCELLED,
-            Transaction::TRANSACTION_STATUS_AUTOCANCEL,
-            Transaction::TRANSACTION_STATUS_REJECTED,
-            Transaction::TRANSACTION_STATUS_FAILED,
-            Transaction::TRANSACTION_STATUS_VOID
-        ];
-
-        return in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses);
-    }
-
-    /**
      * Check that transaction has been cancelled
      *
      * @return bool
      */
-    public function isTransactionCancelled()
+    public function transactionWasCancelled()
     {
+        $cancelOperations = [
+            Transaction::TRANSACTION_OPERATION_CANCEL,
+            Transaction::TRANSACTION_OPERATION_VOID
+        ];
+
         foreach ($this->getTransactionLogHistory()->getItems() as $item) {
-            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_CANCEL) {
+            if (!in_array($item->getOperation(), $cancelOperations)) {
                 continue;
             }
 
@@ -275,7 +329,7 @@ class Transaction
      *
      * @return bool
      */
-    public function isTransactionReserved()
+    public function transactionWasReserved()
     {
         foreach ($this->getTransactionLogHistory()->getItems() as $item) {
             if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_RESERVE) {

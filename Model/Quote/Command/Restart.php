@@ -56,7 +56,7 @@ class Restart
         $this
             ->vippsQuote
             ->clearAttempts()
-            ->setStatus(QuoteStatusInterface::STATUS_PROCESSING);
+            ->setStatus(QuoteStatusInterface::STATUS_PENDING);
 
         $this->quoteRepository->save($this->vippsQuote);
     }
