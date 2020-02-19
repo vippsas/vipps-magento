@@ -139,6 +139,7 @@ class InitiateHandler implements HandlerInterface
             $vippsQuote = $this->quoteFactory->create();
             $vippsQuote->setQuoteId($quote->getId());
             $vippsQuote->setStoreId($quote->getStoreId());
+            $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
             $vippsQuote->setReservedOrderId($quote->getReservedOrderId());
             $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['authToken'] ?? '');
             $this->quoteRepository->save($vippsQuote);

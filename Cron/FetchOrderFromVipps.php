@@ -205,9 +205,6 @@ class FetchOrderFromVipps
 
             if ($transaction->isTransactionReserved()) {
                 $this->placeOrder($vippsQuote, $transaction);
-            } elseif ($transaction->isTransactionCancelled()) {
-                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-                $this->vippsQuoteRepository->save($vippsQuote);
             } elseif ($this->isQuoteExpired($vippsQuote)) {
                 $vippsQuote->setStatus(QuoteStatusInterface::STATUS_EXPIRED);
                 $this->vippsQuoteRepository->save($vippsQuote);
