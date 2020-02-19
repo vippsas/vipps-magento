@@ -136,6 +136,8 @@ class GatewayCommand implements CommandInterface
             $this->requestBuilder->build($commandSubject)
         );
 
+        $commandSubject['transferObject'] = $transfer;
+
         $result = $this->client->placeRequest($transfer);
 
         /** @var ZendResponse $response */

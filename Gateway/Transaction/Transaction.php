@@ -123,6 +123,11 @@ class Transaction
     const TRANSACTION_OPERATION_VOID = 'void';
 
     /**
+     * @var string
+     */
+    private $orderId;
+
+    /**
      * @var TransactionInfo
      */
     private $transactionInfo;
@@ -150,6 +155,7 @@ class Transaction
     /**
      * Transaction constructor.
      *
+     * @param string $orderId
      * @param TransactionInfo $transactionInfo
      * @param TransactionSummary $transactionSummary
      * @param TransactionLogHistory $transactionLogHistory
@@ -157,17 +163,27 @@ class Transaction
      * @param ShippingDetails|null $shippingDetails
      */
     public function __construct(
+        $orderId,
         TransactionInfo $transactionInfo,
         TransactionSummary $transactionSummary,
         TransactionLogHistory $transactionLogHistory,
         UserDetails $userDetails = null,
         ShippingDetails $shippingDetails = null
     ) {
+        $this->orderId = $orderId;
         $this->transactionInfo = $transactionInfo;
         $this->transactionSummary = $transactionSummary;
         $this->transactionLogHistory = $transactionLogHistory;
         $this->userDetails = $userDetails;
         $this->shippingDetails = $shippingDetails;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderId()
+    {
+        return $this->orderId;
     }
 
     /**
@@ -238,20 +254,36 @@ class Transaction
     }
 
     /**
-     * Check that transaction has not been reserved yet
+     * Check that transaction has been cancelled
+     *
+     * @return bool
+     */
+    public function isTransactionCancelled()
+    {
+        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
+            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_CANCEL) {
+                continue;
+            }
+
+            return $item->isOperationSuccess();
+        }
+        return false;
+    }
+
+    /**
+     * Check that transaction has been reserved
      *
      * @return bool
      */
     public function isTransactionReserved()
     {
-        $statuses = [
-            Transaction::TRANSACTION_STATUS_RESERVE,
-            Transaction::TRANSACTION_STATUS_RESERVED
-        ];
-        if (in_array($this->getTransactionInfo()->getStatus(), $statuses)) {
-            return true;
-        }
+        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
+            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_RESERVE) {
+                continue;
+            }
 
+            return $item->isOperationSuccess();
+        }
         return false;
     }
 

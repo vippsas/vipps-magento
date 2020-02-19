@@ -24,14 +24,16 @@ use Magento\Framework\{App\Action\Action,
     App\ResponseInterface,
     Controller\ResultFactory,
     Controller\ResultInterface,
+    Exception\NoSuchEntityException,
     Serialize\Serializer\Json};
-use Magento\Quote\{Api\Data\CartInterface, Model\Quote};
+use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface};
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Gateway\Request\Initiate\MerchantDataBuilder,
+use Vipps\Payment\{Api\Data\QuoteInterface,
+    Api\QuoteRepositoryInterface,
+    Gateway\Command\PaymentDetailsProvider,
     Gateway\Transaction\TransactionBuilder,
     Model\Gdpr\Compliance,
-    Model\OrderPlace,
-    Model\QuoteLocator};
+    Model\OrderPlace};
 use Zend\Http\Response as ZendResponse;
 
 /**
@@ -47,9 +49,9 @@ class Callback extends Action implements CsrfAwareActionInterface
     private $orderPlace;
 
     /**
-     * @var QuoteLocator
+     * @var QuoteRepositoryInterface
      */
-    private $quoteLocator;
+    private $vippsQuoteRepository;
 
     /**
      * @var Json
@@ -72,6 +74,21 @@ class Callback extends Action implements CsrfAwareActionInterface
     private $quote;
 
     /**
+     * @var QuoteInterface
+     */
+    private $vippsQuote;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
+     * @var PaymentDetailsProvider
+     */
+    private $paymentDetailsProvider;
+
+    /**
      * @var Compliance
      */
     private $gdprCompliance;
@@ -81,15 +98,20 @@ class Callback extends Action implements CsrfAwareActionInterface
      *
      * @param Context $context
      * @param OrderPlace $orderManagement
-     * @param QuoteLocator $quoteLocator
+     * @param QuoteRepositoryInterface $vippsQuoteRepository
+     * @param CartRepositoryInterface $cartRepository
+     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param Json $jsonDecoder
      * @param TransactionBuilder $transactionBuilder
+     * @param Compliance $compliance
      * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
         OrderPlace $orderManagement,
-        QuoteLocator $quoteLocator,
+        QuoteRepositoryInterface $vippsQuoteRepository,
+        CartRepositoryInterface $cartRepository,
+        PaymentDetailsProvider $paymentDetailsProvider,
         Json $jsonDecoder,
         TransactionBuilder $transactionBuilder,
         Compliance $compliance,
@@ -97,7 +119,9 @@ class Callback extends Action implements CsrfAwareActionInterface
     ) {
         parent::__construct($context);
         $this->orderPlace = $orderManagement;
-        $this->quoteLocator = $quoteLocator;
+        $this->vippsQuoteRepository = $vippsQuoteRepository;
+        $this->cartRepository = $cartRepository;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->jsonDecoder = $jsonDecoder;
         $this->transactionBuilder = $transactionBuilder;
         $this->logger = $logger;
@@ -116,7 +140,8 @@ class Callback extends Action implements CsrfAwareActionInterface
             $requestData = $this->jsonDecoder->unserialize($this->getRequest()->getContent());
 
             $this->authorize($requestData);
-            $transaction = $this->transactionBuilder->setData($requestData)->build();
+
+            $transaction = $this->getPaymentDetails($requestData);
             $this->orderPlace->execute($this->getQuote($requestData), $transaction);
 
             /** @var Json $result */
@@ -138,6 +163,18 @@ class Callback extends Action implements CsrfAwareActionInterface
 
     /**
      * @param $requestData
+     *
+     * @return \Vipps\Payment\Gateway\Transaction\Transaction
+     * @throws \Vipps\Payment\Gateway\Exception\VippsException
+     */
+    private function getPaymentDetails($requestData)
+    {
+        $responseData = $this->paymentDetailsProvider->get(['orderId' => $requestData['orderId']]);
+        return $this->transactionBuilder->setData($responseData)->build();
+    }
+
+    /**
+     * @param array $requestData
      *
      * @return bool
      * @throws \Exception
@@ -169,15 +206,17 @@ class Callback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * Return order id
-     *
      * @param $requestData
      *
-     * @return string|null
+     * @return QuoteInterface
+     * @throws NoSuchEntityException
      */
-    private function getOrderId($requestData)
+    private function getVippsQuote($requestData)
     {
-        return $requestData['orderId'] ?? null;
+        if (null === $this->vippsQuote) {
+            $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($requestData['orderId']);
+        }
+        return $this->vippsQuote;
     }
 
     /**
@@ -185,29 +224,29 @@ class Callback extends Action implements CsrfAwareActionInterface
      *
      * @param $requestData
      *
-     * @return bool|CartInterface|Quote
+     * @return CartInterface
+     * @throws NoSuchEntityException
      */
     private function getQuote($requestData)
     {
         if (null === $this->quote) {
-            $this->quote = $this->quoteLocator->get($this->getOrderId($requestData)) ?: false;
+            $vippsQuote = $this->getVippsQuote($requestData);
+            $this->quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         }
         return $this->quote;
     }
 
     /**
-     * @param array $requestData
+     * @param $requestData
      *
      * @return bool
+     * @throws NoSuchEntityException
      */
     private function isAuthorized($requestData): bool
     {
-        $quote = $this->getQuote($requestData);
-        if ($quote) {
-            $additionalInfo = $quote->getPayment()->getAdditionalInformation();
-            $authToken = $additionalInfo[MerchantDataBuilder::MERCHANT_AUTH_TOKEN] ?? null;
-
-            if ($authToken === $this->getRequest()->getHeader('authorization')) {
+        $vippsQuote = $this->getVippsQuote($requestData);
+        if ($vippsQuote) {
+            if ($vippsQuote->getAuthToken() === $this->getRequest()->getHeader('authorization')) {
                 return true;
             }
         }

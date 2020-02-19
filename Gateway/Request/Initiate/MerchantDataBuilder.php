@@ -19,6 +19,7 @@ use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\{Quote, Quote\Payment};
 use Magento\Framework\UrlInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
 /**
@@ -127,26 +128,23 @@ class MerchantDataBuilder implements InitiateBuilderInterface
      */
     public function build(array $buildSubject)
     {
-        $callBackAuthToken = $this->generateAuthToken();
-        $fallBackAuthToken = $this->generateAuthToken();
+        $authToken = $this->generateAuthToken();
 
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         /** @var Payment $payment */
         $payment = $paymentDO->getPayment();
-        $payment->setAdditionalInformation(self::MERCHANT_AUTH_TOKEN, $callBackAuthToken);
-        $payment->setAdditionalInformation(self::FALLBACK_AUTH_TOKEN, $fallBackAuthToken);
         $quote = $this->cartRepository->get($payment->getQuote()->getId());
         /** @var $quote Quote */
         $quote->reserveOrderId();
         $merchantInfo = [
             self::$merchantInfo => [
-                self::$authToken => $callBackAuthToken,
+                self::$authToken => $authToken,
                 self::$callbackPrefix => $this->urlBuilder->getUrl('vipps/payment/callback'),
                 self::$fallBack => $this->urlBuilder->getUrl(
                     'vipps/payment/fallback',
                     [
-                        'access_token' => $fallBackAuthToken,
+                        'auth_token' => $authToken,
                         'order_id' => $quote->getReservedOrderId()
                     ]
                 ),
