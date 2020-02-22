@@ -55,6 +55,16 @@ By clicking on a link `Show` in an `Action` column of grid you can find appropri
 
 Using built-in Magento grid filter you could easily find all requests per order that you are interested in.
 
+# Integration
+
+## Klarna Checkout
+
+There is a known issue when using Vipps as an external payment method for Klarna Checkout. 
+When customer fills in checkout form using data that were used before, customer will see an error:
+
+`Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
+
+This issue will be fixed in next releases.
 
 # Magento
 
