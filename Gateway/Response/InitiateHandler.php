@@ -20,9 +20,12 @@ use Magento\Checkout\Helper\Data as CheckoutHelper;
 use Magento\Checkout\Model\Type\Onepage;
 use Magento\Customer\Model\Session;
 use Magento\Framework\{App\ResourceConnection, Session\SessionManagerInterface};
-use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Response\HandlerInterface};
+use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Http\Transfer, Response\HandlerInterface};
 use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
-use Vipps\Payment\{Gateway\Request\SubjectReader, Model\QuoteManagement};
+use Vipps\Payment\{Api\Data\QuoteInterface,
+    Gateway\Request\SubjectReader,
+    Model\QuoteFactory,
+    Model\QuoteRepository};
 
 /**
  * Class InitiateHandler
@@ -57,9 +60,14 @@ class InitiateHandler implements HandlerInterface
     private $resourceConnection;
 
     /**
-     * @var QuoteManagement
+     * @var QuoteFactory
      */
-    private $vippsQuoteManagement;
+    private $quoteFactory;
+
+    /**
+     * @var QuoteRepository
+     */
+    private $quoteRepository;
 
     /**
      * InitiateHandler constructor.
@@ -69,7 +77,8 @@ class InitiateHandler implements HandlerInterface
      * @param CheckoutHelper $checkoutHelper
      * @param SessionManagerInterface $customerSession
      * @param ResourceConnection $resourceConnection
-     * @param QuoteManagement $monitoringManagement
+     * @param QuoteFactory $quoteFactory
+     * @param QuoteRepository $quoteRepository
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
@@ -77,14 +86,16 @@ class InitiateHandler implements HandlerInterface
         CheckoutHelper $checkoutHelper,
         SessionManagerInterface $customerSession,
         ResourceConnection $resourceConnection,
-        QuoteManagement $monitoringManagement
+        QuoteFactory $quoteFactory,
+        QuoteRepository $quoteRepository
     ) {
         $this->cartRepository = $cartRepository;
         $this->subjectReader = $subjectReader;
         $this->checkoutHelper = $checkoutHelper;
         $this->customerSession = $customerSession;
         $this->resourceConnection = $resourceConnection;
-        $this->vippsQuoteManagement = $monitoringManagement;
+        $this->quoteFactory = $quoteFactory;
+        $this->quoteRepository = $quoteRepository;
     }
 
     /**
@@ -97,6 +108,8 @@ class InitiateHandler implements HandlerInterface
      */
     public function handle(array $handlingSubject, array $responseBody) //@codingStandardsIgnoreLine
     {
+        /** @var Transfer $transfer */
+        $transfer = $handlingSubject['transferObject'];
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
         /** @var Payment $payment */
@@ -121,7 +134,15 @@ class InitiateHandler implements HandlerInterface
             $connection->beginTransaction();
 
             $this->cartRepository->save($quote);
-            $this->vippsQuoteManagement->create($quote);
+
+            /** @var QuoteInterface $vippsQuote */
+            $vippsQuote = $this->quoteFactory->create();
+            $vippsQuote->setQuoteId($quote->getId());
+            $vippsQuote->setStoreId($quote->getStoreId());
+            $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
+            $vippsQuote->setReservedOrderId($quote->getReservedOrderId());
+            $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['authToken'] ?? '');
+            $this->quoteRepository->save($vippsQuote);
 
             $connection->commit();
         } catch (\Exception $e) {

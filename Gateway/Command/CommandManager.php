@@ -77,20 +77,6 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
     /**
      * {@inheritdoc}
      *
-     * @param $orderId
-     *
-     * @return ResultInterface|null
-     * @throws CommandException
-     * @throws NotFoundException
-     */
-    public function getOrderStatus($orderId)
-    {
-        return $this->executeByCode('getOrderStatus', null, ['orderId' => $orderId]);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
      * @param InfoInterface $payment
      * @param array $arguments
      *

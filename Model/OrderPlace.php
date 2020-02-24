@@ -171,39 +171,51 @@ class OrderPlace
      */
     public function execute(CartInterface $quote, Transaction $transaction)
     {
-        if (!$this->canPlaceOrder($transaction)) {
+        $order = $this->orderLocator->get($transaction->getOrderId());
+        if ($order) {
+            return $order;
+        }
+
+        if (!$this->canPlaceOrder($quote, $transaction)) {
             return null;
         }
 
         $lockName = $this->acquireLock($quote);
-        if (!$lockName) {
-            return null;
-        }
-
-        try {
-            $order = $this->placeOrder($quote, $transaction);
-
-            if ($order) {
-                $this->updateVippsQuote($quote);
-                $this->notify($order);
+        if ($lockName) {
+            try {
+                $order = $this->placeOrder($quote, $transaction);
+                if ($order) {
+                    $this->updateVippsQuote($quote);
+                    $this->notify($order);
+                }
+                return $order;
+            } finally {
+                $this->releaseLock($lockName);
             }
-
-            return $order;
-        } finally {
-            $this->releaseLock($lockName);
         }
+
+        return null;
     }
 
     /**
      * Check can we place order or not based on transaction object
      *
+     * @param CartInterface $cart
      * @param Transaction $transaction
      *
      * @return bool
      */
-    private function canPlaceOrder(Transaction $transaction)
+    private function canPlaceOrder(CartInterface $cart, Transaction $transaction)
     {
-        return $transaction->isTransactionReserved();
+        if (!$transaction->isTransactionReserved()) {
+            return false;
+        }
+
+        if (!$cart->getReservedOrderId() || $cart->getReservedOrderId() !== $transaction->getOrderId()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -238,34 +250,27 @@ class OrderPlace
      */
     private function placeOrder(CartInterface $quote, Transaction $transaction)
     {
+        /** @var Quote $clonedQuote */
         $clonedQuote = clone $quote;
-        $reservedOrderId = $clonedQuote->getReservedOrderId();
-        if (!$reservedOrderId) {
-            return null;
+
+        if ($transaction->isExpressCheckout()) {
+            $this->quoteUpdater->execute($clonedQuote, $transaction);
         }
 
-        $order = $this->orderLocator->get($reservedOrderId);
-        if (!$order) {
-            //this is used only for express checkout
-            $this->quoteUpdater->execute($clonedQuote);
-            /** @var Quote $clonedQuote */
-            $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
-            if ($clonedQuote->getReservedOrderId() !== $reservedOrderId) {
-                return null;
-            }
+        $clonedQuote = $this->cartRepository->get($clonedQuote->getId());
 
-            $this->prepareQuote($clonedQuote);
+        // fix quote to be able to work from different areas (frontend/adminhtml/etc...)
+        $this->fixQuote($clonedQuote);
 
-            $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
-            $clonedQuote->collectTotals();
+        $clonedQuote->getShippingAddress()->setCollectShippingRates(true);
+        $clonedQuote->collectTotals();
 
-            $this->validateAmount($clonedQuote, $transaction);
+        $this->validateAmount($clonedQuote, $transaction);
 
-            // set quote active, collect totals and place order
-            $clonedQuote->setIsActive(true);
-            $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
-            $order = $this->orderRepository->get($orderId);
-        }
+        // set quote active, collect totals and place order
+        $clonedQuote->setIsActive(true);
+        $orderId = $this->cartManagement->placeOrder($clonedQuote->getId());
+        $order = $this->orderRepository->get($orderId);
 
         $clonedQuote->setReservedOrderId(null);
         $this->cartRepository->save($clonedQuote);
@@ -276,7 +281,7 @@ class OrderPlace
     /**
      * @param CartInterface|Quote $quote
      */
-    private function prepareQuote($quote)
+    private function fixQuote($quote)
     {
         $websiteId = $quote->getStore()->getWebsiteId();
         foreach ($quote->getAllItems() as $item) {
@@ -297,7 +302,7 @@ class OrderPlace
     private function validateAmount(CartInterface $quote, Transaction $transaction)
     {
         $quoteAmount = (int)round($this->formatPrice($quote->getGrandTotal()) * 100);
-        $vippsAmount = (int)$transaction->getTransactionInfo()->getAmount();
+        $vippsAmount = (int)$transaction->getTransactionSummary()->getRemainingAmountToCapture();
 
         if ($quoteAmount != $vippsAmount) {
             throw new WrongAmountException(

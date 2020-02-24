@@ -46,16 +46,6 @@ interface CommandManagerInterface
     public function getPaymentDetails($arguments = []);
 
     /**
-     * Method to execute getOrderStatus Command.
-     *
-     * @param string $orderId
-     *
-     * @return ResultInterface|null
-     * @throws VippsException
-     */
-    public function getOrderStatus($orderId);
-
-    /**
      * Method to execute cancel Command.
      *
      * @param InfoInterface $payment

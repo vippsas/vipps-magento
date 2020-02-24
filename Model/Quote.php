@@ -173,6 +173,23 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
+     * @param string $value
+     * @return self
+     */
+    public function setAuthToken(string $value)
+    {
+        return $this->setData(self::AUTH_TOKEN, $value);
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthToken()
+    {
+        return $this->getData(self::AUTH_TOKEN);
+    }
+
+    /**
      * Constructor.
      */
     protected function _construct() //@codingStandardsIgnoreLine

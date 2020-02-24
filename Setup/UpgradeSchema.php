@@ -47,6 +47,22 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $this->addStoreIdToQuote($installer);
         }
 
+        if (version_compare($context->getVersion(), '2.3.0', '<')) {
+            $connection = $installer->getConnection();
+            $tableName = $installer->getTable('vipps_quote');
+
+            $connection
+                ->addColumn(
+                    $tableName,
+                    'auth_token',
+                    [
+                        'type'     => Table::TYPE_TEXT,
+                        'length'   => 32,
+                        'comment'  => 'Auth Token'
+                    ]
+                );
+        }
+
         $installer->endSetup();
     }
 

@@ -22,7 +22,9 @@ use Vipps\Payment\{Api\CommandManagerInterface,
     Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Api\Quote\CancelFacadeInterface,
+    Model\Quote,
     Model\QuoteRepository};
+use Magento\Framework\Exception\CouldNotSaveException;
 
 /**
  * Quote Cancellation Facade.
@@ -61,33 +63,23 @@ class CancelFacade implements CancelFacadeInterface
     }
 
     /**
-     * vipps_monitoring extension attribute requires to be loaded in the quote.
-     *
-     * @param QuoteInterface $vippsQuote
+     * @param QuoteInterface|Quote $vippsQuote
      * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @throws \Throwable
+     *
+     * @throws CouldNotSaveException
      */
-    public function cancel(
-        QuoteInterface $vippsQuote,
-        CartInterface $quote
-    ) {
+    public function cancel(QuoteInterface $vippsQuote, CartInterface $quote) {
         try {
-            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
-            // cancel order on vipps side
             $this->commandManager->cancel($quote->getPayment());
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-            $attempt->setMessage('The order has been canceled.');
-        } catch (\Throwable $exception) {
-            // Log the exception
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
-            $attempt->setMessage($exception->getMessage());
-            throw $exception;
-        } finally {
-            if (isset($attempt)) {
-                $this->attemptManagement->save($attempt);
-            }
             $this->quoteRepository->save($vippsQuote);
+        } catch (\Throwable $t) {
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
+            $this->quoteRepository->save($vippsQuote);
+
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+            $attempt->setMessage($t->getMessage());
+            $this->attemptManagement->save($attempt);
         }
     }
 }

@@ -26,11 +26,34 @@ define(
     function ($, quote, urlBuilder, storage, errorProcessor, customer, fullScreenLoader, agreementsAssigner) {
         'use strict';
 
+
+        /**
+         * Filter template data.
+         *
+         * @param {Object|Array} data
+         */
+        var filterTemplateData = function (data) {
+            return _.each(data, function (value, key, list) {
+                if (_.isArray(value) || _.isObject(value)) {
+                    list[key] = filterTemplateData(value);
+                }
+
+                if (key === '__disableTmpl') {
+                    delete list[key];
+                }
+            });
+        };
+
         return function (messageContainer) {
             var serviceUrl,
                 payload,
                 method = 'put',
                 paymentData = quote.paymentMethod();
+
+            // starting from the M 2.3.3 some keys have to be removed from the payload before sending
+            // please see module-checkout/view/frontend/web/js/action/set-payment-information-extended.js
+            // but as it's not fully compatible with our logic, we have to add handle for this separately
+            paymentData = filterTemplateData(paymentData);
 
             /**
              * Checkout for guest and registered customer.

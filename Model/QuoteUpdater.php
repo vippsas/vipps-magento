@@ -69,18 +69,13 @@ class QuoteUpdater
 
     /**
      * @param CartInterface $quote
+     * @param Transaction $transaction
      *
      * @return bool|CartInterface|Quote
-     * @throws VippsException
      */
-    public function execute(CartInterface $quote)
+    public function execute(CartInterface $quote, Transaction $transaction)
     {
         /** @var Quote $quote */
-        $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
-        $transaction = $this->transactionBuilder->setData($response)->build();
-        if (!$transaction->isExpressCheckout()) {
-            return false;
-        }
         $quote->setMayEditShippingAddress(false);
         $quote->setMayEditShippingMethod(true);
 
