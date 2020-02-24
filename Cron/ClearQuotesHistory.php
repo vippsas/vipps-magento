@@ -18,7 +18,6 @@ namespace Vipps\Payment\Cron;
 
 use Magento\Framework\DB\Adapter\Pdo\Mysql;
 use Magento\Framework\Intl\DateTimeFactory;
-use Magento\Quote\Model\{ResourceModel\Quote\CollectionFactory};
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Model\Order\Cancellation\Config,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
@@ -30,11 +29,6 @@ use Vipps\Payment\{Model\Order\Cancellation\Config,
  */
 class ClearQuotesHistory
 {
-    /**
-     * Order collection page size
-     */
-    const COLLECTION_PAGE_SIZE = 100;
-
     /**
      * @var LoggerInterface
      */
@@ -81,9 +75,7 @@ class ClearQuotesHistory
     public function execute()
     {
         $days = $this->cancellationConfig->getQuoteStoragePeriod();
-
         if (!$days) {
-            $this->logger->debug('No days interval installed to remove quotes information');
             return;
         }
 
@@ -97,9 +89,7 @@ class ClearQuotesHistory
 
             /** @var VippsQuoteCollection $collection */
             $collection = $this->vippsQuoteCollectionFactory->create();
-
             $collection->addFieldToFilter('updated_at', ['lt' => $dateTimeFormatted]);
-
             $query = $collection
                 ->getSelect()
                 ->deleteFromSelect('main_table');

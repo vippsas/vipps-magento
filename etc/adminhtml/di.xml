@@ -16,16 +16,6 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="Magento\Sales\Model\Order\Invoice">
-        <!-- This pluging was just disabled, not removed for backward compatibility -->
-        <plugin name="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" type="Vipps\Payment\Plugin\Sales\Model\Order\Invoice" sortOrder="10" disabled="true"/>
-    </type>
-
-    <type name="Magento\Sales\Model\Service\CreditmemoService">
-        <!-- This pluging was just disabled, not removed for backward compatibility -->
-        <plugin name="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" type="Vipps\Payment\Plugin\Sales\Model\Services\CreditmemoService" sortOrder="10" disabled="true"/>
-    </type>
-
     <type name="Magento\Config\Model\Config">
         <plugin name="admin_system_config_save_plugin" type="Vipps\Payment\Plugin\Config\Model\Config" sortOrder="10"/>
     </type>

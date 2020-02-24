@@ -279,7 +279,7 @@ class Transaction
     }
 
     /**
-     * @return string|null
+     * @return bool
      */
     public function isTransactionReserved()
     {
@@ -287,7 +287,32 @@ class Transaction
     }
 
     /**
-     * @return string|null
+     * @return bool
+     * @throws \Exception
+     */
+    public function isTransactionExpired()
+    {
+        if ($this->isTransactionInitiated()) {
+            foreach ($this->getTransactionLogHistory()->getItems() as $item) {
+                if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_INITIATE) {
+                    continue;
+                }
+
+                $now = new \DateTime();
+                $createdAt = new \DateTime($item->getTimeStamp());
+
+                $interval = new \DateInterval("PT5M");  //@codingStandardsIgnoreLine
+                $createdAt->add($interval);
+
+                return !$createdAt->diff($now)->invert;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
      */
     public function isTransactionInitiated()
     {

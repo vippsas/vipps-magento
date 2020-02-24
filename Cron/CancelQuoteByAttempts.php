@@ -18,8 +18,7 @@
 namespace Vipps\Payment\Cron;
 
 use Magento\Framework\App\Config\ScopeCodeResolver;
-use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException};
-use Magento\Quote\Api\{CartRepositoryInterface};
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
@@ -67,11 +66,6 @@ class CancelQuoteByAttempts
     private $vippsQuoteCollectionFactory;
 
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
      * @var CancelFacade
      */
     private $cancelFacade;
@@ -84,7 +78,6 @@ class CancelQuoteByAttempts
      * @param ScopeCodeResolver $scopeCodeResolver
      * @param Config $cancellationConfig
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
-     * @param CartRepositoryInterface $cartRepository
      * @param CancelFacade $cancelFacade
      */
     public function __construct(
@@ -93,7 +86,6 @@ class CancelQuoteByAttempts
         ScopeCodeResolver $scopeCodeResolver,
         Config $cancellationConfig,
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
-        CartRepositoryInterface $cartRepository,
         CancelFacade $cancelFacade
     ) {
         $this->logger = $logger;
@@ -101,14 +93,12 @@ class CancelQuoteByAttempts
         $this->scopeCodeResolver = $scopeCodeResolver;
         $this->cancellationConfig = $cancellationConfig;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
-        $this->cartRepository = $cartRepository;
         $this->cancelFacade = $cancelFacade;
     }
 
     /**
      * Create orders from Vipps that are not created in Magento yet
      *
-     * @throws CouldNotSaveException
      * @throws NoSuchEntityException
      */
     public function execute()
@@ -157,7 +147,7 @@ class CancelQuoteByAttempts
             QuoteStatusInterface::FIELD_STATUS,
             ['in' => [
                 QuoteStatusInterface::STATUS_NEW,
-                QuoteStatusInterface::STATUS_PLACE_FAILED,
+                QuoteStatusInterface::STATUS_RESERVE_FAILED,
                 QuoteStatusInterface::STATUS_PENDING
             ]]
         );
@@ -169,8 +159,6 @@ class CancelQuoteByAttempts
      * Main process
      *
      * @param QuoteInterface $vippsQuote
-     *
-     * @throws CouldNotSaveException
      */
     private function processQuote(QuoteInterface $vippsQuote)
     {
@@ -180,11 +168,10 @@ class CancelQuoteByAttempts
             $this->prepareEnv($vippsQuote);
 
             if ($this->cancellationConfig->isAutomatic($vippsQuote->getStoreId())) {
-                $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-                $this->cancelFacade->cancel($vippsQuote, $quote);
+                $this->cancelFacade->cancel($vippsQuote);
             }
-        } catch (\Throwable $e) {
-            $this->logger->critical($e->getMessage(), ['quote_id' => $vippsQuote->getId()]);
+        } catch (\Throwable $t) {
+            $this->logger->critical($t->getMessage(), ['quote_id' => $vippsQuote->getId()]);
         }
     }
 

@@ -17,8 +17,12 @@
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
 use Magento\Framework\{
-    App\RequestInterface, Controller\ResultFactory, Controller\ResultInterface, Message\ManagerInterface,
-    TestFramework\Unit\Helper\ObjectManager, App\Action\Context
+    App\RequestInterface,
+    Controller\ResultFactory,
+    Controller\ResultInterface,
+    Message\ManagerInterface,
+    TestFramework\Unit\Helper\ObjectManager,
+    App\Action\Context
 };
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -30,10 +34,17 @@ use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{
-    Controller\Payment\Fallback, Gateway\Request\Initiate\MerchantDataBuilder, Gateway\Transaction\ShippingDetails,
-    Gateway\Command\PaymentDetailsProvider, Gateway\Transaction\Transaction, Gateway\Transaction\TransactionBuilder,
-    Gateway\Transaction\TransactionInfo, Gateway\Transaction\TransactionLogHistory,
-    Gateway\Transaction\TransactionSummary, Gateway\Transaction\UserDetails, Model\OrderPlace,
+    Controller\Payment\Fallback,
+    Gateway\Request\Initiate\MerchantDataBuilder,
+    Gateway\Transaction\ShippingDetails,
+    Gateway\Command\PaymentDetailsProvider,
+    Gateway\Transaction\Transaction,
+    Gateway\Transaction\TransactionBuilder,
+    Gateway\Transaction\TransactionInfo,
+    Gateway\Transaction\TransactionLogHistory,
+    Gateway\Transaction\TransactionSummary,
+    Gateway\Transaction\UserDetails,
+    Model\TransactionProcessor,
     Api\CommandManagerInterface
 };
 
@@ -55,7 +66,7 @@ class FallbackTestTest extends TestCase
     private $commandManager;
 
     /**
-     * @var OrderPlace|MockObject
+     * @var TransactionProcessor|MockObject
      */
     private $orderManagement;
 
@@ -134,7 +145,7 @@ class FallbackTestTest extends TestCase
             ->method('create')
             ->with(ResultFactory::TYPE_REDIRECT)
             ->willReturn($this->resultRedirect);
-        $this->orderManagement = $this->getMockBuilder(OrderPlace::class)
+        $this->orderManagement = $this->getMockBuilder(TransactionProcessor::class)
             ->disableOriginalConstructor()
             ->setMethods(['getOrderByIncrementId', 'place', 'getQuoteByReservedOrderId'])
             ->getMock();

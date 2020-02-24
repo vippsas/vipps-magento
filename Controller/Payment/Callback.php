@@ -26,14 +26,12 @@ use Magento\Framework\{App\Action\Action,
     Controller\ResultInterface,
     Exception\NoSuchEntityException,
     Serialize\Serializer\Json};
-use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface};
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\QuoteRepositoryInterface,
     Gateway\Command\PaymentDetailsProvider,
-    Gateway\Transaction\TransactionBuilder,
     Model\Gdpr\Compliance,
-    Model\OrderPlace};
+    Model\TransactionProcessor};
 use Zend\Http\Response as ZendResponse;
 
 /**
@@ -44,9 +42,9 @@ use Zend\Http\Response as ZendResponse;
 class Callback extends Action implements CsrfAwareActionInterface
 {
     /**
-     * @var OrderPlace
+     * @var TransactionProcessor
      */
-    private $orderPlace;
+    private $transactionProcessor;
 
     /**
      * @var QuoteRepositoryInterface
@@ -59,29 +57,14 @@ class Callback extends Action implements CsrfAwareActionInterface
     private $jsonDecoder;
 
     /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
 
     /**
-     * @var CartInterface
-     */
-    private $quote;
-
-    /**
      * @var QuoteInterface
      */
     private $vippsQuote;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
 
     /**
      * @var PaymentDetailsProvider
@@ -97,35 +80,29 @@ class Callback extends Action implements CsrfAwareActionInterface
      * Callback constructor.
      *
      * @param Context $context
-     * @param OrderPlace $orderManagement
+     * @param TransactionProcessor $orderManagement
      * @param QuoteRepositoryInterface $vippsQuoteRepository
-     * @param CartRepositoryInterface $cartRepository
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param Json $jsonDecoder
-     * @param TransactionBuilder $transactionBuilder
      * @param Compliance $compliance
      * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
-        OrderPlace $orderManagement,
+        TransactionProcessor $orderManagement,
         QuoteRepositoryInterface $vippsQuoteRepository,
-        CartRepositoryInterface $cartRepository,
         PaymentDetailsProvider $paymentDetailsProvider,
         Json $jsonDecoder,
-        TransactionBuilder $transactionBuilder,
         Compliance $compliance,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
-        $this->orderPlace = $orderManagement;
+        $this->transactionProcessor = $orderManagement;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
-        $this->cartRepository = $cartRepository;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->jsonDecoder = $jsonDecoder;
-        $this->transactionBuilder = $transactionBuilder;
-        $this->logger = $logger;
         $this->gdprCompliance = $compliance;
+        $this->logger = $logger;
     }
 
     /**
@@ -142,7 +119,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $this->authorize($requestData);
 
             $transaction = $this->getPaymentDetails($requestData);
-            $this->orderPlace->execute($this->getQuote($requestData), $transaction);
+            //$this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
 
             /** @var Json $result */
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
@@ -169,8 +146,7 @@ class Callback extends Action implements CsrfAwareActionInterface
      */
     private function getPaymentDetails($requestData)
     {
-        $responseData = $this->paymentDetailsProvider->get(['orderId' => $requestData['orderId']]);
-        return $this->transactionBuilder->setData($responseData)->build();
+        return $this->paymentDetailsProvider->get($requestData['orderId']);
     }
 
     /**
@@ -217,23 +193,6 @@ class Callback extends Action implements CsrfAwareActionInterface
             $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($requestData['orderId']);
         }
         return $this->vippsQuote;
-    }
-
-    /**
-     * Retrieve a quote from repository based on request parameter order id
-     *
-     * @param $requestData
-     *
-     * @return CartInterface
-     * @throws NoSuchEntityException
-     */
-    private function getQuote($requestData)
-    {
-        if (null === $this->quote) {
-            $vippsQuote = $this->getVippsQuote($requestData);
-            $this->quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-        }
-        return $this->quote;
     }
 
     /**

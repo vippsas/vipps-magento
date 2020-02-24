@@ -66,7 +66,7 @@ class TransactionLogHistory extends DataObject
             $items = $this->getItems();
             $lastTransactionTime = 0;
             foreach ($items as $item) {
-                if ($item->getTimeStamp() >= $lastTransactionTime) {
+                if ($item->isOperationSuccess() && $item->getTimeStamp() >= $lastTransactionTime) {
                     $lastTransactionTime = $item->getTimeStamp();
                     $this->lastItem = $item;
                 }

@@ -27,8 +27,11 @@ use Magento\Framework\{
     Json\DecoderInterface
 };
 use Vipps\Payment\Gateway\{
-    Exception\ExceptionFactory, Exception\VippsException, Request\SubjectReader, Transaction\Transaction,
-    Transaction\TransactionBuilder, Transaction\TransactionSummary,
+    Exception\ExceptionFactory,
+    Exception\VippsException,
+    Request\SubjectReader,
+    Transaction\Transaction,
+    Transaction\TransactionSummary,
     Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem
 };
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
@@ -94,11 +97,6 @@ class CancelCommand extends GatewayCommand
     private $paymentDetailsProvider;
 
     /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
-    /**
      * @var SubjectReader
      */
     private $subjectReader;
@@ -114,7 +112,6 @@ class CancelCommand extends GatewayCommand
      * @param DecoderInterface $jsonDecoder
      * @param ProfilerInterface $profiler
      * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param SubjectReader $subjectReader
      * @param HandlerInterface|null $handler
      * @param ValidatorInterface|null $validator
@@ -130,7 +127,6 @@ class CancelCommand extends GatewayCommand
         DecoderInterface $jsonDecoder,
         ProfilerInterface $profiler,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         SubjectReader $subjectReader,
         HandlerInterface $handler = null,
         ValidatorInterface $validator = null
@@ -156,7 +152,6 @@ class CancelCommand extends GatewayCommand
         $this->jsonDecoder = $jsonDecoder;
         $this->profiler = $profiler;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->subjectReader = $subjectReader;
     }
 
@@ -173,8 +168,8 @@ class CancelCommand extends GatewayCommand
      */
     public function execute(array $commandSubject)
     {
-        $response = $this->paymentDetailsProvider->get($commandSubject);
-        $transaction = $this->transactionBuilder->setData($response)->build();
+        $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
+        $transaction = $this->paymentDetailsProvider->get($orderId);
 
         // try to cancel based on payment details data
         if ($this->cancelBasedOnPaymentDetails($commandSubject, $transaction)) {

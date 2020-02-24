@@ -24,10 +24,8 @@ use Magento\Framework\{Controller\Result\Json,
     Exception\NoSuchEntityException,
     App\ResponseInterface,
     Session\SessionManagerInterface};
-use Vipps\Payment\{
-    Api\CommandManagerInterface,
-    Gateway\Request\Initiate\InitiateBuilderInterface
-};
+use Magento\Quote\Api\CartRepositoryInterface;
+use Vipps\Payment\{Api\CommandManagerInterface, Gateway\Request\Initiate\InitiateBuilderInterface, Model\Method\Vipps};
 use Magento\Checkout\Model\Session;
 use Psr\Log\LoggerInterface;
 
@@ -49,6 +47,11 @@ class Regular extends Action
     private $session;
 
     /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -59,17 +62,20 @@ class Regular extends Action
      * @param Context $context
      * @param CommandManagerInterface $commandManager
      * @param SessionManagerInterface $session
+     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
         CommandManagerInterface $commandManager,
         SessionManagerInterface $session,
+        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
         $this->session = $session;
+        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
     }
 
@@ -84,16 +90,14 @@ class Regular extends Action
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
             $responseData = $this->initiatePayment();
-            $this->getSession()->clearStorage();
-
             $response->setData($responseData);
         } catch (LocalizedException $e) {
             $this->getLogger()->critical($e->getMessage());
-            $response->setData(['errorMessage' => $e->getMessage()]);
+            $response->setData(['message' => $e->getMessage()]);
         } catch (\Exception $e) {
             $this->getLogger()->critical($e->getMessage());
             $response->setData([
-                'errorMessage' => __('An error occurred during request to Vipps. Please try again later.')
+                'message' => __('An error occurred during request to Vipps. Please try again later.')
             ]);
         }
 
@@ -110,6 +114,13 @@ class Regular extends Action
     protected function initiatePayment()
     {
         $quote = $this->getSession()->getQuote();
+        if (!$quote) {
+            throw new LocalizedException(__('Could not initiate payment. Please, reload the page.'));
+        }
+
+        $quote->getPayment()
+            ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
+
         $responseData = $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
@@ -117,6 +128,8 @@ class Regular extends Action
                 InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
             ]
         );
+
+        $this->cartRepository->save($quote);
         return $responseData;
     }
 

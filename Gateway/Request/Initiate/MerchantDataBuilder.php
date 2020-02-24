@@ -135,8 +135,13 @@ class MerchantDataBuilder implements InitiateBuilderInterface
         /** @var Payment $payment */
         $payment = $paymentDO->getPayment();
         $quote = $this->cartRepository->get($payment->getQuote()->getId());
+
         /** @var $quote Quote */
+        $quote->getPayment()->setMethod('vipps');
+        $quote->setReservedOrderId(null);
         $quote->reserveOrderId();
+        $this->cartRepository->save($quote);
+
         $merchantInfo = [
             self::$merchantInfo => [
                 self::$authToken => $authToken,

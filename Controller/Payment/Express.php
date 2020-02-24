@@ -15,16 +15,21 @@
  */
 namespace Vipps\Payment\Controller\Payment;
 
+use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Checkout\Model\Type\Onepage;
 use Magento\Framework\{
     Controller\ResultFactory, Controller\ResultInterface, App\Action\Context, App\Action\Action,
     Exception\LocalizedException, App\ResponseInterface, Session\SessionManagerInterface
 };
 use Magento\Payment\Gateway\ConfigInterface;
-use Vipps\Payment\{
-    Api\CommandManagerInterface,
+use Magento\Quote\Api\CartRepositoryInterface;
+use Vipps\Payment\{Api\CommandManagerInterface,
     Gateway\Exception\VippsException,
-    Gateway\Request\Initiate\InitiateBuilderInterface
-};
+    Gateway\Request\Initiate\InitiateBuilderInterface,
+    Model\Method\Vipps};
+use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,9 +45,24 @@ class Express extends Action
     private $commandManager;
 
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var CheckoutSession
      */
-    private $session;
+    private $checkoutSession;
+
+    /**
+     * @var CustomerSession
+     */
+    private $customerSession;
+
+    /**
+     * @var CheckoutHelper
+     */
+    private $checkoutHelper;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
 
     /**
      * @var LoggerInterface
@@ -59,20 +79,29 @@ class Express extends Action
      *
      * @param Context $context
      * @param CommandManagerInterface $commandManager
-     * @param SessionManagerInterface $session
+     * @param SessionManagerInterface $checkoutSession
+     * @param SessionManagerInterface $customerSession
+     * @param CheckoutHelper $checkoutHelper
+     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      * @param ConfigInterface $config
      */
     public function __construct(
         Context $context,
         CommandManagerInterface $commandManager,
-        SessionManagerInterface $session,
+        SessionManagerInterface $checkoutSession,
+        SessionManagerInterface $customerSession,
+        CheckoutHelper $checkoutHelper,
+        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger,
         ConfigInterface $config
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
-        $this->session = $session;
+        $this->checkoutSession = $checkoutSession;
+        $this->customerSession = $customerSession;
+        $this->checkoutHelper = $checkoutHelper;
+        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
         $this->config = $config;
     }
@@ -89,16 +118,10 @@ class Express extends Action
             if (!$this->config->getValue('express_checkout')) {
                 throw new LocalizedException(__('Express Payment method is not available.'));
             }
-            $quote = $this->session->getQuote();
-            $responseData = $this->commandManager->initiatePayment(
-                $quote->getPayment(),
-                [
-                    'amount' => $quote->getGrandTotal(),
-                    InitiateBuilderInterface::PAYMENT_TYPE_KEY
-                        => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT
-                ]
-            );
-            $this->session->clearStorage();
+
+            $responseData = $this->initiatePayment();
+
+            $this->checkoutSession->clearStorage();
             $resultRedirect->setPath($responseData['url'], ['_secure' => true]);
         } catch (VippsException $e) {
             $this->logger->critical($e->getMessage());
@@ -116,5 +139,46 @@ class Express extends Action
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
         }
         return $resultRedirect;
+    }
+
+    /**
+     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    private function initiatePayment()
+    {
+        $responseData = null;
+
+        $quote = $this->checkoutSession->getQuote();
+
+        $quote->getPayment()
+            ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_EXPRESS_CHECKOUT);
+        $shippingAddress = $quote->getShippingAddress();
+        $shippingAddress->setShippingMethod(null);
+        $quote->collectTotals();
+
+        $responseData = $this->commandManager->initiatePayment(
+            $quote->getPayment(),
+            [
+                'amount' => $quote->getGrandTotal(),
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY
+                => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT
+            ]
+        );
+
+        if (!$quote->getCheckoutMethod()) {
+            if ($this->customerSession->isLoggedIn()) {
+                $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
+            } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
+                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
+            } else {
+                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
+            }
+        }
+        $quote->setIsActive(false);
+        $this->cartRepository->save($quote);
+
+        return $responseData;
     }
 }

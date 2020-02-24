@@ -17,9 +17,7 @@
 
 namespace Vipps\Payment\Api\Quote;
 
-use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Gateway\Transaction\Transaction;
 
 /**
  * Cancels Vipps payment everywhere.
@@ -31,10 +29,6 @@ interface CancelFacadeInterface
      * Cancel Vipps payment transaction both, Magento and Vipps.
      *
      * @param QuoteInterface $vippsQuote
-     * @param CartInterface|null $quote
      */
-    public function cancel(
-        QuoteInterface $vippsQuote,
-        CartInterface $quote
-    );
+    public function cancel(QuoteInterface $vippsQuote);
 }

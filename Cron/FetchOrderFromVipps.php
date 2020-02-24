@@ -17,27 +17,20 @@
 namespace Vipps\Payment\Cron;
 
 use Magento\Framework\App\Config\ScopeCodeResolver;
-use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Intl\DateTimeFactory;
-use Magento\Quote\Model\{QuoteRepository};
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteStatusInterface,
+use Vipps\Payment\{Api\Data\QuoteStatusInterface,
+    Gateway\Command\PaymentDetailsProvider,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
-    Gateway\Transaction\TransactionBuilder,
     Model\Order\Cancellation\Config,
-    Model\OrderLocator,
-    Model\OrderPlace,
+    Model\TransactionProcessor,
     Model\Quote as VippsQuote,
     Model\Quote\AttemptManagement,
     Model\QuoteRepository as VippsQuoteRepository,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
     Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
-use Vipps\Payment\Gateway\Exception\WrongAmountException;
 
 /**
  * Class FetchOrderStatus
@@ -52,19 +45,14 @@ class FetchOrderFromVipps
     const COLLECTION_PAGE_SIZE = 100;
 
     /**
-     * @var CommandManagerInterface
+     * @var PaymentDetailsProvider
      */
-    private $commandManager;
+    private $paymentDetailsProvider;
 
     /**
-     * @var TransactionBuilder
+     * @var TransactionProcessor
      */
-    private $transactionBuilder;
-
-    /**
-     * @var OrderPlace
-     */
-    private $orderPlace;
+    private $transactionProcessor;
 
     /**
      * @var LoggerInterface
@@ -97,69 +85,43 @@ class FetchOrderFromVipps
     private $vippsQuoteCollectionFactory;
 
     /**
-     * @var QuoteRepository
-     */
-    private $quoteRepository;
-
-    /**
      * @var VippsQuoteRepository
      */
     private $vippsQuoteRepository;
 
     /**
-     * @var DateTimeFactory
-     */
-    private $dateTimeFactory;
-
-    /**
-     * @var OrderLocator
-     */
-    private $orderLocator;
-
-    /**
      * FetchOrderFromVipps constructor.
+     *
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
      * @param VippsQuoteRepository $vippsQuoteRepository
-     * @param QuoteRepository $quoteRepository
-     * @param CommandManagerInterface $commandManager
-     * @param TransactionBuilder $transactionBuilder
-     * @param OrderPlace $orderManagement
+     * @param PaymentDetailsProvider $paymentDetailsProvider
+     * @param TransactionProcessor $orderProcessor
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
      * @param ScopeCodeResolver $scopeCodeResolver
      * @param Config $cancellationConfig
-     * @param DateTimeFactory $dateTimeFactory
      * @param AttemptManagement $attemptManagement
-     * @param OrderLocator $orderLocator
      */
     public function __construct(
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         VippsQuoteRepository $vippsQuoteRepository,
-        QuoteRepository $quoteRepository,
-        CommandManagerInterface $commandManager,
-        TransactionBuilder $transactionBuilder,
-        OrderPlace $orderManagement,
+        PaymentDetailsProvider $paymentDetailsProvider,
+        TransactionProcessor $orderProcessor,
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
         ScopeCodeResolver $scopeCodeResolver,
         Config $cancellationConfig,
-        DateTimeFactory $dateTimeFactory,
-        AttemptManagement $attemptManagement,
-        OrderLocator $orderLocator
+        AttemptManagement $attemptManagement
     ) {
-        $this->commandManager = $commandManager;
-        $this->transactionBuilder = $transactionBuilder;
-        $this->orderPlace = $orderManagement;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
+        $this->transactionProcessor = $orderProcessor;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->scopeCodeResolver = $scopeCodeResolver;
         $this->cancellationConfig = $cancellationConfig;
         $this->attemptManagement = $attemptManagement;
         $this->vippsQuoteCollectionFactory = $vippsQuoteCollectionFactory;
-        $this->quoteRepository = $quoteRepository;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
-        $this->dateTimeFactory = $dateTimeFactory;
-        $this->orderLocator = $orderLocator;
     }
 
     /**
@@ -202,18 +164,12 @@ class FetchOrderFromVipps
             $this->vippsQuoteRepository->save($vippsQuote);
 
             $transaction = $this->getPaymentDetails($vippsQuote->getReservedOrderId());
-
-            if ($transaction->isTransactionReserved()) {
-                $this->placeOrder($vippsQuote, $transaction);
-            } elseif ($this->isQuoteExpired($vippsQuote)) {
-                $vippsQuote->setStatus(QuoteStatusInterface::STATUS_EXPIRED);
-                $this->vippsQuoteRepository->save($vippsQuote);
-            }
-        } catch (\Throwable $e) {
-            $this->logger->critical($e->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
+            $this->transactionProcessor->process($vippsQuote, $transaction);
+        } catch (\Throwable $t) {
+            $this->logger->critical($t->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
 
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
-            $attempt->setMessage($e->getMessage());
+            $attempt->setMessage($t->getMessage());
             $this->attemptManagement->save($attempt);
         }
     }
@@ -232,56 +188,14 @@ class FetchOrderFromVipps
     }
 
     /**
-     * @param $orderId
+     * @param string $orderId
      *
      * @return Transaction
      * @throws VippsException
      */
     private function getPaymentDetails($orderId)
     {
-        $response = $this->commandManager->getPaymentDetails(['orderId' => $orderId]);
-        return $this->transactionBuilder->setData($response)->build();
-    }
-
-    /**
-     * @param VippsQuote $vippsQuote
-     * @param Transaction $transaction
-     *
-     * @return OrderInterface|null
-     * @throws AlreadyExistsException
-     * @throws CouldNotSaveException
-     * @throws InputException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     * @throws VippsException
-     * @throws WrongAmountException
-     */
-    private function placeOrder(VippsQuote $vippsQuote, Transaction $transaction)
-    {
-        $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
-        $order = $this->orderPlace->execute($quote, $transaction);
-        if (!$order) {
-            throw new LocalizedException(__('Place order service returns NULL'));
-        }
-        return $order;
-    }
-
-    /**
-     * Validate Vipps Quote expiration.
-     *
-     * @param $vippsQuote
-     * @return bool
-     * @throws \Exception
-     */
-    private function isQuoteExpired($vippsQuote)
-    {
-        $createdAt = $this->dateTimeFactory->create($vippsQuote->getCreatedAt());
-
-        $interval = new \DateInterval("PT{$this->cancellationConfig->getInactivityTime()}M");  //@codingStandardsIgnoreLine
-
-        $createdAt->add($interval);
-
-        return !$createdAt->diff($this->dateTimeFactory->create())->invert;
+        return $this->paymentDetailsProvider->get($orderId);
     }
 
     /**

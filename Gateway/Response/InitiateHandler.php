@@ -16,14 +16,13 @@
 
 namespace Vipps\Payment\Gateway\Response;
 
-use Magento\Checkout\Helper\Data as CheckoutHelper;
-use Magento\Checkout\Model\Type\Onepage;
-use Magento\Customer\Model\Session;
-use Magento\Framework\{App\ResourceConnection, Session\SessionManagerInterface};
-use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface, Http\Transfer, Response\HandlerInterface};
-use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote\Payment};
+use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface,
+    Http\Transfer,
+    Response\HandlerInterface};
+use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\{Api\Data\QuoteInterface,
     Gateway\Request\SubjectReader,
+    Model\Method\Vipps,
     Model\QuoteFactory,
     Model\QuoteRepository};
 
@@ -35,29 +34,9 @@ use Vipps\Payment\{Api\Data\QuoteInterface,
 class InitiateHandler implements HandlerInterface
 {
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
      * @var SubjectReader
      */
     private $subjectReader;
-
-    /**
-     * @var CheckoutHelper
-     */
-    private $checkoutHelper;
-
-    /**
-     * @var SessionManagerInterface|Session
-     */
-    private $customerSession;
-
-    /**
-     * @var ResourceConnection
-     */
-    private $resourceConnection;
 
     /**
      * @var QuoteFactory
@@ -72,28 +51,16 @@ class InitiateHandler implements HandlerInterface
     /**
      * InitiateHandler constructor.
      *
-     * @param CartRepositoryInterface $cartRepository
      * @param SubjectReader $subjectReader
-     * @param CheckoutHelper $checkoutHelper
-     * @param SessionManagerInterface $customerSession
-     * @param ResourceConnection $resourceConnection
      * @param QuoteFactory $quoteFactory
      * @param QuoteRepository $quoteRepository
      */
     public function __construct(
-        CartRepositoryInterface $cartRepository,
         SubjectReader $subjectReader,
-        CheckoutHelper $checkoutHelper,
-        SessionManagerInterface $customerSession,
-        ResourceConnection $resourceConnection,
         QuoteFactory $quoteFactory,
         QuoteRepository $quoteRepository
     ) {
-        $this->cartRepository = $cartRepository;
         $this->subjectReader = $subjectReader;
-        $this->checkoutHelper = $checkoutHelper;
-        $this->customerSession = $customerSession;
-        $this->resourceConnection = $resourceConnection;
         $this->quoteFactory = $quoteFactory;
         $this->quoteRepository = $quoteRepository;
     }
@@ -116,38 +83,13 @@ class InitiateHandler implements HandlerInterface
         $payment = $paymentDO->getPayment();
         $quote = $payment->getQuote();
 
-        if (!$quote->getCheckoutMethod()) {
-            if ($this->customerSession->isLoggedIn()) {
-                $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
-            } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
-                $quote->setCheckoutMethod(Onepage::METHOD_GUEST);
-            } else {
-                $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
-            }
-        }
-        $payment->setMethod('vipps');
-        $quote->setIsActive(false);
-
-        $connection = $this->resourceConnection->getConnection();
-
-        try {
-            $connection->beginTransaction();
-
-            $this->cartRepository->save($quote);
-
-            /** @var QuoteInterface $vippsQuote */
-            $vippsQuote = $this->quoteFactory->create();
-            $vippsQuote->setQuoteId($quote->getId());
-            $vippsQuote->setStoreId($quote->getStoreId());
-            $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
-            $vippsQuote->setReservedOrderId($quote->getReservedOrderId());
-            $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['authToken'] ?? '');
-            $this->quoteRepository->save($vippsQuote);
-
-            $connection->commit();
-        } catch (\Exception $e) {
-            $connection->rollBack();
-            throw $e;
-        }
+        /** @var QuoteInterface $vippsQuote */
+        $vippsQuote = $this->quoteFactory->create();
+        $vippsQuote->setStoreId($quote->getStoreId());
+        $vippsQuote->setQuoteId($quote->getId());
+        $vippsQuote->setStatus(QuoteInterface::STATUS_NEW);
+        $vippsQuote->setReservedOrderId($quote->getReservedOrderId());
+        $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['authToken'] ?? '');
+        $this->quoteRepository->save($vippsQuote);
     }
 }

@@ -21,11 +21,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\MailException;
-use Magento\Payment\Gateway\Data\PaymentDataObjectFactoryInterface;
 use Magento\Sales\Model\Order;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
-use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 use Vipps\Payment\Model\Order\PartialVoid\SendMail;
 use Vipps\Payment\Model\Order\PartialVoid\Config as PartialVoidConfig;
 
@@ -35,21 +31,6 @@ use Vipps\Payment\Model\Order\PartialVoid\Config as PartialVoidConfig;
  */
 class SendOfflineVoidEmail implements ObserverInterface
 {
-    /**
-     * @var PaymentDataObjectFactoryInterface
-     */
-    private $dataObjectFactory;
-
-    /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
-
-    /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
     /**
      * @var SendMail
      */
@@ -63,22 +44,13 @@ class SendOfflineVoidEmail implements ObserverInterface
     /**
      * SendOfflineVoidEmail constructor.
      *
-     * @param PaymentDataObjectFactoryInterface $dataObjectFactory
-     * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param SendMail $sendMail
      * @param PartialVoidConfig $config
      */
     public function __construct(
-        PaymentDataObjectFactoryInterface $dataObjectFactory,
-        PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         SendMail $sendMail,
         PartialVoidConfig $config
     ) {
-        $this->dataObjectFactory = $dataObjectFactory;
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->sendMail = $sendMail;
         $this->config = $config;
     }
@@ -90,23 +62,22 @@ class SendOfflineVoidEmail implements ObserverInterface
      *
      * @throws LocalizedException
      * @throws MailException
-     * @throws VippsException
      */
     public function execute(Observer $observer)
     {
         /** @var Order $order */
         $order = $observer->getData('order');
         $payment = $order->getPayment();
+
         $offlineVoidEnabled = $this->config->isOfflinePartialVoidEnabled($order->getStoreId());
         $sendMailEnabled = $this->config->isSendMailEnabled($order->getStoreId());
 
-        if ($payment->getMethod() === 'vipps' && $offlineVoidEnabled && $sendMailEnabled) {
-            $paymentDataObject = $this->dataObjectFactory->create($payment);
-            $response = $this->paymentDetailsProvider->get(['payment' => $paymentDataObject]);
-            $transaction = $this->transactionBuilder->setData($response)->build();
-            if ($transaction->getTransactionSummary()->getRemainingAmountToCapture() > 0) {
-                $this->sendMail->send($order);
-            }
+        if ($payment->getMethod() === 'vipps'
+            && $offlineVoidEnabled
+            && $sendMailEnabled
+            && $order->getTotalDue() > 0
+        ) {
+            $this->sendMail->send($order);
         }
     }
 }

@@ -34,7 +34,8 @@
 
     <type name="Vipps\Payment\Controller\Payment\Express">
         <arguments>
-            <argument name="session" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>

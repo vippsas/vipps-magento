@@ -51,6 +51,10 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
             $this->fillVippsQuotes($setup);
         }
 
+        if (version_compare($context->getVersion(), '2.3.0', '<')) {
+            $this->fixCoreConfigData($setup);
+        }
+
         $installer->endSetup();
     }
 
@@ -90,5 +94,16 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
             );
 
         $connection->query($updateSql); //@codingStandardsIgnoreLine
+    }
+
+    /**
+     * @param ModuleDataSetupInterface $installer
+     */
+    private function fixCoreConfigData(ModuleDataSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $installer->getTable('core_config_data');
+
+        $connection->delete($tableName, ['path = ?' => 'payment/vipps/payment_action']);
     }
 }
