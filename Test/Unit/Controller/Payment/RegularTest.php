@@ -21,7 +21,7 @@ use Magento\Framework\{
     TestFramework\Unit\Helper\ObjectManager, App\Action\Context
 };
 use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Controller\Payment\Regular;
+use Vipps\Payment\Controller\Payment\InitRegular;
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteRepository;
@@ -32,14 +32,14 @@ use PHPUnit\Framework\TestCase;
 use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
- * Class RegularTest
+ * Class InitRegularTest
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class RegularTest extends TestCase
+class InitRegularTest extends TestCase
 {
     /**
-     * @var Regular
+     * @var InitRegular
      */
     private $action;
 
@@ -139,7 +139,7 @@ class RegularTest extends TestCase
             ->with(ResultFactory::TYPE_JSON)
             ->willReturn($this->response);
         $managerHelper = new ObjectManager($this);
-        $this->action = $managerHelper->getObject(Regular::class, [
+        $this->action = $managerHelper->getObject(InitRegular::class, [
             'context' => $context,
             'commandManager' => $this->commandManager,
             'session' => $this->session,

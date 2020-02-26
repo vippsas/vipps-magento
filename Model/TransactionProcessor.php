@@ -310,6 +310,7 @@ class TransactionProcessor
         // set quote active, collect totals and place order
         $quote->setIsActive(true);
         $orderId = $this->cartManagement->placeOrder($quote->getId());
+
         $order = $this->orderRepository->get($orderId);
 
         $quote->setReservedOrderId(null);

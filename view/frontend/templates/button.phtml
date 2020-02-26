@@ -27,7 +27,7 @@ $shortcutHtmlId = $block->escapeHtml($block->getShortcutHtmlId());
 <a class="vipps-express-checkout"
      href="#"
      data-action="checkout-form-submit"
-     data-redirect-url="<?php echo $block->escapeUrl($block->getUrl('vipps/payment/express')); ?>"
+     data-redirect-url="<?php echo $block->escapeUrl($block->getUrl('vipps/payment/initExpress')); ?>"
      data-mage-init='{
      "Vipps_Payment/js/view/vipps-express-checkout": {
                 "isCatalogProduct": "<?= (bool)$isInCatalogProduct //@codingStandardsIgnoreLine ?>",

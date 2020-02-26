@@ -79,7 +79,7 @@ class QuoteUpdater
         $quote->setMayEditShippingAddress(false);
         $quote->setMayEditShippingMethod(true);
 
-        $this->updateQuoteAddress($quote, $transaction);
+        $this->updateQuoteAddresses($quote, $transaction);
         $this->utility->disabledQuoteAddressValidation($quote);
 
         /**
@@ -97,13 +97,12 @@ class QuoteUpdater
      * @param Quote $quote
      * @param Transaction $transaction
      */
-    private function updateQuoteAddress(Quote $quote, Transaction $transaction)
+    private function updateQuoteAddresses(Quote $quote, Transaction $transaction)
     {
+        $this->updateBillingAddress($quote, $transaction);
         if (!$quote->getIsVirtual()) {
             $this->updateShippingAddress($quote, $transaction);
         }
-
-        $this->updateBillingAddress($quote, $transaction);
     }
 
     /**
@@ -127,10 +126,11 @@ class QuoteUpdater
             $shippingAddress->setPostcode($shippingDetails->getPostcode());
         }
 
+        $shippingAddress->setSameAsBilling(true);
+
         //We do not save user address from vipps in Magento
         $shippingAddress->setSaveInAddressBook(false);
-        $shippingAddress->setSameAsBilling(true);
-        $shippingAddress->unsCustomerAddressId();
+        $shippingAddress->setCustomerAddressId(null);
     }
 
     /**
@@ -153,9 +153,10 @@ class QuoteUpdater
             $billingAddress->setPostcode($shippingDetails->getPostcode());
         }
 
+        $billingAddress->setSameAsBilling(false);
+
         //We do not save user address from vipps in Magento
         $billingAddress->setSaveInAddressBook(false);
-        $billingAddress->setSameAsBilling(false);
-        $billingAddress->unsCustomerAddressId();
+        $billingAddress->setCustomerAddressId(null);
     }
 }
