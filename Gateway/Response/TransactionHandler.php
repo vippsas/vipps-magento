@@ -67,7 +67,7 @@ class TransactionHandler implements HandlerInterface
 
         if ($payment instanceof Payment) {
             $status = $transaction->getTransactionInfo()->getStatus();
-            $transactionId = $transaction->getTransactionInfo()->getTransactionId();
+            $transactionId = $transaction->getTransactionId();
 
             switch ($status) {
                 case Transaction::TRANSACTION_STATUS_CANCELLED:
@@ -82,7 +82,7 @@ class TransactionHandler implements HandlerInterface
             $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(
                 PaymentTransaction::RAW_DETAILS,
-                $transaction->getTransactionInfo()->getData() + $transaction->getTransactionSummary()->getData()
+                $transaction->getTransactionSummary()->getData()
             );
         }
     }

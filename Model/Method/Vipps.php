@@ -13,32 +13,28 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Plugin\Sales\Model\Order;
+namespace Vipps\Payment\Model\Method;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order\Invoice as CoreInvoice;
+use Magento\Payment\Model\Method\Adapter;
 
 /**
- * Class Invoice
- * @package Vipps\Payment\Plugin\Sales\Model\Order
+ * Class Vipps
+ * @package Vipps\Payment\Model\Method
  */
-class Invoice
+class Vipps extends Adapter
 {
     /**
-     * Before Invoice register plugin.
-     *
-     * Plugin prevents creating invoice with 'Capture Offline' for orders with vipps payment method
-     *
-     * @param CoreInvoice $subject
-     * @throws LocalizedException
+     * @var string
      */
-    public function beforeRegister(CoreInvoice $subject)
-    {
-        $captureCase = $subject->getRequestedCaptureCase();
-        $paymentMethod = $subject->getOrder()->getPayment()->getMethod();
+    const METHOD_TYPE_KEY = 'method_type';
 
-        if (CoreInvoice::CAPTURE_OFFLINE === $captureCase && $paymentMethod === 'vipps') {
-            throw new LocalizedException(__('Vipps payment method does not support Capture Offline'));
-        }
-    }
+    /**
+     * @var string
+     */
+    const METHOD_TYPE_EXPRESS_CHECKOUT = 'express_checkout';
+
+    /**
+     * @var string
+     */
+    const METHOD_TYPE_REGULAR_CHECKOUT = 'regular_checkout';
 }

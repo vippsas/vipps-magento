@@ -81,14 +81,6 @@ class TransactionDataBuilder implements InitiateBuilderInterface
         $amount = $this->subjectReader->readAmount($buildSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
 
-        if ($buildSubject[self::PAYMENT_TYPE_KEY] == self::PAYMENT_TYPE_EXPRESS_CHECKOUT) {
-            $shippingAddress = $quote->getShippingAddress();
-            $shippingAddress->setShippingMethod(null);
-            $quote->collectTotals();
-
-            $amount = (int)round($this->formatPrice($quote->getGrandTotal()) * 100);
-        }
-
         return [
             self::$transaction => [
                 self::$orderId => $quote->getReservedOrderId(),

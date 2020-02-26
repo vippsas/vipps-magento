@@ -28,8 +28,11 @@ use Magento\Framework\{
     Json\DecoderInterface
 };
 use Vipps\Payment\Gateway\{
-    Exception\VippsException, Request\SubjectReader, Transaction\Transaction, Transaction\TransactionBuilder,
-    Transaction\TransactionSummary, Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem,
+    Exception\VippsException,
+    Request\SubjectReader,
+    Transaction\Transaction,
+    Transaction\TransactionSummary,
+    Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem,
     Exception\ExceptionFactory
 };
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
@@ -100,11 +103,6 @@ class RefundCommand extends GatewayCommand
     private $subjectReader;
 
     /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
-    /**
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
@@ -120,7 +118,6 @@ class RefundCommand extends GatewayCommand
      * @param DecoderInterface $jsonDecoder
      * @param ProfilerInterface $profiler
      * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param SubjectReader $subjectReader
      * @param OrderRepositoryInterface $orderRepository
      * @param HandlerInterface|null $handler
@@ -137,7 +134,6 @@ class RefundCommand extends GatewayCommand
         DecoderInterface $jsonDecoder,
         ProfilerInterface $profiler,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         SubjectReader $subjectReader,
         OrderRepositoryInterface $orderRepository,
         HandlerInterface $handler = null,
@@ -165,7 +161,6 @@ class RefundCommand extends GatewayCommand
         $this->profiler = $profiler;
 
         $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->subjectReader = $subjectReader;
         $this->orderRepository = $orderRepository;
     }
@@ -186,8 +181,8 @@ class RefundCommand extends GatewayCommand
         $amount = $this->subjectReader->readAmount($commandSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
 
-        $response = $this->paymentDetailsProvider->get($commandSubject);
-        $transaction = $this->transactionBuilder->setData($response)->build();
+        $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
+        $transaction = $this->paymentDetailsProvider->get($orderId);
 
         // try to refund based on payment details data
         if ($this->refundBasedOnPaymentDetails($commandSubject, $transaction)) {

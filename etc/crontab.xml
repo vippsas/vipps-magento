@@ -18,7 +18,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="default">
         <job name="vipps_fetch_order_from_vipps" instance="Vipps\Payment\Cron\FetchOrderFromVipps" method="execute">
-            <schedule>*/10 * * * *</schedule>
+            <schedule>* * * * *</schedule>
         </job>
         <job name="vipps_cancel_order_by_attempts" instance="Vipps\Payment\Cron\CancelQuoteByAttempts" method="execute">
             <schedule>0 * * * *</schedule>

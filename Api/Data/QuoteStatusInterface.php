@@ -28,13 +28,45 @@ interface QuoteStatusInterface
      */
     const FIELD_STATUS = 'status';
 
+    /**
+     * @const string
+     */
     const STATUS_NEW = 'new';
-    const STATUS_EXPIRED = 'expired';
-    const STATUS_PLACED = 'placed';
+
+    /**
+     * @const string
+     */
     const STATUS_PENDING = 'pending';
-    const STATUS_PLACE_FAILED = 'place_failed';
+
+    /**
+     * @const string
+     */
     const STATUS_CANCELED = 'canceled';
-    const STATUS_CANCEL_FAILED = 'cancel_failed';
+
+    /**
+     * @const string
+     */
+    const STATUS_EXPIRED = 'expired';
+
+    /**
+     * @const string
+     */
+    const STATUS_RESERVED = 'reserved';
+
+    /**
+     * @const string
+     */
+    const STATUS_RESERVE_FAILED = 'reserve_failed';
+
+    /**
+     * @const string
+     */
+    const STATUS_REVERTED = 'reverted';
+
+    /**
+     * @const string
+     */
+    const STATUS_REVERT_FAILED = 'revert_failed';
 
     /**
      * @return string

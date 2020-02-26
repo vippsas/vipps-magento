@@ -27,23 +27,19 @@ use Magento\Framework\{App\Action\Action,
     Controller\ResultFactory,
     Controller\ResultInterface,
     Exception\CouldNotSaveException,
-    Exception\InputException,
     Exception\LocalizedException,
     Exception\NoSuchEntityException,
     Session\SessionManagerInterface};
-use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Quote\{Api\CartRepositoryInterface, Model\Quote};
+use Magento\Sales\Api\OrderManagementInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteInterface,
+use Vipps\Payment\{Api\Data\QuoteInterface,
     Api\QuoteRepositoryInterface,
-    Gateway\Transaction\TransactionBuilder,
+    Gateway\Command\PaymentDetailsProvider,
+    Gateway\Transaction\Transaction,
     Model\Gdpr\Compliance,
-    Model\OrderLocator,
-    Model\OrderPlace,
-    Model\Quote\AttemptManagement,
-    Model\QuoteManagement};
-use Zend\Http\Response as ZendResponse;
+    Model\TransactionProcessor};
+use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
  * Class Fallback
@@ -53,9 +49,9 @@ use Zend\Http\Response as ZendResponse;
 class Fallback extends Action implements CsrfAwareActionInterface
 {
     /**
-     * @var CommandManagerInterface
+     * @var PaymentDetailsProvider
      */
-    private $commandManager;
+    private $paymentDetailsProvider;
 
     /**
      * @var SessionManagerInterface|Session
@@ -63,14 +59,9 @@ class Fallback extends Action implements CsrfAwareActionInterface
     private $checkoutSession;
 
     /**
-     * @var TransactionBuilder
+     * @var TransactionProcessor
      */
-    private $transactionBuilder;
-
-    /**
-     * @var OrderPlace
-     */
-    private $orderPlace;
+    private $transactionProcessor;
 
     /**
      * @var CartRepositoryInterface
@@ -78,24 +69,9 @@ class Fallback extends Action implements CsrfAwareActionInterface
     private $cartRepository;
 
     /**
-     * @var OrderInterface
-     */
-    private $order;
-
-    /**
-     * @var CartInterface
-     */
-    private $quote;
-
-    /**
      * @var QuoteRepositoryInterface
      */
     private $vippsQuoteRepository;
-
-    /**
-     * @var OrderLocator
-     */
-    private $orderLocator;
 
     /**
      * @var LoggerInterface
@@ -107,15 +83,11 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     private $gdprCompliance;
 
-    /**
-     * @var QuoteManagement
-     */
-    private $vippsQuoteManagement;
 
     /**
-     * @var AttemptManagement
+     * @var OrderManagementInterface
      */
-    private $attemptManagement;
+    private $orderManagement;
 
     /**
      * @var QuoteInterface
@@ -126,15 +98,12 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * Fallback constructor.
      *
      * @param Context $context
-     * @param CommandManagerInterface $commandManager
+     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param SessionManagerInterface $checkoutSession
-     * @param TransactionBuilder $transactionBuilder
-     * @param OrderPlace $orderPlace
+     * @param TransactionProcessor $orderProcessor
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteRepositoryInterface $vippsQuoteRepository
-     * @param QuoteManagement $vippsQuoteManagement
-     * @param AttemptManagement $attemptManagement
-     * @param OrderLocator $orderLocator
+     * @param OrderManagementInterface $orderManagement
      * @param Compliance $compliance
      * @param LoggerInterface $logger
      *
@@ -142,30 +111,24 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     public function __construct(
         Context $context,
-        CommandManagerInterface $commandManager,
+        PaymentDetailsProvider $paymentDetailsProvider,
         SessionManagerInterface $checkoutSession,
-        TransactionBuilder $transactionBuilder,
-        OrderPlace $orderPlace,
+        TransactionProcessor $orderProcessor,
         CartRepositoryInterface $cartRepository,
         QuoteRepositoryInterface $vippsQuoteRepository,
-        QuoteManagement $vippsQuoteManagement,
-        AttemptManagement $attemptManagement,
-        OrderLocator $orderLocator,
+        OrderManagementInterface $orderManagement,
         Compliance $compliance,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
-        $this->commandManager = $commandManager;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->checkoutSession = $checkoutSession;
-        $this->transactionBuilder = $transactionBuilder;
-        $this->orderPlace = $orderPlace;
+        $this->transactionProcessor = $orderProcessor;
         $this->cartRepository = $cartRepository;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
-        $this->orderLocator = $orderLocator;
-        $this->logger = $logger;
         $this->gdprCompliance = $compliance;
-        $this->vippsQuoteManagement = $vippsQuoteManagement;
-        $this->attemptManagement = $attemptManagement;
+        $this->orderManagement = $orderManagement;
+        $this->logger = $logger;
     }
 
     /**
@@ -179,19 +142,22 @@ class Fallback extends Action implements CsrfAwareActionInterface
         try {
             $this->authorize();
 
-            $quote = $this->getQuote();
-            $order = $this->placeOrder();
+            $vippsQuote = $this->getVippsQuote();
+            $transaction = $this->getPaymentDetails();
 
-            $this->updateCheckoutSession($quote, $order);
-            /** @var ZendResponse $result */
-            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+            // main transaction process
+            $this->transactionProcessor->process($vippsQuote, $transaction);
+
+            $this->prepareResponse($resultRedirect, $transaction);
         } catch (LocalizedException $e) {
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage($e->getMessage());
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
-            $this->messageManager->addErrorMessage(__('An error occurred during order place.'));
+            $this->messageManager->addErrorMessage(
+                __('A server error stopped your transaction from being processed. Please contact to store administrator.')
+            );
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getRequestString());
@@ -222,84 +188,38 @@ class Fallback extends Action implements CsrfAwareActionInterface
     }
 
     /**
+     * @param bool $forceReload
+     *
      * @return QuoteInterface
      * @throws NoSuchEntityException
      */
-    private function getVippsQuote()
+    private function getVippsQuote($forceReload = false)
     {
-        if (null === $this->vippsQuote) {
-            $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($this->getRequest()->getParam('order_id'));
+        if (null === $this->vippsQuote || $forceReload) {
+            $this->vippsQuote = $this->vippsQuoteRepository
+                ->loadByOrderId($this->getRequest()->getParam('order_id'));
         }
         return $this->vippsQuote;
     }
 
     /**
-     * Retrieve quote from quote repository if no then from order
-     *
-     * @return CartInterface|bool
-     * @throws NoSuchEntityException
-     */
-    private function getQuote()
-    {
-        if (null === $this->quote) {
-            $vippsQuote = $this->getVippsQuote();
-            $this->quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-        }
-        return $this->quote;
-    }
-
-    /**
-     * @return OrderInterface|null
-     * @throws CouldNotSaveException
-     * @throws InputException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Vipps\Payment\Gateway\Exception\VippsException
-     * @throws \Vipps\Payment\Gateway\Exception\WrongAmountException
-     */
-    private function placeOrder()
-    {
-        $quote = $this->getQuote();
-        $transaction = $this->getPaymentDetails();
-
-        if ($transaction->isTransactionCancelled()) {
-            $this->restoreQuote($quote);
-            throw new LocalizedException(__('Your order was canceled in Vipps.'));
-        }
-
-        if ($transaction->isTransactionReserved()) {
-            $order = $this->orderPlace->execute($quote, $transaction);
-            if (!$order) {
-                throw new LocalizedException(__('An error occurred during order place.'));
-            }
-            return $order;
-        }
-
-        $this->restoreQuote($quote);
-        throw new LocalizedException(__('The order was not reserved in Vipps.'));
-    }
-
-    /**
-     * @return \Vipps\Payment\Gateway\Transaction\Transaction
-     * @throws \Vipps\Payment\Gateway\Exception\VippsException
+     * @return Transaction
+     * @throws VippsException
      */
     private function getPaymentDetails()
     {
-        $response = $this->commandManager->getPaymentDetails(
-            [
-                'orderId' => $this->getRequest()->getParam('order_id')
-            ]
-        );
-
-        return $this->transactionBuilder->setData($response)->build();
+        return $this->paymentDetailsProvider->get($this->getRequest()->getParam('order_id'));
     }
 
     /**
-     * @param $quote
+     * @param QuoteInterface $vippsQuote
+     *
+     * @throws NoSuchEntityException
      */
-    private function restoreQuote($quote)
+    private function restoreQuote(QuoteInterface $vippsQuote)
     {
+        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+
         /** @var Quote $quote */
         $quote->setIsActive(true);
         $quote->setReservedOrderId(null);
@@ -312,18 +232,63 @@ class Fallback extends Action implements CsrfAwareActionInterface
     /**
      * Method to update Checkout session for success page when order was placed with Callback Controller.
      *
-     * @param CartInterface $quote
-     * @param OrderInterface $order
+     * @param QuoteInterface $vippsQuote
      */
-    private function updateCheckoutSession(CartInterface $quote, OrderInterface $order = null)
+    private function storeSuccessDataToCheckoutSession(QuoteInterface $vippsQuote)
     {
-        $this->checkoutSession->setLastQuoteId($quote->getId());
-        if ($order) {
-            $this->checkoutSession->setLastSuccessQuoteId($quote->getId());
-            $this->checkoutSession->setLastOrderId($order->getEntityId());
-            $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
-            $this->checkoutSession->setLastOrderStatus($order->getStatus());
+        $this->checkoutSession->clearStorage();
+        $this->checkoutSession->setLastQuoteId($vippsQuote->getQuoteId());
+        if ($vippsQuote->getOrderId()) {
+            $this->checkoutSession->setLastSuccessQuoteId($vippsQuote->getQuoteId());
+            $this->checkoutSession->setLastOrderId($vippsQuote->getOrderId());
+            $this->checkoutSession->setLastRealOrderId($vippsQuote->getReservedOrderId());
+            $this->checkoutSession->setLastOrderStatus($this->orderManagement->getStatus($vippsQuote->getOrderId()));
         }
+    }
+
+    /**
+     * @param Redirect $resultRedirect
+     * @param Transaction $transaction
+     *
+     * @return Redirect
+     * @throws NoSuchEntityException
+     * @throws \Exception
+     */
+    private function prepareResponse(Redirect $resultRedirect, Transaction $transaction)
+    {
+        $vippsQuote = $this->getVippsQuote(true);
+
+        if ($transaction->isTransactionCancelled()) {
+            $this->restoreQuote($vippsQuote);
+            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
+            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
+            return $resultRedirect;
+        }
+
+        if ($transaction->isTransactionReserved()) {
+            $this->storeSuccessDataToCheckoutSession($vippsQuote);
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+
+            return $resultRedirect;
+        }
+
+        if ($transaction->isTransactionExpired()) {
+            $this->restoreQuote($vippsQuote);
+            $this->messageManager->addErrorMessage(
+                __('Transaction was expired. Please, place your order again')
+            );
+            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
+            return $resultRedirect;
+        }
+
+        $this->messageManager->addWarningMessage(
+            __('We have not received a confirmation that order was reserved. It will be checked later again.')
+        );
+        $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+
+        return $resultRedirect;
     }
 
     /**

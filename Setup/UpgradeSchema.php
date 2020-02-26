@@ -54,6 +54,20 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             $connection
                 ->addColumn(
                     $tableName,
+                    'order_id',
+                    [
+                        'type' => Table::TYPE_INTEGER,
+                        'nullable' => true,
+                        'unsigned' => true,
+                        'default' => null,
+                        'after' => 'quote_id',
+                        'comment' => 'Order Id'
+                    ]
+                );
+
+            $connection
+                ->addColumn(
+                    $tableName,
                     'auth_token',
                     [
                         'type'     => Table::TYPE_TEXT,
