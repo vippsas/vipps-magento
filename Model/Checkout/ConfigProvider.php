@@ -53,7 +53,7 @@ class ConfigProvider implements ConfigProviderInterface
         return [
             'payment' => [
                 'vipps' => [
-                    'initiateUrl' => $this->urlBuilder->getUrl('vipps/payment/regular', ['_secure' => true]),
+                    'initiateUrl' => $this->urlBuilder->getUrl('vipps/payment/initRegular', ['_secure' => true]),
                     'logoSrc' => $this->assertRepository->getUrl('Vipps_Payment::images/vipps_logo_rgb.png'),
                     'continueImgSrc' =>
                         $this->assertRepository->getUrl('Vipps_Payment::images/vipps_knapp_fortsett.png'),

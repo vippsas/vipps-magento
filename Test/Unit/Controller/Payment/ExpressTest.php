@@ -22,7 +22,7 @@ use Magento\Framework\{
 };
 use Magento\Payment\Gateway\ConfigInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Controller\Payment\Regular;
+use Vipps\Payment\Controller\Payment\InitRegular;
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Payment;
@@ -37,7 +37,7 @@ use Vipps\Payment\Gateway\Exception\VippsException;
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ExpressTest extends TestCase
+class InitExpressTest extends TestCase
 {
     /**
      * @var Regular
@@ -153,7 +153,7 @@ class ExpressTest extends TestCase
             ->willReturn($this->messageManager);
 
         $managerHelper = new ObjectManager($this);
-        $this->action = $managerHelper->getObject(Express::class, [
+        $this->action = $managerHelper->getObject(InitExpress::class, [
             'context' => $context,
             'commandManager' => $this->commandManager,
             'session' => $this->session,

@@ -57,7 +57,7 @@ define(
                 fullScreenLoader.startLoader();
 
                 $.post(
-                    url.build('vipps/payment/regular'), {}
+                    url.build('vipps/payment/initRegular'), {}
                 ).done(
                     function(response, msg, xhr) {
                         if (response.hasOwnProperty('url')) {
