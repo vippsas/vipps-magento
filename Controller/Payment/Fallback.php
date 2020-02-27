@@ -100,7 +100,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @param Context $context
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param SessionManagerInterface $checkoutSession
-     * @param TransactionProcessor $orderProcessor
+     * @param TransactionProcessor $transactionProcessor
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteRepositoryInterface $vippsQuoteRepository
      * @param OrderManagementInterface $orderManagement
@@ -113,7 +113,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         Context $context,
         PaymentDetailsProvider $paymentDetailsProvider,
         SessionManagerInterface $checkoutSession,
-        TransactionProcessor $orderProcessor,
+        TransactionProcessor $transactionProcessor,
         CartRepositoryInterface $cartRepository,
         QuoteRepositoryInterface $vippsQuoteRepository,
         OrderManagementInterface $orderManagement,
@@ -123,7 +123,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         parent::__construct($context);
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->checkoutSession = $checkoutSession;
-        $this->transactionProcessor = $orderProcessor;
+        $this->transactionProcessor = $transactionProcessor;
         $this->cartRepository = $cartRepository;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->gdprCompliance = $compliance;
@@ -258,7 +258,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
     {
         $vippsQuote = $this->getVippsQuote(true);
 
-        if ($transaction->isTransactionCancelled()) {
+        if ($transaction->transactionWasCancelled()) {
             $this->restoreQuote($vippsQuote);
             $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);

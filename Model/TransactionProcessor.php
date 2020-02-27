@@ -157,22 +157,14 @@ class TransactionProcessor
     public function process(QuoteInterface $vippsQuote, Transaction $transaction)
     {
         $lockName = $this->acquireLock($vippsQuote->getReservedOrderId());
-        if (!$lockName) {
-            throw new \Exception(__('Can not acquire lock for order "%1"', $transaction->getOrderId()));
-        }
 
         try {
-            switch ($transaction->getTransactionStatus()) {
-                case Transaction::TRANSACTION_STATUS_CANCELLED:
-                    $this->processCancelledTransaction($vippsQuote, $transaction);
-                    break;
-                case Transaction::TRANSACTION_STATUS_RESERVED:
-                    $this->processReservedTransaction($vippsQuote, $transaction);
-                    break;
-                default:
-                    if ($transaction->isTransactionExpired()) {
-                        $this->processExpiredTransaction($vippsQuote, $transaction);
-                    }
+            if ($transaction->transactionWasCancelled() || $transaction->transactionWasVoided()) {
+                $this->processCancelledTransaction($vippsQuote, $transaction);
+            } elseif ($transaction->isTransactionReserved()) {
+                $this->processReservedTransaction($vippsQuote, $transaction);
+            } elseif ($transaction->isTransactionExpired()) {
+                $this->processExpiredTransaction($vippsQuote, $transaction);
             }
         } finally {
             $this->releaseLock($lockName);
@@ -266,10 +258,10 @@ class TransactionProcessor
     private function acquireLock($reservedOrderId)
     {
         $lockName = 'vipps_place_order_' . $reservedOrderId;
-        if ($this->lockManager->lock($lockName, 10)) {
+        if ($reservedOrderId && $this->lockManager->lock($lockName, 10)) {
             return $lockName;
         }
-        throw new \Exception('Could not acquire lock');
+        throw new \Exception(__('Can not acquire lock for order "%1"', $reservedOrderId));
     }
 
     /**
