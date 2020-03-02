@@ -14,21 +14,21 @@
  * IN THE SOFTWARE.
  */
 
-/**
- * Create value-object \Magento\Framework\Phrase
- *
- * @return \Magento\Framework\Phrase
- * @SuppressWarnings(PHPMD.ShortMethodName)
- */
-if (!function_exists('__')) {
-    function __() // @codingStandardsIgnoreLine
-    {
-        $argc = func_get_args();
-        $text = array_shift($argc);
-        if (!empty($argc) && is_array($argc[0])) {
-            $argc = $argc[0];
-        }
-
-        return new \Magento\Framework\Phrase($text, $argc);
-    }
-}
+$currentDate = strtotime('now');
+return \json_decode(
+    '{
+        "orderId": "testOrderId",
+        "transactionLogHistory": [
+            {
+                "amount": 20000,
+                "transactionText": "One pair of Vipps socks",
+                "transactionId": "5001420062",
+                "timeStamp": "' . date('c', $currentDate) . '",
+                "operation": "INITIATE",
+                "requestId": "",
+                "operationSuccess": true
+            }
+        ]
+    }',
+    true
+);

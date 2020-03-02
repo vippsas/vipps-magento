@@ -224,38 +224,11 @@ class Transaction
     }
 
     /**
-     * Is initiate transaction.
-     *
-     * @return bool
-     */
-    public function isInitiate()
-    {
-        return $this->getTransactionInfo()->getStatus() === Transaction::TRANSACTION_STATUS_INITIATE;
-    }
-
-    /**
-     * Is initiate transaction.
-     *
-     * @return bool
-     */
-    public function transactionWasInitiated()
-    {
-        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
-            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_INITIATE) {
-                continue;
-            }
-
-            return $item->isOperationSuccess();
-        }
-        return false;
-    }
-
-    /**
      * @return string|null
      */
     public function getTransactionStatus()
     {
-        if ($this->transactionWasCancelled()) {
+        if ($this->transactionWasCancelled() || $this->transactionWasVoided()) {
             return self::TRANSACTION_STATUS_CANCELLED;
         }
 
@@ -271,11 +244,15 @@ class Transaction
     }
 
     /**
-     * @return string|null
+     * @return bool
      */
-    public function isTransactionCancelled()
+    public function isTransactionInitiated()
     {
-        return $this->transactionWasCancelled();
+        $item = $this->getTransactionLogHistory()->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_INITIATE) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -283,7 +260,11 @@ class Transaction
      */
     public function isTransactionReserved()
     {
-        return $this->getTransactionStatus() == self::TRANSACTION_STATUS_RESERVED;
+        $item = $this->transactionLogHistory->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_RESERVE) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -293,30 +274,18 @@ class Transaction
     public function isTransactionExpired()
     {
         if ($this->isTransactionInitiated()) {
-            foreach ($this->getTransactionLogHistory()->getItems() as $item) {
-                if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_INITIATE) {
-                    continue;
-                }
+            $item = $this->getTransactionLogHistory()->getLastSuccessItem();
 
-                $now = new \DateTime();
-                $createdAt = new \DateTime($item->getTimeStamp());
+            $now = new \DateTime();
+            $createdAt = new \DateTime($item->getTimeStamp());
 
-                $interval = new \DateInterval("PT5M");  //@codingStandardsIgnoreLine
-                $createdAt->add($interval);
+            $interval = new \DateInterval("PT5M");  //@codingStandardsIgnoreLine
+            $createdAt->add($interval);
 
-                return !$createdAt->diff($now)->invert;
-            }
+            return !$createdAt->diff($now)->invert;
         }
 
         return false;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isTransactionInitiated()
-    {
-        return $this->getTransactionStatus() == self::TRANSACTION_STATUS_INITIATED;
     }
 
     /**
@@ -328,23 +297,46 @@ class Transaction
     }
 
     /**
+     * Check that transaction has been initiated
+     *
+     * @return bool
+     */
+    public function transactionWasInitiated()
+    {
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_INITIATE);
+        if ($item) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Check that transaction has been cancelled
      *
      * @return bool
      */
     public function transactionWasCancelled()
     {
-        $cancelOperations = [
-            Transaction::TRANSACTION_OPERATION_CANCEL,
-            Transaction::TRANSACTION_OPERATION_VOID
-        ];
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_CANCEL);
+        if ($item) {
+            return true;
+        }
+        return false;
+    }
 
-        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
-            if (!in_array($item->getOperation(), $cancelOperations)) {
-                continue;
-            }
-
-            return $item->isOperationSuccess();
+    /**
+     * Check that transaction has been cancelled
+     *
+     * @return bool
+     */
+    public function transactionWasVoided()
+    {
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_VOID);
+        if ($item) {
+            return true;
         }
         return false;
     }
@@ -356,12 +348,10 @@ class Transaction
      */
     public function transactionWasReserved()
     {
-        foreach ($this->getTransactionLogHistory()->getItems() as $item) {
-            if ($item->getOperation() != Transaction::TRANSACTION_OPERATION_RESERVE) {
-                continue;
-            }
-
-            return $item->isOperationSuccess();
+        $item = $this->getTransactionLogHistory()
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_RESERVE);
+        if ($item) {
+            return true;
         }
         return false;
     }

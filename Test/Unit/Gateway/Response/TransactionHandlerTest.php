@@ -126,7 +126,7 @@ class TransactionHandlerTest extends TestCase
             ->method('setTransactionId')
             ->willReturnSelf();
 
-        $this->action->handle([], []);
+        $this->action->handle([], ['orderId' => 'testOrderId']);
     }
 
     public function dataProvider()
