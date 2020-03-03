@@ -119,7 +119,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $this->authorize($requestData);
 
             $transaction = $this->getPaymentDetails($requestData);
-            //$this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
+            $this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
 
             /** @var Json $result */
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
