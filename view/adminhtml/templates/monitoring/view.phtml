@@ -31,6 +31,14 @@ $quote = $block->getQuote();
             <td><?= $vippsQuote->getEntityId(); ?></td>
         </tr>
         <tr>
+            <th style="width: 30%;"><?= __('Quote ID'); ?></th>
+            <td><?= $vippsQuote->getQuoteId(); ?></td>
+        </tr>
+        <tr>
+            <th style="width: 30%;"><?= __('Order ID'); ?></th>
+            <td><?= $vippsQuote->getOrderId(); ?></td>
+        </tr>
+        <tr>
             <th><?= __('Reserved Order ID'); ?></th>
             <td><?= $vippsQuote->getReservedOrderId(); ?></td>
         </tr>
@@ -67,18 +75,6 @@ $quote = $block->getQuote();
     <?php else: ?>
         <table class="admin__table-secondary">
             <tbody>
-            <tr>
-                <th style="width: 30%;"><?= __('Quote ID'); ?></th>
-                <td><?= $quote->getId(); ?></td>
-            </tr>
-            <tr>
-                <th style="width: 30%;"><?= __('Store ID'); ?></th>
-                <td><?= $quote->getStoreId(); ?></td>
-            </tr>
-            <tr>
-                <th><?= __('Reserved Order ID'); ?></th>
-                <td><?= $quote->getReservedOrderId(); ?></td>
-            </tr>
             <tr>
                 <th><?= __('Customer Email'); ?></th>
                 <td><?= $quote->getCustomerEmail(); ?></td>
@@ -124,9 +120,5 @@ $quote = $block->getQuote();
             <?php endforeach; ?>
             </tbody>
         </table>
-    <?php else : ?>
-        <div class="fieldset-wrapper-title">
-            <span class="title"><?= __('No attempts found.') ?></span>
-        </div>
     <?php endif; ?>
 </div>

@@ -21,7 +21,7 @@
         <label>Vipps</label>
         <name>Vipps</name>
         <redirect_url><![CDATA[{{secure_base_url}}vipps/payment/klarna_initRegular]]></redirect_url>
-        <image_url><![CDATA[Vipps_Payment::images/vipps_logo_100x26.png]]></image_url>
+        <image_url><![CDATA[https://raw.githubusercontent.com/vippsas/vipps-magento/master/media/images/vipps_logo.png]]></image_url>
         <description>Checkout using Vipps.</description>
         <fee>0</fee>
     </external_payment_method>

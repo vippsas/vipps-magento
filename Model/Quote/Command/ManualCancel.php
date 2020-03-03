@@ -67,6 +67,8 @@ class ManualCancel
         return in_array(
             $this->vippsQuote->getStatus(),
             [
+                QuoteStatusInterface::STATUS_NEW,
+                QuoteStatusInterface::STATUS_PENDING,
                 QuoteStatusInterface::STATUS_RESERVE_FAILED,
                 QuoteStatusInterface::STATUS_REVERT_FAILED
             ],

@@ -383,12 +383,6 @@
         </arguments>
     </type>
 
-    <type name="Klarna\Kco\Model\Api\Builder\Kasper">
-        <plugin
-            name="Vipps\Payment\Plugin\Klarna\Kco\Model\Api\Builder\KasperPlugin"
-            type="Vipps\Payment\Plugin\Klarna\Kco\Model\Api\Builder\KasperPlugin" />
-    </type>
-
     <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>

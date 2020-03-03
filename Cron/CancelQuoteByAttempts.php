@@ -147,8 +147,9 @@ class CancelQuoteByAttempts
             QuoteStatusInterface::FIELD_STATUS,
             ['in' => [
                 QuoteStatusInterface::STATUS_NEW,
+                QuoteStatusInterface::STATUS_PENDING,
                 QuoteStatusInterface::STATUS_RESERVE_FAILED,
-                QuoteStatusInterface::STATUS_PENDING
+                QuoteStatusInterface::STATUS_REVERT_FAILED
             ]]
         );
 
@@ -171,7 +172,7 @@ class CancelQuoteByAttempts
                 $this->cancelFacade->cancel($vippsQuote);
             }
         } catch (\Throwable $t) {
-            $this->logger->critical($t->getMessage(), ['quote_id' => $vippsQuote->getId()]);
+            $this->logger->critical($t->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
         }
     }
 

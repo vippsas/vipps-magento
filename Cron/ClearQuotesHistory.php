@@ -94,9 +94,9 @@ class ClearQuotesHistory
                 ->getSelect()
                 ->deleteFromSelect('main_table');
 
-            $collection->getConnection()->query($query);  //@codingStandardsIgnoreLine
+            $result = $collection->getConnection()->query($query);  //@codingStandardsIgnoreLine
 
-            $this->logger->debug('Deleted records: ' . $query);
+            $this->logger->debug('Deleted records: ' . $result->rowCount());
         } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage());
         }

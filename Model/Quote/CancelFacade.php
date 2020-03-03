@@ -18,7 +18,10 @@
 namespace Vipps\Payment\Model\Quote;
 
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\{
+    OrderRepositoryInterface,
+    OrderManagementInterface
+};
 use Magento\Sales\Model\Order;
 use Vipps\Payment\{Api\CommandManagerInterface,
     Api\Data\QuoteInterface,
@@ -38,6 +41,11 @@ class CancelFacade implements CancelFacadeInterface
      * @var CommandManagerInterface
      */
     private $commandManager;
+
+    /**
+     * @var OrderManagementInterface
+     */
+    private $orderManagement;
 
     /**
      * @var QuoteRepository
@@ -63,6 +71,7 @@ class CancelFacade implements CancelFacadeInterface
      * CancelFacade constructor.
      *
      * @param CommandManagerInterface $commandManager
+     * @param OrderManagementInterface $orderManagement
      * @param QuoteRepository $quoteRepository
      * @param AttemptManagement $attemptManagement
      * @param CartRepositoryInterface $cartRepository
@@ -70,12 +79,14 @@ class CancelFacade implements CancelFacadeInterface
      */
     public function __construct(
         CommandManagerInterface $commandManager,
+        OrderManagementInterface $orderManagement,
         QuoteRepository $quoteRepository,
         AttemptManagement $attemptManagement,
         CartRepositoryInterface $cartRepository,
         OrderRepositoryInterface $orderRepository
     ) {
         $this->commandManager = $commandManager;
+        $this->orderManagement = $orderManagement;
         $this->quoteRepository = $quoteRepository;
         $this->attemptManagement = $attemptManagement;
         $this->cartRepository = $cartRepository;
@@ -92,6 +103,7 @@ class CancelFacade implements CancelFacadeInterface
             if ($vippsQuote->getOrderId()) {
                 /** @var Order $order */
                 $order = $this->orderRepository->get($vippsQuote->getOrderId());
+                $this->orderManagement->cancel($vippsQuote->getOrderId());
                 $this->commandManager->cancel($order->getPayment());
             } else {
                 /** @var \Magento\Quote\Model\Quote $quote */
