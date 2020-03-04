@@ -583,7 +583,8 @@ class FallbackTestTest extends TestCase
             ->setMethods(['save'])->disableOriginalConstructor()->getMockForAbstractClass();
 
         $this->quoteManagement = $this->getMockBuilder(QuoteManagement::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMockForAbstractClass();
+            ->setMethods(['save', 'reload'])->disableOriginalConstructor()->getMockForAbstractClass();
+        $this->quoteManagement->method('reload')->willReturn($this->vippsQuote);
 
         $transactionProcessor = $this->objectManagerHelper->getObject(
             TransactionProcessor::class,

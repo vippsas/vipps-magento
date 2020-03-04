@@ -21,6 +21,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteManagementInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class QuoteRepository
@@ -76,5 +77,17 @@ class QuoteManagement implements QuoteManagementInterface
     public function save(QuoteInterface $quote)
     {
         $this->quoteRepository->save($quote);
+    }
+
+    /**
+     * @param QuoteInterface $quote
+     *
+     * @return QuoteInterface|Quote
+     * @throws NoSuchEntityException
+     */
+    public function reload(QuoteInterface $quote)
+    {
+        $quote = $this->quoteRepository->load($quote->getEntityId());
+        return $quote;
     }
 }

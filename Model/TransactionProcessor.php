@@ -159,6 +159,9 @@ class TransactionProcessor
         $lockName = $this->acquireLock($vippsQuote->getReservedOrderId());
 
         try {
+            // reload quote because it could be changed by another process
+            $vippsQuote = $this->quoteManagement->reload($vippsQuote);
+
             if ($transaction->transactionWasCancelled() || $transaction->transactionWasVoided()) {
                 $this->processCancelledTransaction($vippsQuote, $transaction);
             } elseif ($transaction->isTransactionReserved()) {
@@ -279,6 +282,11 @@ class TransactionProcessor
     private function placeOrder(Transaction $transaction)
     {
         $quote = $this->quoteLocator->get($transaction->getOrderId());
+        if (!$quote) {
+            throw new \Exception(
+                __('Could not place order. Could not find quote with such reserved order id.')
+            );
+        }
         if (!$quote->getReservedOrderId() || $quote->getReservedOrderId() !== $transaction->getOrderId()) {
             throw new \Exception(
                 __('Quote reserved order id does not match Vipps transaction order id.')
