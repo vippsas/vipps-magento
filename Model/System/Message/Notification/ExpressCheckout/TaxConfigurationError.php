@@ -111,7 +111,7 @@ class TaxConfigurationError implements \Magento\Tax\Model\System\Message\Notific
         if ($this->isDisplayed()) {
             $messageDetails .= '<strong>';
             $messageDetails .= __('Tax calculation should be based on “Shipping Origin”,'
-                . ' otherwise Vipps Express Checkout may not works properly. ');
+                . ' otherwise Vipps Express Checkout may not work properly. ');
             $messageDetails .= '</strong><p>';
             $messageDetails .= __('Store(s) affected: ');
             $messageDetails .= implode(', ', $this->getStoresWithWrongSettings());
