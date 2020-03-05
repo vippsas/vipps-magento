@@ -66,6 +66,6 @@ class AvailabilityByShippingMethod implements ObserverInterface
             $result->setData('is_available', false);
         }
 
-        return;
+        return null;
     }
 }

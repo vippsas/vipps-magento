@@ -142,7 +142,7 @@ class InitRegular extends Action
      *
      * @return \Magento\Payment\Gateway\Command\ResultInterface|null
      */
-    protected function initiatePayment(CartInterface $quote)
+    private function initiatePayment(CartInterface $quote)
     {
         $responseData = $this->commandManager->initiatePayment(
             $quote->getPayment(),
