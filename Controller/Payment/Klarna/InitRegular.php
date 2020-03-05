@@ -18,7 +18,6 @@ namespace Vipps\Payment\Controller\Payment\Klarna;
 use Magento\Checkout\Api\GuestPaymentInformationManagementInterface;
 use Magento\Checkout\Api\PaymentInformationManagementInterface;
 use Magento\Checkout\Helper\Data as CheckoutHelper;
-use Magento\Checkout\Model\GuestPaymentInformationManagement;
 use Magento\Checkout\Model\Type\Onepage;
 use Magento\Framework\{App\Action\Action,
     App\Action\Context,
@@ -27,7 +26,6 @@ use Magento\Framework\{App\Action\Action,
     Controller\ResultInterface,
     Exception\LocalizedException,
     App\ResponseInterface,
-    Exception\NoSuchEntityException,
     Session\SessionManagerInterface};
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -44,7 +42,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 
 /**
  * Class InitRegular
- * @package Vipps\Payment\Controller\Payment\Klarna
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class InitRegular extends Action
 {
@@ -112,6 +110,8 @@ class InitRegular extends Action
      * @param GuestPaymentInformationManagementInterface $guestPaymentInformationManagement
      * @param PaymentInformationManagementInterface $paymentInformationManagement
      * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,

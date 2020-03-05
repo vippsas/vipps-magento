@@ -59,6 +59,7 @@ use Magento\Payment\Gateway\ConfigInterface;
  * Class FallbackTestTest
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyFields)
  */
 class FallbackTestTest extends TestCase
 {

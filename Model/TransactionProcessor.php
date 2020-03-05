@@ -37,7 +37,7 @@ use Vipps\Payment\Model\Method\Vipps;
 
 /**
  * Class TransactionProcessor
- * @package Vipps\Payment\Model
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TransactionProcessor
 {
@@ -179,6 +179,7 @@ class TransactionProcessor
      * @param Transaction $transaction
      *
      * @throws CouldNotSaveException
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function processCancelledTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
     {
@@ -222,6 +223,8 @@ class TransactionProcessor
      * @param Transaction $transaction
      *
      * @throws CouldNotSaveException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function processExpiredTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
     {
@@ -359,6 +362,8 @@ class TransactionProcessor
      * @param Transaction $transaction
      *
      * @throws LocalizedException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function capture(OrderInterface $order, Transaction $transaction)
     {

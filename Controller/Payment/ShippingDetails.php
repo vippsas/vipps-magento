@@ -101,6 +101,8 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
      * @param Compliance $compliance
      * @param Json $serializer
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,
@@ -160,7 +162,6 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                 'shippingDetails' => []
             ];
             foreach ($shippingMethods as $key => $shippingMethod) {
-
                 $methodFullCode = $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode();
                 if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
                     continue;

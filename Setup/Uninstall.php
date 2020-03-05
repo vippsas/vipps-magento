@@ -49,6 +49,8 @@ class Uninstall implements UninstallInterface
      * @param ModuleContextInterface $context
      * @return void
      * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function uninstall(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {

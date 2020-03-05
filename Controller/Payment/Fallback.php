@@ -83,7 +83,6 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     private $gdprCompliance;
 
-
     /**
      * @var OrderManagementInterface
      */
@@ -156,7 +155,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
             $this->messageManager->addErrorMessage(
-                __('A server error stopped your transaction from being processed. Please contact to store administrator.')
+                __('A server error stopped your transaction from being processed.'
+                    . ' Please contact to store administrator.')
             );
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
