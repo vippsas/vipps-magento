@@ -3,7 +3,7 @@
 @Library('platform-jenkins-pipeline') _
 
 pipeline {
-    agent { label 'magento2' }
+    agent { label 'magento23' }
 
     stages {
         stage('PHP Mess Detector') {
