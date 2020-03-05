@@ -38,7 +38,6 @@
     "require-dev": {
         "magento/marketplace-eqp": "~1.0",
         "phpunit/phpunit": "~6.2.0",
-        "phpmd/phpmd": "@stable",
-        "magento/zendframework1": "~1.12.16"
+        "phpmd/phpmd": "@stable"
     }
 }
