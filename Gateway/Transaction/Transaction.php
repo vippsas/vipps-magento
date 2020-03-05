@@ -276,8 +276,8 @@ class Transaction
         if ($this->isTransactionInitiated()) {
             $item = $this->getTransactionLogHistory()->getLastSuccessItem();
 
-            $now = new \DateTime();
-            $createdAt = new \DateTime($item->getTimeStamp());
+            $now = new \DateTime(); //@codingStandardsIgnoreLine
+            $createdAt = new \DateTime($item->getTimeStamp()); //@codingStandardsIgnoreLine
 
             $interval = new \DateInterval("PT5M");  //@codingStandardsIgnoreLine
             $createdAt->add($interval);

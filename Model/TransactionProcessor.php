@@ -181,7 +181,7 @@ class TransactionProcessor
      * @throws CouldNotSaveException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    private function processCancelledTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
+    private function processCancelledTransaction(QuoteInterface $vippsQuote, Transaction $transaction) //@codingStandardsIgnoreLine
     {
         if ($vippsQuote->getOrderId()) {
             $this->orderManagement->cancel($vippsQuote->getOrderId());
@@ -226,7 +226,7 @@ class TransactionProcessor
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    private function processExpiredTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
+    private function processExpiredTransaction(QuoteInterface $vippsQuote, Transaction $transaction) //@codingStandardsIgnoreLine
     {
         if ($vippsQuote->getOrderId()) {
             $this->orderManagement->cancel($vippsQuote->getOrderId());
@@ -267,7 +267,7 @@ class TransactionProcessor
         if ($reservedOrderId && $this->lockManager->lock($lockName, 10)) {
             return $lockName;
         }
-        throw new \Exception(__('Can not acquire lock for order "%1"', $reservedOrderId));
+        throw new \Exception(__('Can not acquire lock for order "%1"', $reservedOrderId)); //@codingStandardsIgnoreLine
     }
 
     /**
@@ -286,12 +286,12 @@ class TransactionProcessor
     {
         $quote = $this->quoteLocator->get($transaction->getOrderId());
         if (!$quote) {
-            throw new \Exception(
+            throw new \Exception( //@codingStandardsIgnoreLine
                 __('Could not place order. Could not find quote with such reserved order id.')
             );
         }
         if (!$quote->getReservedOrderId() || $quote->getReservedOrderId() !== $transaction->getOrderId()) {
-            throw new \Exception(
+            throw new \Exception( //@codingStandardsIgnoreLine
                 __('Quote reserved order id does not match Vipps transaction order id.')
             );
         }
@@ -365,7 +365,7 @@ class TransactionProcessor
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    private function capture(OrderInterface $order, Transaction $transaction)
+    private function capture(OrderInterface $order, Transaction $transaction) //@codingStandardsIgnoreLine
     {
         if ($order->getState() !== Order::STATE_NEW) {
             return;

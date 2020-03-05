@@ -152,7 +152,6 @@ interface QuoteInterface extends QuoteStatusInterface
      */
     public function setStoreId(int $storeId);
 
-
     /**
      * @return string
      */

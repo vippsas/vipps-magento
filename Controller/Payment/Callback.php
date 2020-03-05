@@ -219,7 +219,7 @@ class Callback extends Action implements CsrfAwareActionInterface
      *
      * @return InvalidRequestException|null
      */
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException //@codingStandardsIgnoreLine
     {
         return null;
     }
@@ -230,7 +230,7 @@ class Callback extends Action implements CsrfAwareActionInterface
      *
      * @return bool
      */
-    public function validateForCsrf(RequestInterface $request): ?bool
+    public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
     }

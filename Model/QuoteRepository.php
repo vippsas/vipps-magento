@@ -113,7 +113,7 @@ class QuoteRepository implements QuoteRepositoryInterface
         return $vippsQuote;
     }
 
-        /**
+    /**
      * @param int $vippsQuoteId
      *
      * @return Quote

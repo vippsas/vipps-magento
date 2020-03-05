@@ -83,7 +83,8 @@ class Config
      */
     public function isSendMailEnabled($storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_IS_SEND_MAIL_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
+        return $this->scopeConfig
+            ->isSetFlag(self::XML_PATH_IS_SEND_MAIL_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     /**

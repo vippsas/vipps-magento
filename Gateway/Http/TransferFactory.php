@@ -122,7 +122,9 @@ class TransferFactory implements TransferFactoryInterface
         $allowedFields = $this->allowedFields;
         $fields = array_filter(
             $fields,
-            function ($key) use ($allowedFields) { return in_array($key, $allowedFields);},
+            function ($key) use ($allowedFields) {
+                return in_array($key, $allowedFields);
+            },
             ARRAY_FILTER_USE_KEY
         );
 

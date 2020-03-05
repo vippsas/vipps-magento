@@ -98,7 +98,8 @@ class CancelFacade implements CancelFacadeInterface
      *
      * @throws CouldNotSaveException
      */
-    public function cancel(QuoteInterface $vippsQuote) {
+    public function cancel(QuoteInterface $vippsQuote)
+    {
         try {
             if ($vippsQuote->getOrderId()) {
                 /** @var Order $order */

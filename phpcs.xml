@@ -33,7 +33,7 @@
     <rule ref="PSR2.Namespaces.UseDeclaration">
         <exclude-pattern>*</exclude-pattern>
     </rule>
-    <rule ref="PEAR">
-        <exclude name="PEAR.NamingConventions.ValidClassName.Invalid" />
+    <rule ref="PSR2.Namespaces.UseDeclaration">
+        <exclude name="PSR2.Namespaces.UseDeclaration.MultipleDeclarations" />
     </rule>
 </ruleset>

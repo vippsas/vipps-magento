@@ -57,9 +57,10 @@ define(
                 fullScreenLoader.startLoader();
 
                 $.post(
-                    url.build('vipps/payment/initRegular'), {}
+                    url.build('vipps/payment/initRegular'),
+                    {}
                 ).done(
-                    function(response, msg, xhr) {
+                    function (response, msg, xhr) {
                         if (response.hasOwnProperty('url')) {
                             self.redirectUrl = response.url;
 
@@ -74,7 +75,7 @@ define(
                         errorProcessor.process(response, self.messageContainer);
                     }
                 ).always(
-                    function() {
+                    function () {
                         fullScreenLoader.stopLoader();
                         self.isPlaceOrderActionAllowed(true);
                     }

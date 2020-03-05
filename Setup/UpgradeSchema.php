@@ -200,7 +200,8 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             )
             ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
             ->addForeignKey(
-                $installer->getFkName('vipps_quote_attempts', 'parent_id', $installer->getTable('vipps_quote'), 'entity_id'),
+                $installer
+                    ->getFkName('vipps_quote_attempts', 'parent_id', $installer->getTable('vipps_quote'), 'entity_id'),
                 'parent_id',
                 $installer->getTable('vipps_quote'),
                 'entity_id',
