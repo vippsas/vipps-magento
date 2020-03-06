@@ -160,8 +160,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
             );
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
-            $compliant = $this->gdprCompliance->process($this->getRequest()->getRequestString());
-            $this->logger->debug($compliant);
+            $this->logger->debug($this->getRequest()->getRequestString());
         }
         return $resultRedirect;
     }
