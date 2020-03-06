@@ -526,7 +526,8 @@ class FallbackTestTest extends TestCase
                 'getOrderByIncrementId',
                 'place',
                 'getQuoteByReservedOrderId',
-                'cancel'
+                'cancel',
+                'notify'
             ])
             ->getMockForAbstractClass();
 
@@ -558,7 +559,7 @@ class FallbackTestTest extends TestCase
     private function createTransactionProcessor()
     {
         $this->order = $this->getMockBuilder(OrderInterface::class)
-            ->setMethods(['getState', 'getStatus'])
+            ->setMethods(['getState', 'getStatus', 'getCanSendNewEmailFlag', 'getEmailSent', 'getEntityId'])
             ->getMockForAbstractClass();
 
         $this->orderRepository = $this->getMockBuilder(OrderRepositoryInterface::class)
