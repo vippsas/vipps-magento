@@ -71,20 +71,21 @@ class CheckoutSubmitAllAfter implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        try {
-            /** @var OrderInterface $order */
-            $order = $observer->getData('order');
+        /** @var OrderInterface $order */
+        $order = $observer->getData('order');
+        if ('vipps' == $order->getPayment()->getMethod()) {
+            try {
+                // send order placed email
+                $this->notify($order);
 
-            // send order placed email
-            $this->notify($order);
-
-            // updated vipps quote
-            $vippsQuote = $this->quoteRepository->loadByOrderId($order->getIncrementId());
-            $vippsQuote->setOrderId((int)$order->getEntityId());
-            $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
-            $this->quoteRepository->save($vippsQuote);
-        } catch (\Throwable $t) {
-            $this->logger->error($t->getMessage());
+                // updated vipps quote
+                $vippsQuote = $this->quoteRepository->loadByOrderId($order->getIncrementId());
+                $vippsQuote->setOrderId((int)$order->getEntityId());
+                $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
+                $this->quoteRepository->save($vippsQuote);
+            } catch (\Throwable $t) {
+                $this->logger->error($t->getMessage());
+            }
         }
     }
 

@@ -215,8 +215,6 @@ class TransactionProcessor
         $vippsQuote->setStatus(QuoteInterface::STATUS_RESERVED);
         $this->quoteManagement->save($vippsQuote);
 
-        $this->sendOrderConfirmation($order);
-
         return $order;
     }
 
@@ -419,18 +417,6 @@ class TransactionProcessor
         // base amount will be set inside
         $payment->setAmountAuthorized($totalDue);
         $this->orderRepository->save($order);
-    }
-
-    /**
-     * Send order conformation email if not sent
-     *
-     * @param Order|OrderInterface $order
-     */
-    private function sendOrderConfirmation($order)
-    {
-        if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
-            $this->orderManagement->notify($order->getEntityId());
-        }
     }
 
     /**
