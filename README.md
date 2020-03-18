@@ -57,7 +57,7 @@ Magento is an open-source e-commerce platform written in PHP: https://magento.co
 
 For Magento support, please see the Magento Help Center: https://support.magento.com/hc/en-us
 
-Magento Inc is an Adobe company: https://magento.com/about
+Magento Inc is an Adobe company: https://magento.com/about.
 
 # Vipps contact information
 
