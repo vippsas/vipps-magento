@@ -21,12 +21,14 @@ use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\Data\QuoteInterface,
+use Vipps\Payment\{
+    Api\Data\QuoteInterface,
     Api\Data\QuoteStatusInterface,
     Model\Order\Cancellation\Config,
     Model\Quote\CancelFacade,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
-    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
+    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory
+};
 
 /**
  * Class FetchOrderStatus

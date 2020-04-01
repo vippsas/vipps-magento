@@ -336,6 +336,7 @@ class RefundCommand extends GatewayCommand
                 return $item->getRequestId();
             }
         }
+
         return null;
     }
 }

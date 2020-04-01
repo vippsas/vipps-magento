@@ -17,7 +17,12 @@
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\App\Action\Action;
-use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\{
+    Result\Json,
+    ResultFactory,
+    ResultInterface
+};
 use Zend\Http\Response as ZendResponse;
 
 /**

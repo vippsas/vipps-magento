@@ -23,10 +23,12 @@ use Magento\Framework\{
 };
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
+use Vipps\Payment\{
+    Api\CommandManagerInterface,
     Gateway\Exception\VippsException,
     Gateway\Request\Initiate\InitiateBuilderInterface,
-    Model\Method\Vipps};
+    Model\Method\Vipps
+};
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -124,20 +126,21 @@ class InitExpress extends Action
             $this->checkoutSession->clearStorage();
             $resultRedirect->setPath($responseData['url'], ['_secure' => true]);
         } catch (VippsException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
                 __('An error occurred during request to Vipps. Please try again later.')
             );
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
         }
+
         return $resultRedirect;
     }
 
@@ -180,5 +183,16 @@ class InitExpress extends Action
         $this->cartRepository->save($quote);
 
         return $responseData;
+    }
+
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'QuoteID: ' . $this->checkoutSession->getQuoteId() ?? 'Missing' .
+            ' . Exception message: ' . $e->getMessage();
     }
 }

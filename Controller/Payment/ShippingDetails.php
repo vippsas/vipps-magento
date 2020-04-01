@@ -178,14 +178,14 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
                 'message' => $e->getMessage()
             ]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
@@ -207,9 +207,8 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     {
         $params = $this->getRequest()->getParams();
         next($params);
-        $reservedOrderId = key($params);
 
-        return $reservedOrderId;
+        return key($params);
     }
 
     /**
@@ -226,6 +225,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         if (!$quote) {
             throw new LocalizedException(__('Requested quote not found'));
         }
+
         return $quote;
     }
 
@@ -251,5 +251,16 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
+    }
+
+
+    /**
+     * @param $e \Exception
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
+            ' . Exception message: ' . $e->getMessage();
     }
 }
