@@ -16,7 +16,7 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Magento\Quote\{Model\Quote, Model\Quote\Address};
+use Magento\Quote\{Api\Data\AddressInterface, Api\Data\CartInterface, Model\Quote, Model\Quote\Address};
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Model\Helper\Utility;
 
@@ -43,8 +43,8 @@ class AddressUpdater
     /**
      * Update quote addresses from source address.
      *
-     * @param Quote $quote
-     * @param Address $sourceAddress
+     * @param Quote|CartInterface $quote
+     * @param Address|AddressInterface $sourceAddress
      * @throws \Exception
      */
     public function fromSourceAddress(Quote $quote, Address $sourceAddress)
