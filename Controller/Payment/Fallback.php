@@ -149,11 +149,11 @@ class Fallback extends Action implements CsrfAwareActionInterface
 
             $this->prepareResponse($resultRedirect, $transaction);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
                 __('A server error stopped your transaction from being processed.'
                     . ' Please contact to store administrator.')
@@ -312,5 +312,17 @@ class Fallback extends Action implements CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
+    }
+
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'OrderID: ' .
+            $this->getRequest()->getParam('order_id', 'Missing') .
+            ' . Error Message: ' . $e->getMessage();
     }
 }
