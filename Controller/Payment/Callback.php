@@ -125,11 +125,13 @@ class Callback extends Action implements CsrfAwareActionInterface
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData(['status' => ZendResponse::STATUS_CODE_200, 'message' => 'success']);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $orderId = $requestData['orderId'] ?? 'Missing';
+            $message = 'OrderID: ' . $orderId . ' . Exception message: ' . $e->getMessage();
+            $this->logger->critical($message);
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
-                'message' => 'An error occurred during callback processing. ' . $e->getMessage()
+                'message' => $message
             ]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());

@@ -70,16 +70,6 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     private $addressFactory;
 
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var Compliance
-     */
-    private $gdprCompliance;
-
-    /**
      * @var AddressUpdater
      */
     private $addressUpdater;
@@ -90,16 +80,27 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     private $shippingMethodValidator;
 
     /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * ShippingDetails constructor.
      *
      * @param Context $context
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteLocator $quoteLocator
+     * @param Json $serializer
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
      * @param AddressUpdater $addressUpdater
+     * @param ShippingMethodValidator $shippingMethodValidator
      * @param Compliance $compliance
-     * @param Json $serializer
      * @param LoggerInterface $logger
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -108,12 +109,12 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         Context $context,
         CartRepositoryInterface $cartRepository,
         QuoteLocator $quoteLocator,
+        Json $serializer,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         AddressUpdater $addressUpdater,
         ShippingMethodValidator $shippingMethodValidator,
         Compliance $compliance,
-        Json $serializer,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
@@ -122,10 +123,10 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         $this->serializer = $serializer;
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
-        $this->logger = $logger;
         $this->addressUpdater = $addressUpdater;
-        $this->gdprCompliance = $compliance;
         $this->shippingMethodValidator = $shippingMethodValidator;
+        $this->gdprCompliance = $compliance;
+        $this->logger = $logger;
     }
 
     /**
@@ -139,7 +140,6 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         try {
             $reservedOrderId = $this->getReservedOrderId();
             $quote = $this->getQuote($reservedOrderId);
-
             $vippsAddress = $this->serializer->unserialize($this->getRequest()->getContent());
             $address = $this->addressFactory->create();
             $address->addData([
@@ -178,14 +178,14 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
                 'message' => $e->getMessage()
             ]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
@@ -207,9 +207,8 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     {
         $params = $this->getRequest()->getParams();
         next($params);
-        $reservedOrderId = key($params);
 
-        return $reservedOrderId;
+        return key($params);
     }
 
     /**
@@ -226,6 +225,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         if (!$quote) {
             throw new LocalizedException(__('Requested quote not found'));
         }
+
         return $quote;
     }
 
@@ -251,5 +251,16 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
+    }
+
+
+    /**
+     * @param $e \Exception
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
+            ' . Exception message: ' . $e->getMessage();
     }
 }
