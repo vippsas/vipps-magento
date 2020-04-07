@@ -3,9 +3,9 @@
  * Copyright 2019 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- *    documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- *  and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
  * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
@@ -19,9 +19,11 @@ namespace Vipps\Payment\Cron;
 use Magento\Framework\DB\Adapter\Pdo\Mysql;
 use Magento\Framework\Intl\DateTimeFactory;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Model\Order\Cancellation\Config,
+use Vipps\Payment\{
+    Model\Order\Cancellation\Config,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
-    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
+    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory
+};
 
 /**
  * Class ClearQuotesHistory
@@ -98,7 +100,9 @@ class ClearQuotesHistory
 
             $this->logger->debug('Deleted records: ' . $result->rowCount());
         } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+            $this->logger->error(
+                'Error during clearing quotes history: ' . $exception->getMessage()
+            );
         }
     }
 }

@@ -20,7 +20,8 @@ use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\Exception\{CouldNotSaveException, NoSuchEntityException};
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\Data\QuoteStatusInterface,
+use Vipps\Payment\{
+    Api\Data\QuoteStatusInterface,
     Gateway\Command\PaymentDetailsProvider,
     Gateway\Exception\VippsException,
     Gateway\Transaction\Transaction,
@@ -30,7 +31,8 @@ use Vipps\Payment\{Api\Data\QuoteStatusInterface,
     Model\Quote\AttemptManagement,
     Model\QuoteRepository as VippsQuoteRepository,
     Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
-    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory};
+    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory
+};
 
 /**
  * Class FetchOrderStatus

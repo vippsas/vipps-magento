@@ -15,13 +15,17 @@
  */
 namespace Vipps\Payment\Gateway\Command;
 
-use Magento\Payment\Gateway\{
-    Command\CommandException, CommandInterface,
-    Http\ClientInterface, Http\TransferFactoryInterface,
-    Request\BuilderInterface, Response\HandlerInterface,
-    Validator\ValidatorInterface, Command\ResultInterface,
-    Http\ClientException, Http\ConverterException
-};
+use Magento\Payment\Gateway\{Command\CommandException,
+    CommandInterface,
+    Http\ClientInterface,
+    Http\TransferFactoryInterface,
+    Http\TransferInterface,
+    Request\BuilderInterface,
+    Response\HandlerInterface,
+    Validator\ValidatorInterface,
+    Command\ResultInterface,
+    Http\ClientException,
+    Http\ConverterException};
 use Magento\Framework\{
     Exception\LocalizedException,
     Phrase,
@@ -222,6 +226,7 @@ class GatewayCommand implements CommandInterface
         if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
             $orderId = $matches[2] ?? null;
         }
+
         return $orderId ?? ($transfer->getBody()['transaction']['orderId'] ?? ($responseBody['orderId'] ?? null));
     }
 }

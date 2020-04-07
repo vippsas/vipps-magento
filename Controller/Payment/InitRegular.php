@@ -21,7 +21,6 @@ use Magento\Framework\{Controller\Result\Json,
     App\Action\Context,
     App\Action\Action,
     Exception\LocalizedException,
-    Exception\NoSuchEntityException,
     App\ResponseInterface,
     Session\SessionManagerInterface};
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -123,10 +122,10 @@ class InitRegular extends Action
 
             $response->setData($responseData);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $response->setData(['message' => $e->getMessage()]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $response->setData([
                 'message' => __('An error occurred during request to Vipps. Please try again later.')
             ]);
@@ -144,14 +143,23 @@ class InitRegular extends Action
      */
     private function initiatePayment(CartInterface $quote)
     {
-        $responseData = $this->commandManager->initiatePayment(
+        return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
                 InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
             ]
         );
+    }
 
-        return $responseData;
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'QuoteID: ' . $this->checkoutSession->getQuoteId() ?? 'Missing' .
+            ' . Exception message: ' . $e->getMessage();
     }
 }

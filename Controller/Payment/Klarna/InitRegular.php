@@ -167,8 +167,9 @@ class InitRegular extends Action
             $response->setPath('checkout/cart');
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
-            $this->messageManager
-                ->addErrorMessage(__('An error occurred during request to Vipps. Please try again later.'));
+            $this->messageManager->addErrorMessage(
+                __('An error occurred during request to Vipps. Please try again later.')
+            );
             $response->setPath('checkout/cart');
         }
 
@@ -184,15 +185,13 @@ class InitRegular extends Action
      */
     private function initiatePayment(CartInterface $quote)
     {
-        $responseData = $this->commandManager->initiatePayment(
+        return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
                 InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
             ]
         );
-
-        return $responseData;
     }
 
     /**
