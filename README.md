@@ -64,7 +64,7 @@ When customer fills in checkout form using data that were used before, customer 
 
 `Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
 
-This issue will be fixed in next releases.
+This issue is fixed in 2.3.0 release.
 
 # Magento
 
