@@ -54,11 +54,11 @@ Please follow the instructions in [DEBUG.md](DEBUG.md)
 ## Klarna Checkout
 
 There is a known issue when using Vipps as an external payment method for Klarna Checkout. 
-When customer fills in checkout form using data that were used before, customer will see an error:
+When the customer fills in the checkout form using the data that were used before, the customer will see an error:
 
 `Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
 
-This issue is fixed in 2.3.0 release.
+This issue was fixed in the 2.3.0 release.
 
 # Magento
 
