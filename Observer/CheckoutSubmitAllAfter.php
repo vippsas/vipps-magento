@@ -75,9 +75,6 @@ class CheckoutSubmitAllAfter implements ObserverInterface
         $order = $observer->getData('order');
         if ('vipps' == $order->getPayment()->getMethod()) {
             try {
-                // send order placed email
-                $this->notify($order);
-
                 // updated vipps quote
                 $vippsQuote = $this->quoteRepository->loadByOrderId($order->getIncrementId());
                 $vippsQuote->setOrderId((int)$order->getEntityId());
@@ -86,18 +83,6 @@ class CheckoutSubmitAllAfter implements ObserverInterface
             } catch (\Throwable $t) {
                 $this->logger->error($t->getMessage());
             }
-        }
-    }
-
-    /**
-     * Send order conformation email if not sent
-     *
-     * @param Order|OrderInterface $order
-     */
-    private function notify($order)
-    {
-        if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
-            $this->orderManagement->notify($order->getEntityId());
         }
     }
 }

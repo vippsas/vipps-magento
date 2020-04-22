@@ -212,6 +212,8 @@ class TransactionProcessor
         $paymentAction = $this->config->getValue('vipps_payment_action');
         $this->processAction($paymentAction, $order, $transaction);
 
+        $this->notify($order);
+
         $vippsQuote->setStatus(QuoteInterface::STATUS_RESERVED);
         $this->quoteManagement->save($vippsQuote);
 
@@ -428,5 +430,15 @@ class TransactionProcessor
     private function releaseLock($lockName)
     {
         return $this->lockManager->unlock($lockName);
+    }
+
+    /**
+     * @param OrderInterface $order
+     */
+    private function notify(OrderInterface $order)
+    {
+        if (!$order->getEmailSent()) {
+            $this->orderManagement->notify($order->getEntityId());
+        }
     }
 }
