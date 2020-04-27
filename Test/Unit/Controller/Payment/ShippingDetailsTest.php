@@ -365,7 +365,8 @@ class ShippingDetailsTest extends TestCase
             ->with($reservedOrderId)
             ->willReturn($this->quote);
 
-        $unSerializedValue = 'a:6:{s:8:"postCode";s:4:"1234";s:12:"addressLine1";s:4:"city";s:4:"Oslo";s:10:"country_id";s:2:"NO";}';
+        $unSerializedValue =
+            'a:6:{s:8:"postCode";s:4:"1234";s:12:"addressLine1";s:4:"city";s:4:"Oslo";s:10:"country_id";s:2:"NO";}';
         $this->request->expects(self::exactly(2))
             ->method('getContent')
             ->willReturn($unSerializedValue);

@@ -16,7 +16,8 @@
 namespace Vipps\Payment\Gateway\Request;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Payment\{Gateway\Request\BuilderInterface, Helper\Formatter};
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Helper\Formatter;
 
 /**
  * Class Transaction

@@ -17,25 +17,23 @@ namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Payment\Helper\Formatter;
-use Magento\Payment\Gateway\{
-    Http\ClientInterface, Http\TransferFactoryInterface,
-    Request\BuilderInterface, Response\HandlerInterface,
-    Validator\ValidatorInterface, Command\ResultInterface,
-    Http\ClientException, Http\ConverterException
-};
-use Magento\Framework\{
-    Exception\LocalizedException,
-    Json\DecoderInterface
-};
+use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Json\DecoderInterface;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
-use Vipps\Payment\Gateway\{
-    Exception\VippsException,
-    Request\SubjectReader,
-    Transaction\Transaction,
-    Transaction\TransactionSummary,
-    Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem,
-    Exception\ExceptionFactory
-};
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionSummary;
+use Vipps\Payment\Gateway\Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem;
+use Vipps\Payment\Gateway\Exception\ExceptionFactory;
 use Psr\Log\LoggerInterface;
 
 /**

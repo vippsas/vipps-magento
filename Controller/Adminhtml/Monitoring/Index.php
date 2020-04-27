@@ -16,7 +16,8 @@
  */
 namespace Vipps\Payment\Controller\Adminhtml\Monitoring;
 
-use Magento\Backend\{App\Action, Model\View\Result\Page};
+use Magento\Backend\App\Action;
+use Magento\Backend\Model\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 
 /**

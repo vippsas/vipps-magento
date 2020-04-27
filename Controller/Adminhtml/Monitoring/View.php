@@ -17,12 +17,13 @@
 
 namespace Vipps\Payment\Controller\Adminhtml\Monitoring;
 
-use Magento\Backend\{App\Action, App\Action\Context};
-use Magento\Framework\{App\ResponseInterface,
-    Controller\ResultInterface,
-    Registry,
-    View\Result\Page,
-    View\Result\PageFactory};
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\View\Result\Page;
+use Magento\Framework\View\Result\PageFactory;
 use Vipps\Payment\Model\QuoteRepository as VippsQuoteRepository;
 
 /**

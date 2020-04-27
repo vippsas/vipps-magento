@@ -16,18 +16,20 @@
 namespace Vipps\Payment\Model\Profiling;
 
 use Magento\Framework\Api\SearchCriteriaInterface;
-use Vipps\Payment\Api\Profiling\{
-    Data\ItemInterface,
-    Data\ItemInterfaceFactory,
-    ItemRepositoryInterface,
-    Data\ItemSearchResultsInterfaceFactory,
-    Data\ItemSearchResultsInterface
-};
-use Vipps\Payment\Model\ResourceModel\Profiling\{Item as ItemResource, Item\Collection, Item\CollectionFactory};
-use Magento\Framework\{
-    Api\SortOrder, Api\DataObjectHelper, Reflection\DataObjectProcessor, Exception\CouldNotDeleteException,
-    Exception\CouldNotSaveException, Exception\NoSuchEntityException
-};
+use Vipps\Payment\Api\Profiling\Data\ItemInterface;
+use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
+use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
+use Vipps\Payment\Api\Profiling\Data\ItemSearchResultsInterfaceFactory;
+use Vipps\Payment\Api\Profiling\Data\ItemSearchResultsInterface;
+use Vipps\Payment\Model\ResourceModel\Profiling\Item as ItemResource;
+use Vipps\Payment\Model\ResourceModel\Profiling\Item\Collection;
+use Vipps\Payment\Model\ResourceModel\Profiling\Item\CollectionFactory;
+use Magento\Framework\Api\SortOrder;
+use Magento\Framework\Api\DataObjectHelper;
+use Magento\Framework\Reflection\DataObjectProcessor;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class ItemRepository
