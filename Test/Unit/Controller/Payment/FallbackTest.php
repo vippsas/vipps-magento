@@ -16,13 +16,13 @@
 
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
-use Magento\Framework\{App\RequestInterface,
-    Controller\Result\Redirect,
-    Controller\ResultFactory,
-    Controller\ResultInterface,
-    Message\ManagerInterface,
-    TestFramework\Unit\Helper\ObjectManager,
-    App\Action\Context};
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -35,23 +35,23 @@ use Magento\Sales\Model\Order;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\Data\QuoteInterface,
-    Api\QuoteRepositoryInterface,
-    Controller\Payment\Fallback,
-    Gateway\Transaction\ShippingDetails,
-    Gateway\Command\PaymentDetailsProvider,
-    Gateway\Transaction\Transaction,
-    Gateway\Transaction\TransactionBuilder,
-    Gateway\Transaction\TransactionInfo,
-    Gateway\Transaction\TransactionLogHistory,
-    Gateway\Transaction\TransactionSummary,
-    Gateway\Transaction\UserDetails,
-    Model\Gdpr\Compliance,
-    Model\LockManager,
-    Model\QuoteLocator,
-    Model\QuoteManagement,
-    Model\QuoteUpdater,
-    Model\TransactionProcessor};
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Controller\Payment\Fallback;
+use Vipps\Payment\Gateway\Transaction\ShippingDetails;
+use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
+use Vipps\Payment\Gateway\Transaction\TransactionInfo;
+use Vipps\Payment\Gateway\Transaction\TransactionLogHistory;
+use Vipps\Payment\Gateway\Transaction\TransactionSummary;
+use Vipps\Payment\Gateway\Transaction\UserDetails;
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\LockManager;
+use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\QuoteManagement;
+use Vipps\Payment\Model\QuoteUpdater;
+use Vipps\Payment\Model\TransactionProcessor;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Payment\Gateway\ConfigInterface;
 

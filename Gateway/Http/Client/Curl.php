@@ -15,14 +15,15 @@
  */
 namespace Vipps\Payment\Gateway\Http\Client;
 
-use Magento\Framework\{
-    HTTP\Adapter\Curl as MagentoCurl,
-    HTTP\Adapter\CurlFactory, Json\EncoderInterface
-};
-use Magento\Payment\Gateway\{ConfigInterface, Http\TransferInterface};
+use Magento\Framework\HTTP\Adapter\Curl as MagentoCurl;
+use Magento\Framework\HTTP\Adapter\CurlFactory;
+use Magento\Framework\Json\EncoderInterface;
+use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProviderInterface;
-use Zend\Http\{Request, Response as ZendResponse};
+use Zend\Http\Request;
+use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
 
 /**

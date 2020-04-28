@@ -18,7 +18,8 @@
 namespace Vipps\Payment\Model\Quote;
 
 use Magento\Framework\Exception\CouldNotSaveException;
-use Vipps\Payment\Api\{Data\QuoteAttemptInterface, Data\QuoteInterface};
+use Vipps\Payment\Api\Data\QuoteAttemptInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Quote\AttemptRepositoryInterface;
 use Vipps\Payment\Model\ResourceModel\Quote\Attempt as AttemptResource;
 use Vipps\Payment\Model\ResourceModel\Quote\Attempt\CollectionFactory;

@@ -16,10 +16,13 @@
 
 namespace Vipps\Payment\Model;
 
-use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Model\Quote;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\{Transaction, TransactionBuilder};
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 use Vipps\Payment\Model\Helper\Utility;
 
 /**

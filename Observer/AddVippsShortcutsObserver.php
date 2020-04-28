@@ -17,7 +17,8 @@ namespace Vipps\Payment\Observer;
 
 use Magento\Catalog\Block\ShortcutButtons;
 use Magento\Payment\Gateway\ConfigInterface;
-use Magento\Framework\Event\{ObserverInterface, Observer};
+use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Event\Observer;
 use Vipps\Payment\Block\Express\Button;
 
 /**

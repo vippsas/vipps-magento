@@ -15,9 +15,8 @@
  */
 namespace Vipps\Payment\Gateway\Request;
 
-use Magento\Payment\Gateway\{
-    ConfigInterface, Request\BuilderInterface
-};
+use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
  * Class MerchantDataBuilder

@@ -15,10 +15,8 @@
  */
 namespace Vipps\Payment\Gateway\Validator;
 
-use Magento\Payment\Gateway\Validator\{
-    AbstractValidator,
-    ResultInterface
-};
+use Magento\Payment\Gateway\Validator\AbstractValidator;
+use Magento\Payment\Gateway\Validator\ResultInterface;
 
 /**
  * Class InitiateValidator

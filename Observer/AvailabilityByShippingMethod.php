@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Observer;
 
-use Magento\Framework\Event\{Observer, ObserverInterface};
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Model\Quote;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;

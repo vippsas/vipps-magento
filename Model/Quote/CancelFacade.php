@@ -18,17 +18,15 @@
 namespace Vipps\Payment\Model\Quote;
 
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Sales\Api\{
-    OrderRepositoryInterface,
-    OrderManagementInterface
-};
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Model\Order;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteInterface,
-    Api\Data\QuoteStatusInterface,
-    Api\Quote\CancelFacadeInterface,
-    Model\Quote,
-    Model\QuoteRepository};
+use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\Data\QuoteStatusInterface;
+use Vipps\Payment\Api\Quote\CancelFacadeInterface;
+use Vipps\Payment\Model\Quote;
+use Vipps\Payment\Model\QuoteRepository;
 use Magento\Framework\Exception\CouldNotSaveException;
 
 /**

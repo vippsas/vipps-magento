@@ -17,8 +17,11 @@
 
 namespace Vipps\Payment\Controller\Adminhtml\Monitoring;
 
-use Magento\Backend\{App\Action, App\Action\Context};
-use Magento\Framework\{App\ResponseInterface, Controller\ResultInterface, View\Result\Page};
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\View\Result\Page;
 use Vipps\Payment\Model\Quote\Command\RestartFactory;
 use Vipps\Payment\Model\QuoteRepository;
 

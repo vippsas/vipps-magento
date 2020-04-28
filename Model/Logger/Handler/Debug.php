@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Model\Logger\Handler;
 
-use Magento\Framework\{Filesystem\DriverInterface, Logger\Handler\Base};
+use Magento\Framework\Filesystem\DriverInterface;
+use Magento\Framework\Logger\Handler\Base;
 use Magento\Payment\Gateway\ConfigInterface;
 use Monolog\Logger;
 
