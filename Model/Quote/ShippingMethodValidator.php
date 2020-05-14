@@ -44,7 +44,9 @@ class ShippingMethodValidator
      */
     public function isValid($methodCode)
     {
-        $disabledShippingMethods = explode(',', $this->config->getValue('disallowed_shipping_methods'));
+        $disabledShippingMethods = array_filter(
+            explode(',', $this->config->getValue('disallowed_shipping_methods'))
+        );
         return !in_array($methodCode, $disabledShippingMethods);
     }
 }
