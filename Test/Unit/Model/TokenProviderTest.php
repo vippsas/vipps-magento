@@ -36,7 +36,6 @@ use Zend_Http_Response;
 /**
  * Class TokenProvider
  * @package Vipps\Payment\Test\Unit\Model
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TokenProviderTest extends TestCase
 {
