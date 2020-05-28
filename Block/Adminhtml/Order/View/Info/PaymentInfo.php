@@ -33,11 +33,6 @@ class PaymentInfo extends Template
     private $registry;
 
     /**
-     * @var Options
-     */
-    private $availableOptions;
-
-    /**
      * @param Context $context
      * @param Registry $registry
      * @param array $data

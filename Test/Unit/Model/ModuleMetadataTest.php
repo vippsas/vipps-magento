@@ -20,7 +20,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Vipps\Payment\Model\ModuleMetadata;
 use Vipps\Payment\Model\ModuleMetadataInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use \Magento\Framework\App\Config;
 use \Magento\Framework\Module\ResourceInterface;
 use \Magento\Framework\App\CacheInterface;
 use \Magento\Framework\App\ProductMetadataInterface;
@@ -40,11 +39,6 @@ class ModuleMetadataTest extends TestCase
      * @var MockObject
      */
     private $cache;
-
-    /**
-     * @var MockObject
-     */
-    private $config;
 
     /**
      * @var MockObject

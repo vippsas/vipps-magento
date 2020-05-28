@@ -39,17 +39,17 @@ class ModuleMetadata implements ModuleMetadataInterface
      *
      * @var string
      */
-    protected $version;
+    private $version;
 
     /**
      * ResourceInterface
      */
-    protected $resource;
+    private $resource;
 
     /**
      * ProductMetadataInterface
      */
-    protected $systemMetadata;
+    private $systemMetadata;
 
     /**
      * @var CacheInterface
@@ -67,8 +67,7 @@ class ModuleMetadata implements ModuleMetadataInterface
         ResourceInterface $resource,
         ProductMetadataInterface $systemMetadata,
         CacheInterface $cache
-    )
-    {
+    ) {
         $this->resource = $resource;
         $this->systemMetadata = $systemMetadata;
         $this->cache = $cache;
