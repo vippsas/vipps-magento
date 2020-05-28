@@ -31,6 +31,7 @@ use Vipps\Payment\Model\ModuleMetadataInterface;
  * Class Curl
  * @package Vipps\Payment\Gateway\Http\Client
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Curl implements ClientInterface
 {
