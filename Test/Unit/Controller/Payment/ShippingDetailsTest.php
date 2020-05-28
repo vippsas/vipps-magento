@@ -45,6 +45,8 @@ use Zend\Http\Response as ZendResponse;
  * Class ShippingDetailsTest
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ShippingDetailsTest extends TestCase
 {
