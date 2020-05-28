@@ -252,8 +252,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     {
         return true;
     }
-
-
+    
     /**
      * @param $e \Exception
      * @return string
