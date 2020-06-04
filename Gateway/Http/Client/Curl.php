@@ -15,20 +15,23 @@
  */
 namespace Vipps\Payment\Gateway\Http\Client;
 
-use Magento\Framework\{
-    HTTP\Adapter\Curl as MagentoCurl,
-    HTTP\Adapter\CurlFactory, Json\EncoderInterface
-};
-use Magento\Payment\Gateway\{ConfigInterface, Http\TransferInterface};
+use Magento\Framework\HTTP\Adapter\Curl as MagentoCurl;
+use Magento\Framework\HTTP\Adapter\CurlFactory;
+use Magento\Framework\Json\EncoderInterface;
+use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProviderInterface;
-use Zend\Http\{Request, Response as ZendResponse};
+use Zend\Http\Request;
+use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Model\ModuleMetadataInterface;
 
 /**
  * Class Curl
  * @package Vipps\Payment\Gateway\Http\Client
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Curl implements ClientInterface
 {
@@ -58,6 +61,11 @@ class Curl implements ClientInterface
     private $logger;
 
     /**
+     * @var MetadataInterface
+     */
+    private $productMetadata;
+
+    /**
      * Curl constructor.
      *
      * @param ConfigInterface $config
@@ -65,19 +73,22 @@ class Curl implements ClientInterface
      * @param TokenProviderInterface $tokenProvider
      * @param EncoderInterface $jsonEncoder
      * @param LoggerInterface $logger
+     * @param ModuleMetadataInterface $moduleMetadata
      */
     public function __construct(
         ConfigInterface $config,
         CurlFactory $adapterFactory,
         TokenProviderInterface $tokenProvider,
         EncoderInterface $jsonEncoder,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ModuleMetadataInterface $moduleMetadata
     ) {
         $this->config = $config;
         $this->adapterFactory = $adapterFactory;
         $this->tokenProvider = $tokenProvider;
         $this->jsonEncoder = $jsonEncoder;
         $this->logger = $logger;
+        $this->productMetadata = $moduleMetadata;
     }
 
     /**
@@ -125,12 +136,14 @@ class Curl implements ClientInterface
                     ];
             }
             $adapter->setOptions($options);
+            $headers = $this->getHeaders($transfer->getHeaders());
+            $requestHeaders = $this->productMetadata->addOptionalHeaders($headers);
             // send request
             $adapter->write(
                 $transfer->getMethod(),
                 $transfer->getUri(),
                 '1.1',
-                $this->getHeaders($transfer->getHeaders()),
+                $requestHeaders,
                 $this->jsonEncoder->encode($transfer->getBody())
             );
             $responseSting = $adapter->read();
@@ -157,7 +170,7 @@ class Curl implements ClientInterface
                 self::HEADER_PARAM_X_REQUEST_ID => '',
                 self::HEADER_PARAM_X_SOURCE_ADDRESS => '',
                 self::HEADER_PARAM_X_TIMESTAMP => '',
-                self::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key2')
+                self::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key2'),
             ],
             $headers
         );

@@ -15,18 +15,20 @@
  */
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{Controller\Result\Json,
-    Controller\ResultFactory,
-    Controller\ResultInterface,
-    App\Action\Context,
-    App\Action\Action,
-    Exception\LocalizedException,
-    App\ResponseInterface,
-    Session\SessionManagerInterface};
+use Magento\Framework\Controller\Result\Json;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\{Api\CommandManagerInterface, Gateway\Request\Initiate\InitiateBuilderInterface, Model\Method\Vipps};
+use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\Model\Method\Vipps;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Helper\Data as CheckoutHelper;

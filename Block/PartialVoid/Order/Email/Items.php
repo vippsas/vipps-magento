@@ -15,6 +15,7 @@
  */
 
 namespace Vipps\Payment\Block\PartialVoid\Order\Email;
+
 use Magento\Sales\Block\Order\Email\Items as OrderItems;
 use Magento\Sales\Model\Order;
 

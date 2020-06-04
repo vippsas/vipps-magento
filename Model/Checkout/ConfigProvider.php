@@ -16,7 +16,8 @@
 namespace Vipps\Payment\Model\Checkout;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
-use Magento\Framework\{View\Asset\Repository as AssetRepository, UrlInterface};
+use Magento\Framework\View\Asset\Repository as AssetRepository;
+use Magento\Framework\UrlInterface;
 
 /**
  * Class ConfigProvider

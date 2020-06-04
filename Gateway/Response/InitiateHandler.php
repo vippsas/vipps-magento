@@ -16,15 +16,15 @@
 
 namespace Vipps\Payment\Gateway\Response;
 
-use Magento\Payment\Gateway\{Data\PaymentDataObjectInterface,
-    Http\Transfer,
-    Response\HandlerInterface};
+use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
+use Magento\Payment\Gateway\Http\Transfer;
+use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Quote\Model\Quote\Payment;
-use Vipps\Payment\{Api\Data\QuoteInterface,
-    Gateway\Request\SubjectReader,
-    Model\Method\Vipps,
-    Model\QuoteFactory,
-    Model\QuoteRepository};
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Model\Method\Vipps;
+use Vipps\Payment\Model\QuoteFactory;
+use Vipps\Payment\Model\QuoteRepository;
 
 /**
  * Class InitiateHandler

@@ -16,25 +16,27 @@
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{App\Action\Action,
-    App\Action\Context,
-    App\CsrfAwareActionInterface,
-    App\Request\InvalidRequestException,
-    App\RequestInterface,
-    App\ResponseInterface,
-    Controller\ResultFactory,
-    Controller\ResultInterface,
-    Exception\LocalizedException,
-    Serialize\Serializer\Json};
-use Magento\Quote\Api\{CartRepositoryInterface,
-    Data\AddressInterfaceFactory,
-    Data\CartInterface,
-    ShipmentEstimationInterface};
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\AddressInterfaceFactory;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\{Gdpr\Compliance, Quote\AddressUpdater, QuoteLocator};
-use Vipps\Payment\Model\{Quote\ShippingMethodValidator};
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\Quote\AddressUpdater;
+use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\Quote\ShippingMethodValidator;
 use Zend\Http\Response as ZendResponse;
 
 /**
@@ -252,7 +254,6 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     {
         return true;
     }
-
 
     /**
      * @param $e \Exception

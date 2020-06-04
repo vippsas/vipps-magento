@@ -17,7 +17,8 @@ namespace Vipps\Payment\Gateway\Request\Initiate;
 
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Model\{Quote, Quote\Payment};
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Payment;
 use Magento\Framework\UrlInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Gateway\Request\SubjectReader;

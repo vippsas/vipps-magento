@@ -16,21 +16,29 @@
 
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\Exception\{AlreadyExistsException, CouldNotSaveException, InputException, NoSuchEntityException};
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Helper\Formatter;
-use Magento\Quote\Api\{CartManagementInterface, CartRepositoryInterface, Data\CartInterface};
+use Magento\Quote\Api\CartManagementInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
-use Magento\Sales\Api\{Data\OrderInterface, OrderManagementInterface, OrderRepositoryInterface};
-use Magento\Sales\Model\{Order,
-    Order\Payment,
-    Order\Payment\Processor,
-    Order\Payment\Transaction as PaymentTransaction};
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\Order\Payment\Processor;
+use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
-use Vipps\Payment\Gateway\{Exception\VippsException, Transaction\Transaction};
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 use Vipps\Payment\Model\Method\Vipps;
