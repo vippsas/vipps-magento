@@ -187,9 +187,9 @@ class CancelCommand extends GatewayCommand
         if ($transaction->getTransactionSummary()->getCapturedAmount() > 0) {
             if (!$offlineVoidEnabled) {
                 throw new LocalizedException(__('Can\'t cancel captured transaction.'));
-            } else {
-                return true;
             }
+
+            return true;
         }
 
         // if previous cancel was failed - use the same request id
