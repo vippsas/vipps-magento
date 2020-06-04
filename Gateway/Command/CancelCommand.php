@@ -33,6 +33,7 @@ use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionSummary;
 use Vipps\Payment\Gateway\Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
+use Vipps\Payment\Model\Order\PartialVoid\Config;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -90,6 +91,11 @@ class CancelCommand extends GatewayCommand
     private $profiler;
 
     /**
+     * @var Config
+     */
+    private $config;
+
+    /**
      * @var PaymentDetailsProvider
      */
     private $paymentDetailsProvider;
@@ -102,6 +108,7 @@ class CancelCommand extends GatewayCommand
     /**
      * CancelCommand constructor.
      *
+     * @param Config $config
      * @param BuilderInterface $requestBuilder
      * @param TransferFactoryInterface $transferFactory
      * @param ClientInterface $client
@@ -117,6 +124,7 @@ class CancelCommand extends GatewayCommand
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
+        Config $config,
         BuilderInterface $requestBuilder,
         TransferFactoryInterface $transferFactory,
         ClientInterface $client,
@@ -140,6 +148,7 @@ class CancelCommand extends GatewayCommand
             $handler,
             $validator
         );
+        $this->config = $config;
         $this->requestBuilder = $requestBuilder;
         $this->transferFactory = $transferFactory;
         $this->client = $client;
@@ -174,8 +183,13 @@ class CancelCommand extends GatewayCommand
             return true;
         }
 
+        $offlineVoidEnabled = $this->config->isOfflinePartialVoidEnabled();
         if ($transaction->getTransactionSummary()->getCapturedAmount() > 0) {
-            throw new LocalizedException(__('Can\'t cancel captured transaction.'));
+            if (!$offlineVoidEnabled) {
+                throw new LocalizedException(__('Can\'t cancel captured transaction.'));
+            } else {
+                return true;
+            }
         }
 
         // if previous cancel was failed - use the same request id
