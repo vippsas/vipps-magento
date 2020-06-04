@@ -19,11 +19,9 @@ namespace Vipps\Payment\Cron;
 use Magento\Framework\DB\Adapter\Pdo\Mysql;
 use Magento\Framework\Intl\DateTimeFactory;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{
-    Model\Order\Cancellation\Config,
-    Model\ResourceModel\Quote\Collection as VippsQuoteCollection,
-    Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory
-};
+use Vipps\Payment\Model\Order\Cancellation\Config;
+use Vipps\Payment\Model\ResourceModel\Quote\Collection as VippsQuoteCollection;
+use Vipps\Payment\Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory;
 
 /**
  * Class ClearQuotesHistory

@@ -24,8 +24,6 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "vendor/bin/phpcs --config-set default_standard MEQP2",
-            "vendor/bin/phpcs --config-set installed_paths \"$(pwd)/vendor/magento/marketplace-eqp\"",
             "vendor/bin/phpcs --config-set php7.0_path \"$(which php)\""
         ]
     },
@@ -36,7 +34,7 @@
         }
     },
     "require-dev": {
-        "magento/marketplace-eqp": "~1.0",
+        "magento/marketplace-eqp": "~2.0",
         "phpunit/phpunit": "~6.2.0",
         "phpmd/phpmd": "@stable"
     }

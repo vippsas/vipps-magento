@@ -17,18 +17,19 @@ namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Checkout\Helper\Data as CheckoutHelper;
 use Magento\Checkout\Model\Type\Onepage;
-use Magento\Framework\{
-    Controller\ResultFactory, Controller\ResultInterface, App\Action\Context, App\Action\Action,
-    Exception\LocalizedException, App\ResponseInterface, Session\SessionManagerInterface
-};
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Vipps\Payment\{
-    Api\CommandManagerInterface,
-    Gateway\Exception\VippsException,
-    Gateway\Request\Initiate\InitiateBuilderInterface,
-    Model\Method\Vipps
-};
+use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\Model\Method\Vipps;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Exception\NoSuchEntityException;

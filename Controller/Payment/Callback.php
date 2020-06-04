@@ -16,22 +16,22 @@
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{App\Action\Action,
-    App\Action\Context,
-    App\CsrfAwareActionInterface,
-    App\Request\InvalidRequestException,
-    App\RequestInterface,
-    App\ResponseInterface,
-    Controller\ResultFactory,
-    Controller\ResultInterface,
-    Exception\NoSuchEntityException,
-    Serialize\Serializer\Json};
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\{Api\Data\QuoteInterface,
-    Api\QuoteRepositoryInterface,
-    Gateway\Command\PaymentDetailsProvider,
-    Model\Gdpr\Compliance,
-    Model\TransactionProcessor};
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\TransactionProcessor;
 use Zend\Http\Response as ZendResponse;
 
 /**

@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Block\Profiling;
 
-use Magento\Framework\View\Element\{Template, Template\Context};
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Element\Template\Context;
 use Vipps\Payment\Model\Profiling\Item;
 
 /**
