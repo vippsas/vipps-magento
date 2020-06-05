@@ -59,7 +59,7 @@ class PaymentInfo extends Template
             'express_checkout' => __('Express'),
         ];
 
-        return (string) $paymentTypes[$paymentMethod] ?? '';
+        return (string) ($paymentTypes[$paymentMethod] ?? '');
     }
 
     /**
@@ -71,14 +71,14 @@ class PaymentInfo extends Template
     {
         $order = $this->registry->registry('current_order');
         if (!$order) {
-            return [];
+            return '';
         }
         $payment = $order->getPayment();
         if (!$payment) {
-            return [];
+            return '';
         }
         $addInfo = (array) $payment->getAdditionalInformation();
 
-        return (string) $addInfo['method_type'] ?? '';
+        return (string) ($addInfo['method_type'] ?? '');
     }
 }
