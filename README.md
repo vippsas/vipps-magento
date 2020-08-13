@@ -72,4 +72,4 @@ Magento Inc is an Adobe company: https://magento.com/about
 
 Please follow this [instruction](https://github.com/vippsas/vipps-developers/blob/master/contact.md) to contact us.
 
-See the Vipps Developers repository for Vipps contact information, etc: https://github.com/vippsas/vipps-developers
+For plugin related issues please contact vipps@vaimo.no or submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento).
