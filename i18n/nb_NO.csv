@@ -2,7 +2,7 @@
 "Invalid request","Invalid forespørsel"
 "An error occurred during request to Vipps. Please try again later.","En feil har oppstått i forespørselen mot Vipps. Vennligst prøv igjen senere."
 "An error occurred during payment status update.","En feil oppstod under betalingens statusoppdatering."
-"Your order was canceled in Vipps.","Bestillingen din ble kansellert i Vipps."
+"Your order was cancelled in Vipps.","Bestillingen din ble kansellert i Vipps."
 "An error occurred during Shipping Details processing.","En feil oppstod ved behandling av leveringsdetaljene."
 "Can't cancel captured transaction.","Kan ikke kansellere en trukket transaksjon."
 "Captured amount is higher then remaining amount to capture","Beløpet som du prøver å trekke er høyere enn resterede beløp som kan trekkes"
