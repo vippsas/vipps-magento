@@ -38,6 +38,7 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Model\Exception\AcquireLockException;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
 use Vipps\Payment\Gateway\Exception\VippsException;
@@ -152,6 +153,9 @@ class Fallback extends Action implements CsrfAwareActionInterface
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
+            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+        } catch (AcquireLockException $e) {
+            $this->logger->critical($e->getMessage());
             $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
