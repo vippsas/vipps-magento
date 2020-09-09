@@ -18,11 +18,13 @@ namespace Vipps\Payment\Model;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\App\ScopeResolverInterface;
-use Magento\Framework\{
-    Exception\CouldNotSaveException, HTTP\ZendClientFactory, HTTP\ZendClient, App\ResourceConnection,
-    Serialize\Serializer\Json
-};
-use Vipps\Payment\Gateway\{Exception\AuthenticationException, Http\Client\Curl};
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\HTTP\ZendClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Serialize\Serializer\Json;
+use Vipps\Payment\Gateway\Exception\AuthenticationException;
+use Vipps\Payment\Gateway\Http\Client\Curl;
 
 /**
  * Class TokenProvider
@@ -188,7 +190,7 @@ class TokenProvider implements TokenProviderInterface
                 throw new \Exception('Not valid JWT data returned from Vipps. Response: '. $response); //@codingStandardsIgnoreLine
             }
             $this->logger->debug('Token fetched from Vipps');
-        } catch (\Exception $e) {
+        } catch (\Exception $e) {    //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage());
             throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'));
         }

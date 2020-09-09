@@ -35,6 +35,9 @@
     <preference for="Vipps\Payment\Api\QuoteRepositoryInterface"
                 type="Vipps\Payment\Model\QuoteRepository"/>
 
+    <preference for="Vipps\Payment\Model\ModuleMetadataInterface"
+                type="Vipps\Payment\Model\ModuleMetadata"/>
+
     <type name="Vipps\Payment\Model\TokenProvider">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>

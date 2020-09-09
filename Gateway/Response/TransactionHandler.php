@@ -16,8 +16,11 @@
 namespace Vipps\Payment\Gateway\Response;
 
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Sales\Model\Order\{Payment, Payment\Transaction as PaymentTransaction};
-use Vipps\Payment\Gateway\{Request\SubjectReader, Transaction\Transaction, Transaction\TransactionBuilder};
+use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 
 /**
  * Class TransactionHandler

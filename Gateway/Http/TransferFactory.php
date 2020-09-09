@@ -15,11 +15,9 @@
  */
 namespace Vipps\Payment\Gateway\Http;
 
-use Magento\Payment\Gateway\Http\{
-    TransferBuilder,
-    TransferFactoryInterface,
-    TransferInterface
-};
+use Magento\Payment\Gateway\Http\TransferBuilder;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Http\Client\ClientInterface;
 use Vipps\Payment\Model\UrlResolver;
 

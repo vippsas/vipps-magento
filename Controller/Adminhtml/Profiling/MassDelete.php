@@ -15,10 +15,15 @@
  */
 namespace Vipps\Payment\Controller\Adminhtml\Profiling;
 
-use Magento\Framework\{App\ResponseInterface, Controller\ResultFactory, Controller\ResultInterface};
-use Magento\Backend\{App\Action, Model\View\Result\Redirect, App\Action\Context};
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Backend\App\Action;
+use Magento\Backend\Model\View\Result\Redirect;
+use Magento\Backend\App\Action\Context;
 use Magento\Ui\Component\MassAction\Filter;
-use Vipps\Payment\Model\ResourceModel\Profiling\{Item, Item\CollectionFactory};
+use Vipps\Payment\Model\ResourceModel\Profiling\Item;
+use Vipps\Payment\Model\ResourceModel\Profiling\Item\CollectionFactory;
 
 /**
  * Class MassDelete

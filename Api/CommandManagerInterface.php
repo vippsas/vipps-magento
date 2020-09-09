@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Api;
 
-use Magento\Payment\{Gateway\Command\ResultInterface, Model\InfoInterface};
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Model\InfoInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**

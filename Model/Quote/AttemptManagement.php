@@ -17,7 +17,9 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Vipps\Payment\Model\{Quote as VippsQuote, Quote\AttemptFactory, QuoteRepository as QuoteMonitorRepository};
+use Vipps\Payment\Model\Quote as VippsQuote;
+use Vipps\Payment\Model\Quote\AttemptFactory;
+use Vipps\Payment\Model\QuoteRepository as QuoteMonitorRepository;
 
 /**
  * Attempt Management.

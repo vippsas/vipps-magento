@@ -15,10 +15,11 @@
  */
 namespace Vipps\Payment\Gateway\Validator;
 
-use Magento\Payment\Gateway\Validator\{
-    AbstractValidator, ResultInterface, ResultInterfaceFactory
-};
-use Vipps\Payment\Gateway\Transaction\{TransactionBuilder, Transaction};
+use Magento\Payment\Gateway\Validator\AbstractValidator;
+use Magento\Payment\Gateway\Validator\ResultInterface;
+use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
+use Vipps\Payment\Gateway\Transaction\Transaction;
 
 /**
  * Class RefundTransactionValidator

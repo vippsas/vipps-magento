@@ -15,7 +15,9 @@
  */
 namespace Vipps\Payment\Block\Express;
 
-use Magento\Framework\View\{Element\Template, Asset\Repository, Element\AbstractBlock};
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Asset\Repository;
+use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\Math\Random;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Catalog\Block\ShortcutInterface;

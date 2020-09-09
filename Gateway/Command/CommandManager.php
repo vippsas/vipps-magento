@@ -16,12 +16,10 @@
 namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Payment\Model\InfoInterface;
-use Magento\Payment\Gateway\{
-    CommandInterface,
-    Command\ResultInterface,
-    Command\CommandException,
-    Command\CommandManagerInterface as PaymentCommandManagerInterface
-};
+use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Command\CommandException;
+use Magento\Payment\Gateway\Command\CommandManagerInterface as PaymentCommandManagerInterface;
 use Magento\Payment\Gateway;
 use Magento\Framework\Exception\NotFoundException;
 use Vipps\Payment\Api\CommandManagerInterface;

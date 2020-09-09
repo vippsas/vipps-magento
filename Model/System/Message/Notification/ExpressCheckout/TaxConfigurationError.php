@@ -17,6 +17,7 @@ namespace Vipps\Payment\Model\System\Message\Notification\ExpressCheckout;
 
 use Magento\Tax\Helper\Data;
 use Magento\Tax\Model\Config as TaxConfig;
+use Magento\Tax\Model\System\Message\NotificationInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\UrlInterface;
@@ -24,7 +25,7 @@ use Magento\Framework\UrlInterface;
 /**
  * Class TaxConfigurationError
  */
-class TaxConfigurationError implements \Magento\Tax\Model\System\Message\NotificationInterface
+class TaxConfigurationError implements NotificationInterface
 {
     /**
      * @var StoreManagerInterface
@@ -95,9 +96,10 @@ class TaxConfigurationError implements \Magento\Tax\Model\System\Message\Notific
      */
     public function isDisplayed()
     {
-        if ($this->paymentConfig->getValue('express_checkout') && !empty($this->getStoresWithWrongSettings())) {
+        if (!empty($this->getStoresWithWrongSettings())) {
             return true;
         }
+
         return false;
     }
 
@@ -142,6 +144,10 @@ class TaxConfigurationError implements \Magento\Tax\Model\System\Message\Notific
      */
     private function checkSettings($store = null)
     {
+        if (!$this->paymentConfig->getValue('express_checkout', $store)) {
+            return true;
+        }
+
         return 'origin' == $this->taxHelper->getTaxBasedOn($store);
     }
 
@@ -156,14 +162,16 @@ class TaxConfigurationError implements \Magento\Tax\Model\System\Message\Notific
         if (null !== $this->storesWithInvalidSettings) {
             return $this->storesWithInvalidSettings;
         }
+
         $this->storesWithInvalidSettings = [];
-        $storeCollection = $this->storeManager->getStores(true);
+        $storeCollection = $this->storeManager->getStores();
         foreach ($storeCollection as $store) {
             if (!$this->checkSettings($store)) {
                 $website = $store->getWebsite();
                 $this->storesWithInvalidSettings[] = $website->getName() . ' (' . $store->getName() . ')';
             }
         }
+
         return $this->storesWithInvalidSettings;
     }
 }

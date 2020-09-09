@@ -20,6 +20,7 @@ namespace Vipps\Payment\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
@@ -73,11 +74,17 @@ class CheckoutSubmitAllAfter implements ObserverInterface
     {
         /** @var OrderInterface $order */
         $order = $observer->getData('order');
-        if ('vipps' == $order->getPayment()->getMethod()) {
-            try {
-                // send order placed email
-                $this->notify($order);
+        if (!$order || !($order instanceof OrderInterface)) {
+            return;
+        }
 
+        $payment  = $order->getPayment();
+        if (!$payment || !($payment instanceof OrderPaymentInterface)) {
+            return;
+        }
+
+        if ('vipps' == $payment->getMethod()) {
+            try {
                 // updated vipps quote
                 $vippsQuote = $this->quoteRepository->loadByOrderId($order->getIncrementId());
                 $vippsQuote->setOrderId((int)$order->getEntityId());
@@ -86,18 +93,6 @@ class CheckoutSubmitAllAfter implements ObserverInterface
             } catch (\Throwable $t) {
                 $this->logger->error($t->getMessage());
             }
-        }
-    }
-
-    /**
-     * Send order conformation email if not sent
-     *
-     * @param Order|OrderInterface $order
-     */
-    private function notify($order)
-    {
-        if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
-            $this->orderManagement->notify($order->getEntityId());
         }
     }
 }

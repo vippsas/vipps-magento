@@ -69,3 +69,12 @@ Placement Failed - All attempts were unsuccessful.
 Canceled - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
 
 Cancel Failed - Means failed to cancel payment. Record in this status require admin/developer interaction.
+
+## Tax Calculation for Express Checkout
+When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
+![Express Checkout notice](docs/images/express-checkout-notice.png)
+
+This means that you should change Tax Calculation Settings to be based on **Shipping Origin**:
+![Tax Calculation Settings](docs/images/tax-origin-settings.png)
+
+Otherwise an issue with calculating delivery cost might occur.

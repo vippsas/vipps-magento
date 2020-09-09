@@ -16,7 +16,9 @@
 
 namespace Vipps\Payment\Setup;
 
-use Magento\Framework\Setup\{ModuleContextInterface, ModuleDataSetupInterface, UpgradeDataInterface};
+use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Quote\Model\ResourceModel\Quote\Collection;
 use Magento\Quote\Model\ResourceModel\Quote\CollectionFactory;
 
