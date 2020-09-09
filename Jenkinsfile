@@ -3,7 +3,7 @@
 @Library('platform-jenkins-pipeline') _
 
 pipeline {
-    agent { label 'magento23' }
+    agent { label 'magento24' }
     options {
         ansiColor('xterm')
     }
