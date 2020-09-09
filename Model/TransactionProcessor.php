@@ -41,6 +41,7 @@ use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
+use Vipps\Payment\Model\Exception\AcquireLockException;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -160,6 +161,7 @@ class TransactionProcessor
      * @throws NoSuchEntityException
      * @throws VippsException
      * @throws WrongAmountException
+     * @throws AcquireLockException
      * @throws \Exception
      */
     public function process(QuoteInterface $vippsQuote, Transaction $transaction)
@@ -269,6 +271,7 @@ class TransactionProcessor
      * @return string
      * @throws AlreadyExistsException
      * @throws InputException
+     * @throws AcquireLockException
      * @throws \Exception
      */
     private function acquireLock($reservedOrderId)
@@ -277,7 +280,7 @@ class TransactionProcessor
         if ($reservedOrderId && $this->lockManager->lock($lockName, 10)) {
             return $lockName;
         }
-        throw new \Exception(__('Can not acquire lock for order "%1"', $reservedOrderId)); //@codingStandardsIgnoreLine
+        throw new AcquireLockException(__('Can not acquire lock for order "%1"', $reservedOrderId)); //@codingStandardsIgnoreLine
     }
 
     /**
