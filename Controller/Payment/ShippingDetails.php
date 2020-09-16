@@ -13,28 +13,38 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory, Exception\LocalizedException, Serialize\Serializer\Json,
-    Controller\ResultInterface, App\ResponseInterface, App\Action\Action, App\Action\Context
-};
-use Magento\Quote\Api\{
-    CartRepositoryInterface, Data\CartInterface, ShipmentEstimationInterface, Data\AddressInterfaceFactory
-};
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\AddressInterfaceFactory;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\Model\Gdpr\Compliance;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
-use Vipps\Payment\Model\{Quote\ShippingMethodValidator, QuoteLocator, Quote\AddressUpdater};
-use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\Quote\AddressUpdater;
+use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\Quote\ShippingMethodValidator;
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class ShippingDetails
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ShippingDetails extends Action
+class ShippingDetails extends Action implements CsrfAwareActionInterface
 {
     /**
      * @var CartRepositoryInterface
@@ -62,9 +72,14 @@ class ShippingDetails extends Action
     private $addressFactory;
 
     /**
-     * @var LoggerInterface
+     * @var AddressUpdater
      */
-    private $logger;
+    private $addressUpdater;
+
+    /**
+     * @var ShippingMethodValidator
+     */
+    private $shippingMethodValidator;
 
     /**
      * @var Compliance
@@ -72,13 +87,9 @@ class ShippingDetails extends Action
     private $gdprCompliance;
 
     /**
-     * @var AddressUpdater
+     * @var LoggerInterface
      */
-    private $addressUpdater;
-    /**
-     * @var ShippingMethodValidator
-     */
-    private $shippingMethodValidator;
+    private $logger;
 
     /**
      * ShippingDetails constructor.
@@ -86,23 +97,26 @@ class ShippingDetails extends Action
      * @param Context $context
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteLocator $quoteLocator
+     * @param Json $serializer
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
      * @param AddressUpdater $addressUpdater
+     * @param ShippingMethodValidator $shippingMethodValidator
      * @param Compliance $compliance
-     * @param Json $serializer
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,
         CartRepositoryInterface $cartRepository,
         QuoteLocator $quoteLocator,
+        Json $serializer,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         AddressUpdater $addressUpdater,
         ShippingMethodValidator $shippingMethodValidator,
         Compliance $compliance,
-        Json $serializer,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
@@ -111,10 +125,10 @@ class ShippingDetails extends Action
         $this->serializer = $serializer;
         $this->shipmentEstimation = $shipmentEstimation;
         $this->addressFactory = $addressFactory;
-        $this->logger = $logger;
         $this->addressUpdater = $addressUpdater;
-        $this->gdprCompliance = $compliance;
         $this->shippingMethodValidator = $shippingMethodValidator;
+        $this->gdprCompliance = $compliance;
+        $this->logger = $logger;
     }
 
     /**
@@ -128,7 +142,6 @@ class ShippingDetails extends Action
         try {
             $reservedOrderId = $this->getReservedOrderId();
             $quote = $this->getQuote($reservedOrderId);
-
             $vippsAddress = $this->serializer->unserialize($this->getRequest()->getContent());
             $address = $this->addressFactory->create();
             $address->addData([
@@ -151,7 +164,6 @@ class ShippingDetails extends Action
                 'shippingDetails' => []
             ];
             foreach ($shippingMethods as $key => $shippingMethod) {
-
                 $methodFullCode = $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode();
                 if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
                     continue;
@@ -168,14 +180,14 @@ class ShippingDetails extends Action
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
                 'message' => $e->getMessage()
             ]);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
@@ -197,9 +209,8 @@ class ShippingDetails extends Action
     {
         $params = $this->getRequest()->getParams();
         next($params);
-        $reservedOrderId = key($params);
 
-        return $reservedOrderId;
+        return key($params);
     }
 
     /**
@@ -216,6 +227,41 @@ class ShippingDetails extends Action
         if (!$quote) {
             throw new LocalizedException(__('Requested quote not found'));
         }
+
         return $quote;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException //@codingStandardsIgnoreLine
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
+    {
+        return true;
+    }
+
+    /**
+     * @param $e \Exception
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
+            ' . Exception message: ' . $e->getMessage();
     }
 }

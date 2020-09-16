@@ -67,15 +67,6 @@
                 </item>
             </argument>
         </column>
-        <column name="attempts">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="filter" xsi:type="string"/>
-                    <item name="label" xsi:type="string" translate="true">Attempts Count</item>
-                    <item name="sortOrder" xsi:type="number">40</item>
-                </item>
-            </argument>
-        </column>
         <column name="status">
             <argument name="data" xsi:type="array">
                 <item name="options" xsi:type="object">Vipps\Payment\Ui\Component\Column\Status</item>

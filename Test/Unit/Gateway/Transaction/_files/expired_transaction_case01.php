@@ -13,32 +13,23 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Plugin\Sales\Model\Order;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order\Invoice as CoreInvoice;
-
-/**
- * Class Invoice
- * @package Vipps\Payment\Plugin\Sales\Model\Order
- */
-class Invoice
-{
-    /**
-     * Before Invoice register plugin.
-     *
-     * Plugin prevents creating invoice with 'Capture Offline' for orders with vipps payment method
-     *
-     * @param CoreInvoice $subject
-     * @throws LocalizedException
-     */
-    public function beforeRegister(CoreInvoice $subject)
-    {
-        $captureCase = $subject->getRequestedCaptureCase();
-        $paymentMethod = $subject->getOrder()->getPayment()->getMethod();
-
-        if (CoreInvoice::CAPTURE_OFFLINE === $captureCase && $paymentMethod === 'vipps') {
-            throw new LocalizedException(__('Vipps payment method does not support Capture Offline'));
-        }
-    }
-}
+$currentDate = strtotime('now');
+$pastDate = $currentDate - (60 * 6);
+return \json_decode(
+    '{
+        "orderId": "testOrderId",
+        "transactionLogHistory": [
+            {
+                "amount": 20000,
+                "transactionText": "One pair of Vipps socks",
+                "transactionId": "5001420062",
+                "timeStamp": "' . date('c', $pastDate) . '",
+                "operation": "INITIATE",
+                "requestId": "",
+                "operationSuccess": true
+            }
+        ]
+    }',
+    true
+);

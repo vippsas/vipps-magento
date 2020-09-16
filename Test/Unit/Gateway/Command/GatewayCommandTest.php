@@ -15,16 +15,26 @@
  */
 namespace Vipps\Payment\Test\Unit\Gateway\Command;
 
-use Vipps\Payment\Gateway\{Command\GatewayCommand, Exception\ExceptionFactory, Exception\MerchantException};
+use Vipps\Payment\Gateway\Command\GatewayCommand;
+use Vipps\Payment\Gateway\Exception\ExceptionFactory;
+use Vipps\Payment\Gateway\Exception\MerchantException;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
-use Magento\Payment\Gateway\{
-    Command\CommandException, CommandInterface, Http\TransferInterface, Http\ClientInterface,
-    Http\TransferFactoryInterface, Request\BuilderInterface, Response\HandlerInterface, Validator\ValidatorInterface,
-    Command\ResultInterface, Http\ClientException, Http\ConverterException, Validator\Result
-};
-use Magento\Framework\{
-    Exception\LocalizedException, Phrase, Json\DecoderInterface, TestFramework\Unit\Helper\ObjectManager
-};
+use Magento\Payment\Gateway\Command\CommandException;
+use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
+use Magento\Payment\Gateway\Validator\Result;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
+use Magento\Framework\Json\DecoderInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Zend\Http\Response as ZendResponse;

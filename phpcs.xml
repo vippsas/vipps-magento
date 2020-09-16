@@ -17,6 +17,9 @@
 -->
 <ruleset name="Vipps_Payment">
     <description>Code Sniffer Configuration for Vipps Payment </description>
+    <config name="installed_paths" value="../../../vendor/magento/marketplace-eqp/"/>
+    <arg name="extensions" value="php"/>
+    <rule ref="MEQP2" />
     <file>Api/</file>
     <file>Controller/</file>
     <file>Cron/</file>
@@ -27,10 +30,15 @@
     <file>Setup/</file>
     <file>Ui/</file>
     <file>view/</file>
-    <arg name="extensions" value="php"/>
-    <rule ref="MEQP2" />
 
     <rule ref="PSR2.Namespaces.UseDeclaration">
+        <exclude-pattern>*</exclude-pattern>
+    </rule>
+    <rule ref="PSR2.Namespaces.UseDeclaration">
+        <exclude name="PSR2.Namespaces.UseDeclaration.MultipleDeclarations" />
+    </rule>
+
+    <rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
         <exclude-pattern>*</exclude-pattern>
     </rule>
 </ruleset>

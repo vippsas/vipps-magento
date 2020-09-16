@@ -18,7 +18,8 @@
 namespace Vipps\Payment\Model\ResourceModel\Quote;
 
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
-use Vipps\Payment\Model\{Quote as QuoteModel, ResourceModel\Quote as QuoteResource};
+use Vipps\Payment\Model\Quote as QuoteModel;
+use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
 
 /**
  * Class Collection

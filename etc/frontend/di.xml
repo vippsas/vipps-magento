@@ -25,16 +25,25 @@
         </arguments>
     </type>
 
-    <type name="Vipps\Payment\Controller\Payment\Regular">
+    <type name="Vipps\Payment\Controller\Payment\InitRegular">
         <arguments>
-            <argument name="session" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Controller\Payment\Klarna\InitRegular">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
 
-    <type name="Vipps\Payment\Controller\Payment\Express">
+    <type name="Vipps\Payment\Controller\Payment\InitExpress">
         <arguments>
-            <argument name="session" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
@@ -70,5 +79,10 @@
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
+    </type>
+
+    <!-- Disabling email Sent when Order Is Placed in Frontend -->
+    <type name="Magento\Sales\Api\OrderManagementInterface">
+        <plugin name="disable_send_email" type="Vipps\Payment\Plugin\Sales\OrderManagement\AfterPlaceOrder"/>
     </type>
 </config>

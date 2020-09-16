@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\{
-    App\DeploymentConfig, App\ResourceConnection, Config\ConfigOptionsListConstants, Exception\AlreadyExistsException,
-    Exception\InputException, Phrase
-};
+use Magento\Framework\App\DeploymentConfig;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Config\ConfigOptionsListConstants;
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Phrase;
 
 /**
  * Class LockManager

@@ -17,10 +17,14 @@ namespace Vipps\Payment\Test\Unit\Model;
 
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\App\ScopeResolverInterface;
-use Magento\Framework\{
-    App\ResourceConnection, App\ScopeInterface, DB\Adapter\AdapterInterface, DB\Select, HTTP\ZendClientFactory,
-    HTTP\ZendClient, TestFramework\Unit\Helper\ObjectManager, Serialize\SerializerInterface
-};
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\App\ScopeInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Select;
+use Magento\Framework\HTTP\ZendClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use Magento\Framework\Serialize\SerializerInterface;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -28,6 +32,7 @@ use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProvider;
 use Vipps\Payment\Model\UrlResolver;
 use Zend_Http_Response;
+
 /**
  * Class TokenProvider
  * @package Vipps\Payment\Test\Unit\Model

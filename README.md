@@ -45,20 +45,16 @@ Here is a diagram of the process
 ![Screenshot of Quote Processing Flow](docs/images/quote-monitoring-flow.png)
 
 
-# Debug
+# Requests Profiling
 
-Please follow the instructions in [DEBUG.md](DEBUG.md)
+Requests Profiling is a page in Magento admin panel that helps you to track a communication between Vipps and Magento.
+You can find the page under `System -> Vipps`
 
-# Integration
+On the page you can see the list of all requests for all orders that Magento sends to Vipps. 
+By clicking on a link `Show` in an `Action` column of grid you can find appropriate response from Vipps.
 
-## Klarna Checkout
+Using built-in Magento grid filter you could easily find all requests per order that you are interested in.
 
-There is a known issue when using Vipps as an external payment method for Klarna Checkout. 
-When the customer fills in the checkout form using the data that were used before, the customer will see an error:
-
-`Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
-
-This issue was fixed in the 2.3.0 release.
 
 # Magento
 
@@ -66,7 +62,7 @@ Magento is an open-source e-commerce platform written in PHP: https://magento.co
 
 For Magento support, please see the Magento Help Center: https://support.magento.com/hc/en-us
 
-Magento Inc is an Adobe company: https://magento.com/about
+Magento Inc is an Adobe company: https://magento.com/about.
 
 # Vipps contact information
 

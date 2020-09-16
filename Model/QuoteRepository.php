@@ -33,6 +33,7 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @var QuoteResource
      */
     private $quoteResource;
+
     /**
      * @var QuoteFactory
      */
@@ -78,36 +79,55 @@ class QuoteRepository implements QuoteRepositoryInterface
      * Load monitoring quote by quote.
      *
      * @param $quoteId
+     *
+     * @return Quote
      * @throws NoSuchEntityException
      */
     public function loadByQuote($quoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create();
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $quoteId, 'quote_id');
 
-        $this->quoteResource->load($monitoringQuote, $quoteId, 'quote_id');
-
-        if (!$monitoringQuote->getId()) {
+        if (!$vippsQuote->getId()) {
             throw NoSuchEntityException::singleField('quote_id', $quoteId);
         }
 
-        return $monitoringQuote;
+        return $vippsQuote;
     }
 
     /**
-     * @param int $monitoringQuoteId
+     * @param string $orderId
+     *
+     * @return QuoteInterface
+     * @throws NoSuchEntityException
+     */
+    public function loadByOrderId($orderId)
+    {
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $orderId, 'reserved_order_id');
+
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('reserved_order_id', $orderId);
+        }
+
+        return $vippsQuote;
+    }
+
+    /**
+     * @param int $vippsQuoteId
+     *
      * @return Quote
      * @throws NoSuchEntityException
      */
-    public function load(int $monitoringQuoteId)
+    public function load(int $vippsQuoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create();
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $vippsQuoteId);
 
-        $this->quoteResource->load($monitoringQuote, $monitoringQuoteId);
-
-        if (!$monitoringQuote->getId()) {
-            throw NoSuchEntityException::singleField('entity_id', $monitoringQuoteId);
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
         }
 
-        return $monitoringQuote;
+        return $vippsQuote;
     }
 }

@@ -18,7 +18,8 @@
 namespace Vipps\Payment\Model\ResourceModel\Quote\Attempt;
 
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
-use Vipps\Payment\Model\{Quote\Attempt as AttemptModel, ResourceModel\Quote\Attempt as AttemptResource};
+use Vipps\Payment\Model\Quote\Attempt as AttemptModel;
+use Vipps\Payment\Model\ResourceModel\Quote\Attempt as AttemptResource;
 
 /**
  * Class Collection

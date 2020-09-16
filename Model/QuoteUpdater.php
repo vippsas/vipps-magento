@@ -16,10 +16,13 @@
 
 namespace Vipps\Payment\Model;
 
-use Magento\Quote\{Api\CartRepositoryInterface, Api\Data\CartInterface, Model\Quote};
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Model\Quote;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\{Transaction, TransactionBuilder};
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 use Vipps\Payment\Model\Helper\Utility;
 
 /**
@@ -69,22 +72,17 @@ class QuoteUpdater
 
     /**
      * @param CartInterface $quote
+     * @param Transaction $transaction
      *
      * @return bool|CartInterface|Quote
-     * @throws VippsException
      */
-    public function execute(CartInterface $quote)
+    public function execute(CartInterface $quote, Transaction $transaction)
     {
         /** @var Quote $quote */
-        $response = $this->paymentDetailsProvider->get(['orderId' => $quote->getReservedOrderId()]);
-        $transaction = $this->transactionBuilder->setData($response)->build();
-        if (!$transaction->isExpressCheckout()) {
-            return false;
-        }
         $quote->setMayEditShippingAddress(false);
         $quote->setMayEditShippingMethod(true);
 
-        $this->updateQuoteAddress($quote, $transaction);
+        $this->updateQuoteAddresses($quote, $transaction);
         $this->utility->disabledQuoteAddressValidation($quote);
 
         /**
@@ -102,13 +100,12 @@ class QuoteUpdater
      * @param Quote $quote
      * @param Transaction $transaction
      */
-    private function updateQuoteAddress(Quote $quote, Transaction $transaction)
+    private function updateQuoteAddresses(Quote $quote, Transaction $transaction)
     {
+        $this->updateBillingAddress($quote, $transaction);
         if (!$quote->getIsVirtual()) {
             $this->updateShippingAddress($quote, $transaction);
         }
-
-        $this->updateBillingAddress($quote, $transaction);
     }
 
     /**
@@ -132,10 +129,11 @@ class QuoteUpdater
             $shippingAddress->setPostcode($shippingDetails->getPostcode());
         }
 
+        $shippingAddress->setSameAsBilling(true);
+
         //We do not save user address from vipps in Magento
         $shippingAddress->setSaveInAddressBook(false);
-        $shippingAddress->setSameAsBilling(true);
-        $shippingAddress->unsCustomerAddressId();
+        $shippingAddress->setCustomerAddressId(null);
     }
 
     /**
@@ -158,9 +156,10 @@ class QuoteUpdater
             $billingAddress->setPostcode($shippingDetails->getPostcode());
         }
 
+        $billingAddress->setSameAsBilling(false);
+
         //We do not save user address from vipps in Magento
         $billingAddress->setSaveInAddressBook(false);
-        $billingAddress->setSameAsBilling(false);
-        $billingAddress->unsCustomerAddressId();
+        $billingAddress->setCustomerAddressId(null);
     }
 }

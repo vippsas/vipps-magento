@@ -20,15 +20,14 @@
     <default>
         <payment>
             <vipps>
-                <model>VippsFacade</model>
+                <model>Vipps\Payment\Model\Method\Vipps</model>
                 <title>Vipps</title>
                 <active>1</active>
                 <order_status>processing</order_status>
                 <is_gateway>1</is_gateway>
-                <payment_action>authorize</payment_action>
                 <can_use_checkout>1</can_use_checkout>
                 <can_initialize>0</can_initialize>
-                <can_authorize>1</can_authorize>
+                <can_authorize>0</can_authorize>
                 <can_capture>1</can_capture>
                 <can_refund>1</can_refund>
                 <can_capture_partial>1</can_capture_partial>
@@ -43,7 +42,7 @@
                 <subscription_key2 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <client_id backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <merchant_serial_number backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
-                <cancellation_type>manual</cancellation_type>
+                <cancellation_type>auto</cancellation_type>
                 <cancellation_attempts_count>3</cancellation_attempts_count>
                 <cancellation_customer_inactivity_time>10</cancellation_customer_inactivity_time>
                 <cancellation_quote_storage_period>60</cancellation_quote_storage_period>

@@ -41,7 +41,7 @@ class AvailabilityByShippingMethod implements ObserverInterface
 
     /**
      * @param Observer $observer
-     * @return void
+     * @return null
      *
      * 'result' => $checkResult,
      * 'method_instance' => $this,
@@ -66,6 +66,6 @@ class AvailabilityByShippingMethod implements ObserverInterface
             $result->setData('is_available', false);
         }
 
-        return;
+        return null;
     }
 }

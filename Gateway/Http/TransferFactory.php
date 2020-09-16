@@ -15,11 +15,9 @@
  */
 namespace Vipps\Payment\Gateway\Http;
 
-use Magento\Payment\Gateway\Http\{
-    TransferBuilder,
-    TransferFactoryInterface,
-    TransferInterface
-};
+use Magento\Payment\Gateway\Http\TransferBuilder;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Http\Client\ClientInterface;
 use Vipps\Payment\Model\UrlResolver;
 
@@ -122,7 +120,9 @@ class TransferFactory implements TransferFactoryInterface
         $allowedFields = $this->allowedFields;
         $fields = array_filter(
             $fields,
-            function ($key) use ($allowedFields) { return in_array($key, $allowedFields);},
+            function ($key) use ($allowedFields) {
+                return in_array($key, $allowedFields);
+            },
             ARRAY_FILTER_USE_KEY
         );
 

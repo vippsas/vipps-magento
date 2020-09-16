@@ -32,19 +32,4 @@ interface QuoteManagementInterface
      * @return QuoteInterface
      */
     public function create(CartInterface $cart);
-
-    /**
-     * @param CartInterface $cart
-     * @return Quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function getByQuote(CartInterface $cart);
-
-    /**
-     * Loads Vipps monitoring as extension attribute.
-     *
-     * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function loadExtensionAttribute(CartInterface $quote);
 }

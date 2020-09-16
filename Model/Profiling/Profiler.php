@@ -18,9 +18,9 @@ namespace Vipps\Payment\Model\Profiling;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Store\Model\ScopeInterface;
-use Vipps\Payment\Api\Profiling\ {
-    Data\ItemInterface, Data\ItemInterfaceFactory, ItemRepositoryInterface
-};
+use Vipps\Payment\Api\Profiling\Data\ItemInterface;
+use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
+use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
 
 use Zend\Http\Response;
 use Magento\Framework\Json\DecoderInterface;
