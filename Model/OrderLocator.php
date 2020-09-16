@@ -64,4 +64,18 @@ class OrderLocator
         $order = current($orderList);
         return $order ?: null;
     }
+
+    /**
+     * @param $quoteId
+     *
+     * @return OrderInterface|null
+     */
+    public function getByQuoteId($quoteId)
+    {
+        $searchCriteria = $this->searchCriteriaBuilder->addFilter('quote_id', $quoteId, 'eq')->create();
+        $orderList = $this->orderRepository->getList($searchCriteria)->getItems();
+
+        $order = current($orderList);
+        return $order ?: null;
+    }
 }

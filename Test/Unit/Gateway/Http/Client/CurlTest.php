@@ -16,13 +16,17 @@
 
 namespace Vipps\Payment\Test\Gateway\Http\Client;
 
-use Magento\Payment\Gateway\{ConfigInterface, Http\TransferInterface};
-use Magento\Framework\{TestFramework\Unit\Helper\ObjectManager, HTTP\Adapter\Curl, Json\EncoderInterface};
+use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use Magento\Framework\HTTP\Adapter\Curl;
+use Magento\Framework\Json\EncoderInterface;
 use Vipps\Payment\Gateway\Http\Client\Curl as VippsCurl;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Model\TokenProviderInterface;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
+use Vipps\Payment\Model\ModuleMetadataInterface;
 
 /**
  * Class CurlTest
@@ -71,6 +75,11 @@ class CurlTest extends TestCase
      */
     private $objectManagerHelper;
 
+    /**
+     * @var ModuleMetadataInterface
+     */
+    private $moduleMetadata;
+
     public function setUp()
     {
         $this->config = $this->getMockBuilder(ConfigInterface::class)
@@ -96,13 +105,17 @@ class CurlTest extends TestCase
         $this->logger = $this->getMockBuilder(LoggerInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
+        $this->moduleMetadata = $this->getMockBuilder(ModuleMetadataInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $this->objectManagerHelper = new ObjectManager($this);
         $this->action = $this->objectManagerHelper->getObject(VippsCurl::class, [
             'config' => $this->config,
             'adapterFactory' => $this->adapterFactory,
             'tokenProvider' => $this->tokenProvider,
             'jsonEncoder' => $this->jsonEncoder,
-            'logger' => $this->logger
+            'logger' => $this->logger,
+            'moduleMetadata' => $this->moduleMetadata,
         ]);
     }
 
@@ -127,6 +140,9 @@ class CurlTest extends TestCase
             ->getMockForAbstractClass();
         $transfer->expects($this->once())
             ->method('getHeaders')
+            ->willReturn([]);
+        $this->moduleMetadata->expects($this->atLeastOnce())
+            ->method('addOptionalHeaders')
             ->willReturn([]);
         $this->action->placeRequest($transfer);
     }

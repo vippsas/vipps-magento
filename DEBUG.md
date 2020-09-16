@@ -22,3 +22,6 @@ Using built-in Magento grid filter you could easily find all requests per order 
 
 ## Debugging Log Files
 Logs which are related to vipps payment module are located under two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.  
+
+
+

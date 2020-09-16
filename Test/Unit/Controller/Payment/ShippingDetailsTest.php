@@ -16,6 +16,7 @@
 
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
+use Magento\Quote\Model\Quote\Address;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
@@ -33,13 +34,19 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Controller\Payment\ShippingDetails;
-use Vipps\Payment\Model\OrderPlace;
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\Quote\AddressUpdater;
+use Vipps\Payment\Model\Quote\ShippingMethodValidator;
+use Vipps\Payment\Model\QuoteLocator;
+use Vipps\Payment\Model\TransactionProcessor;
 use Zend\Http\Response as ZendResponse;
 
 /**
  * Class ShippingDetailsTest
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ShippingDetailsTest extends TestCase
 {
@@ -69,7 +76,7 @@ class ShippingDetailsTest extends TestCase
     private $addressFactory;
 
     /**
-     * @var AddressInterface|MockObject
+     * @var Address|AddressInterface|MockObject
      */
     private $address;
 
@@ -89,9 +96,9 @@ class ShippingDetailsTest extends TestCase
     protected $request;  //@codingStandardsIgnoreLine
 
     /**
-     * @var OrderPlace|MockObject
+     * @var QuoteLocator|MockObject
      */
-    private $orderManagement;
+    private $quoteLocator;
 
     /**
      * @var Quote|MockObject
@@ -104,98 +111,187 @@ class ShippingDetailsTest extends TestCase
     private $logger;
 
     /**
+     * @var AddressUpdater|MockObject
+     */
+    private $addressUpdater;
+
+    /**
+     * @var Compliance|MockObject
+     */
+    private $compliance;
+
+    /**
+     * @var ShippingMethodValidator|MockObject
+     */
+    private $shippingMethodValidator;
+
+    /**
      * @var ShippingMethodInterface|MockObject
      */
     private $shippingMethod;
 
     protected function setUp() //@codingStandardsIgnoreLine
     {
-        $this->markTestSkipped('Skipped since deprecated, will be coveren in new patch release');
-
         $this->cartRepository = $this->getMockBuilder(CartRepositoryInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['getList', 'getItems'])
             ->getMockForAbstractClass();
-        $this->orderManagement = $this->getMockBuilder(OrderPlace::class)
+
+        $this->quoteLocator = $this->getMockBuilder(QuoteLocator::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getQuoteByReservedOrderId'])
+            ->setMethods(['get'])
             ->getMock();
+
         $this->quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getId'])
+            ->setMethods(['getId', 'setIsActive'])
             ->getMock();
 
         $this->serializer = $this->getMockBuilder(Json::class)
             ->disableOriginalConstructor()
             ->setMethods(['unserialize'])
             ->getMock();
+
         $this->shipmentEstimation = $this->getMockBuilder(ShipmentEstimationInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['estimateByExtendedAddress'])
             ->getMockForAbstractClass();
+
         $this->addressFactory = $this->getMockBuilder(AddressInterfaceFactory::class)
             ->disableOriginalConstructor()
             ->setMethods(['create'])
             ->getMock();
-        $this->address = $this->getMockBuilder(AddressInterface::class)
+
+        $this->address = $this->getMockBuilder(Address::class)
             ->disableOriginalConstructor()
             ->setMethods(['addData'])
             ->getMockForAbstractClass();
+
         $this->request = $this->getMockBuilder(RequestInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['getParams', 'getContent'])
             ->getMockForAbstractClass();
+
         $this->resultFactory = $this->getMockBuilder(ResultFactory::class)
             ->disableOriginalConstructor()
             ->setMethods(['create'])
             ->getMock();
+
         $context = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
             ->getMock();
+
         $context->expects(self::once())
             ->method('getResultFactory')
             ->willReturn($this->resultFactory);
         $context->expects(self::once())
             ->method('getRequest')
             ->willReturn($this->request);
+
         $this->response = $this->getMockBuilder(ResultInterface::class)
-            ->setMethods(['setData'])
+            ->setMethods(['setData', 'setHttpResponseCode'])
             ->getMockForAbstractClass();
         $this->resultFactory->expects(self::once())
             ->method('create')
             ->with(ResultFactory::TYPE_JSON)
             ->willReturn($this->response);
+
         $this->shippingMethod = $this->getMockBuilder(ShippingMethodInterface::class)
             ->setMethods(['getAmount', 'getMethodCode', 'getCarrierCode'])
             ->getMockForAbstractClass();
+
         $this->logger = $this->getMockBuilder(LoggerInterface::class)
+            ->setMethods(['critical', 'debug'])
             ->getMockForAbstractClass();
+
+        $this->addressUpdater = $this->getMockBuilder(AddressUpdater::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['fromSourceAddress'])
+            ->getMock();
+
+        $this->compliance = $this->getMockBuilder(Compliance::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['process'])
+            ->getMock();
+
+        $this->shippingMethodValidator = $this->getMockBuilder(ShippingMethodValidator::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['isValid'])
+            ->getMock();
+
         $managerHelper = new ObjectManager($this);
         $this->action = $managerHelper->getObject(ShippingDetails::class, [
             'context' => $context,
             'cartRepository' => $this->cartRepository,
-            'orderManagement' => $this->orderManagement,
+            'quoteLocator' => $this->quoteLocator,
             'serializer' => $this->serializer,
             'shipmentEstimation' => $this->shipmentEstimation,
             'addressFactory' => $this->addressFactory,
+            'addressUpdater' => $this->addressUpdater,
+            'shippingMethodValidator' => $this->shippingMethodValidator,
+            'compliance' => $this->compliance,
             'logger' => $this->logger
         ]);
     }
 
     public function testExecuteException()
     {
+        $reservedOrderId = '1000024';
+        $params = [
+            '1000023' => [],
+            $reservedOrderId => [],
+        ];
+        $this->request->method('getParams')
+            ->willReturn($params);
+
+        $this->quoteLocator->expects(self::once())
+            ->method('get')
+            ->with($reservedOrderId)
+            ->willReturn($this->quote);
+
+        $content = 'some bad content';
+        $this->request->expects(self::exactly(2))
+            ->method('getContent')
+            ->willReturn($content);
+
+        $errorMessage1 = "Unable to unserialize value. Error: xxx";
+        $exception = new \InvalidArgumentException($errorMessage1);
+        $this->serializer->expects(self::once())
+            ->method('unserialize')
+            ->with($content)
+            ->willThrowException($exception);
+
+        $this->logger->expects(self::once())
+            ->method('critical')
+            ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
+            ->willReturnSelf();
+
         $errorStatus = ZendResponse::STATUS_CODE_500;
-        $errorMessage = __('An error occurred during Shipping Details processing.');
+        $errorMessage2 = __('An error occurred during Shipping Details processing.');
         $responseData = [
             'status' => $errorStatus,
-            'message' => $errorMessage
+            'message' => $errorMessage2
         ];
-        $exception = new \Exception();
-        $this->request->method('getParams')
-            ->willThrowException($exception);
+
+        $this->response->expects(self::once())
+            ->method('setHttpResponseCode')
+            ->with($errorStatus)
+            ->willReturnSelf();
+
         $this->response->expects(self::once())
             ->method('setData')
             ->with($responseData)
+            ->willReturnSelf();
+
+        $compliantString = 'compliantString';
+        $this->compliance->expects(self::once())
+            ->method('process')
+            ->with($content)
+            ->willReturn($compliantString);
+
+        $this->logger->expects(self::once())
+            ->method('debug')
+            ->with($compliantString)
             ->willReturnSelf();
 
         self::assertEquals($this->action->execute(), $this->response);
@@ -203,59 +299,182 @@ class ShippingDetailsTest extends TestCase
 
     public function testExecuteLocalizedException()
     {
+        $reservedOrderId = '1000024';
+        $params = [
+            '1000023' => [],
+            $reservedOrderId => [],
+        ];
+        $this->request->method('getParams')
+            ->willReturn($params);
+
+        $errorMessage1 = 'Requested Quote does not exist';
+        $this->quoteLocator->expects(self::once())
+            ->method('get')
+            ->with($reservedOrderId)
+            ->willThrowException(new LocalizedException(__($errorMessage1)));
+
+        $this->logger->expects(self::once())
+            ->method('critical')
+            ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
+            ->willReturnSelf();
+
         $errorStatus = ZendResponse::STATUS_CODE_500;
-        $errorMessage = __('Requested quote not found');
         $responseData = [
             'status' => $errorStatus,
-            'message' => $errorMessage
+            'message' => $errorMessage1
         ];
+        $this->response->expects(self::once())
+            ->method('setHttpResponseCode')
+            ->with($errorStatus)
+            ->willReturnSelf();
+
         $this->response->expects(self::once())
             ->method('setData')
             ->with($responseData)
             ->willReturnSelf();
-        $params = [
-            '1000023' => [],
-            '1000024' => [],
-        ];
-        $this->request->method('getParams')
-            ->willReturn($params);
-        $this->orderManagement->expects(self::any())
-            ->method('getQuoteByReservedOrderId')
-            ->willThrowException(new LocalizedException(__('Requested Quote does not exist')));
-        $this->quote->expects(self::any())
-            ->method('getId')
-            ->willReturn($this->quote);
+
+        $content = 'some bad content';
+        $this->request->expects(self::once())
+            ->method('getContent')
+            ->willReturn($content);
+
+        $compliantString = 'compliantString';
+        $this->compliance->expects(self::once())
+            ->method('process')
+            ->with($content)
+            ->willReturn($compliantString);
+
+        $this->logger->expects(self::once())
+            ->method('debug')
+            ->with($compliantString)
+            ->willReturnSelf();
 
         self::assertEquals($this->action->execute(), $this->response);
     }
 
     public function testExecute()
     {
+        $reservedOrderId = (int)'1000024';
         $params = [
             '1000023' => [],
-            '1000024' => [],
+            $reservedOrderId => [],
         ];
         $this->request->method('getParams')
             ->willReturn($params);
-        $unserializedValue = 'a:1:{s:9:"addressId";s:6:"123333";}';
-        $this->request->expects(self::once())
+
+        $this->quoteLocator->expects(self::once())
+            ->method('get')
+            ->with($reservedOrderId)
+            ->willReturn($this->quote);
+
+        $unSerializedValue =
+            'a:6:{s:8:"postCode";s:4:"1234";s:12:"addressLine1";s:4:"city";s:4:"Oslo";s:10:"country_id";s:2:"NO";}';
+        $this->request->expects(self::exactly(2))
             ->method('getContent')
-            ->willReturn($unserializedValue);
+            ->willReturn($unSerializedValue);
+
+        $serializedValue  = [
+            'addressId' => '123333',
+            'postCode' => '1232',
+            'addressLine1' => 'street name',
+            'addressLine2' => 'house number',
+            'address_type' => 'shipping',
+            'city' => 'city'
+        ];
         $this->serializer->expects(self::once())
             ->method('unserialize')
-            ->willReturn(['addressId' => '123333']);
+            ->with($unSerializedValue)
+            ->willReturn($serializedValue);
+
         $this->addressFactory->expects(self::once())
             ->method('create')
             ->willReturn($this->address);
-        $this->address->expects(self::any())
-            ->method('addData')
+
+        $quoteId = 1111;
+        $this->quote->expects(self::exactly(2))
+            ->method('getId')
+            ->willReturn($quoteId);
+
+        $this->cartRepository->expects(self::once())
+            ->method('get')
+            ->with($quoteId)
+            ->willReturn($this->quote);
+
+        $this->addressUpdater->expects(self::once())
+            ->method('fromSourceAddress')
+            ->with($this->quote, $this->address)
             ->willReturnSelf();
-        $this->shipmentEstimation->expects(self::any())
+
+        $this->quote->expects(self::once())
+            ->method('setIsActive')
+            ->with(true)
+            ->willReturnSelf();
+
+        $this->shipmentEstimation->expects(self::once())
             ->method('estimateByExtendedAddress')
-            ->willReturn([$this->shippingMethod]);
+            ->with($quoteId, $this->address)
+            ->willReturn([$this->shippingMethod, $this->shippingMethod]);
+
+        $this->shippingMethod->expects(self::exactly(2))
+            ->method('getCarrierCode')
+            ->willReturn('carrier_code');
+
+        $this->shippingMethod->expects(self::exactly(2))
+            ->method('getMethodCode')
+            ->willReturn('method_code');
+
+        $this->shippingMethodValidator->expects(self::exactly(2))
+            ->method('isValid')
+            ->with('carrier_code_method_code')
+            ->willReturn(true);
+
+        $this->shippingMethod->expects(self::exactly(2))
+            ->method('getAmount')
+            ->willReturn(10);
+
+        $this->shippingMethod->expects(self::exactly(2))
+            ->method('getMethodTitle')
+            ->willReturn('method_title');
+
+        $responseData = [
+            'addressId' => '123333',
+            'orderId' => $reservedOrderId,
+            'shippingDetails' => [
+                [
+                    'isDefault' => 'N',
+                    'priority' => 0,
+                    'shippingCost' => 10,
+                    'shippingMethod' => 'method_title',
+                    'shippingMethodId' => 'carrier_code_method_code',
+                ],
+                [
+                    'isDefault' => 'N',
+                    'priority' => 1,
+                    'shippingCost' => 10,
+                    'shippingMethod' => 'method_title',
+                    'shippingMethodId' => 'carrier_code_method_code',
+                ]
+            ]
+        ];
+        $this->response->expects(self::once())
+            ->method('setHttpResponseCode')
+            ->with(ZendResponse::STATUS_CODE_200)
+            ->willReturnSelf();
 
         $this->response->expects(self::once())
             ->method('setData')
+            ->with($responseData)
+            ->willReturnSelf();
+
+        $compliantString = 'compliantString';
+        $this->compliance->expects(self::once())
+            ->method('process')
+            ->with($unSerializedValue)
+            ->willReturn($compliantString);
+
+        $this->logger->expects(self::once())
+            ->method('debug')
+            ->with($compliantString)
             ->willReturnSelf();
 
         self::assertEquals($this->action->execute(), $this->response);

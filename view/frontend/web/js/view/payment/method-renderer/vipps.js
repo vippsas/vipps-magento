@@ -17,24 +17,27 @@
 define(
     [
         'jquery',
+        'mage/storage',
+        'mage/url',
         'Magento_Checkout/js/view/payment/default',
-        'Vipps_Payment/js/action/set-payment-method',
-        'Magento_Checkout/js/model/payment/additional-validators',
-        'Magento_Customer/js/customer-data',
+        'Magento_Checkout/js/model/error-processor',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
     function (
         $,
+        storage,
+        url,
         Component,
-        setPaymentMethodAction,
-        additionalValidators,
-        customerData,
+        errorProcessor,
         fullScreenLoader
     ) {
         'use strict';
 
         return Component.extend({
+            redirectUrl: null,
+
             defaults: {
+                redirectAfterPlaceOrder: false,
                 template: 'Vipps_Payment/payment/vipps'
             },
 
@@ -43,48 +46,41 @@ define(
                 return window.checkoutConfig.payment.vipps.logoSrc;
             },
 
-            /** Returns payment continue button image path */
-            getContinueVippsImgSrc: function () {
-                return window.checkoutConfig.payment.vipps.continueImgSrc;
+            afterPlaceOrder: function () {
+                $.mage.redirect(this.redirectUrl);
             },
 
-            /** Redirect to vipps */
-            continueToVipps: function () {
-                if (additionalValidators.validate()) {
-                    //update payment method information if additional data was changed
-                    this.selectPaymentMethod();
-                    var self = this;
-                    setPaymentMethodAction(this.messageContainer).done(
-                        function () {
-                            $.post(
-                                window.checkoutConfig.payment.vipps.initiateUrl
-                            ).done(
-                                function (response) {
-                                    if (response.hasOwnProperty('url')) {
-                                        $.mage.redirect(response.url);
-                                    } else if (response.hasOwnProperty('errorMessage')) {
-                                        self.messageContainer.addErrorMessage({
-                                            "message": response.errorMessage
-                                        });
-                                    } else {
-                                        customerData.invalidate(['cart']);
-                                        window.location.reload();
-                                    }
-                                }
-                            ).fail(
-                                function () {
-                                    window.location.reload();
-                                }
-                            ).always(
-                                function () {
-                                    customerData.invalidate(['cart']);
-                                    fullScreenLoader.stopLoader();
-                                }
-                            );
+            continueToVipps: function (data, event) {
+                let self = this;
 
-                        }.bind(this)
-                    )
-                }
+                self.isPlaceOrderActionAllowed(false);
+                fullScreenLoader.startLoader();
+
+                $.post(
+                    url.build('vipps/payment/initRegular'),
+                    {}
+                ).done(
+                    function (response, msg, xhr) {
+                        if (response.hasOwnProperty('url')) {
+                            self.redirectUrl = response.url;
+
+                            self.isPlaceOrderActionAllowed(true);
+                            return self.placeOrder(data, event);
+                        } else {
+                            errorProcessor.process(xhr, self.messageContainer);
+                        }
+                    }
+                ).fail(
+                    function (response) {
+                        errorProcessor.process(response, self.messageContainer);
+                    }
+                ).always(
+                    function () {
+                        fullScreenLoader.stopLoader();
+                        self.isPlaceOrderActionAllowed(true);
+                    }
+                );
+
                 return false;
             }
         });

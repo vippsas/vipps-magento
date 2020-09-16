@@ -18,6 +18,7 @@
 namespace Vipps\Payment\Api;
 
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Vipps\Payment\Api\Data\QuoteInterface;
 
 /**
@@ -32,4 +33,12 @@ interface QuoteRepositoryInterface
      * @return void
      */
     public function save(QuoteInterface $quote);
+
+    /**
+     * @param string $orderId
+     *
+     * @return QuoteInterface
+     * @throws NoSuchEntityException
+     */
+    public function loadByOrderId($orderId);
 }

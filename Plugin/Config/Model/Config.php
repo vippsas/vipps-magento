@@ -16,7 +16,8 @@
 namespace Vipps\Payment\Plugin\Config\Model;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\{ScopeResolverInterface, ResourceConnection};
+use Magento\Framework\App\ScopeResolverInterface;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Config\Model\Config as CoreConfig;
 use Magento\Payment\Gateway\ConfigInterface;
 use Psr\Log\LoggerInterface;

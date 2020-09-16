@@ -156,6 +156,23 @@ class Quote extends AbstractModel implements QuoteInterface
     }
 
     /**
+     * @param int $orderId
+     * @return self
+     */
+    public function setOrderId(int $orderId)
+    {
+        return $this->setData(self::ORDER_ID, $orderId);
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrderId()
+    {
+        return $this->getData(self::ORDER_ID);
+    }
+
+    /**
      * @param int $storeId
      * @return self
      */
@@ -170,6 +187,23 @@ class Quote extends AbstractModel implements QuoteInterface
     public function getStoreId()
     {
         return $this->getData(self::STORE_ID);
+    }
+
+    /**
+     * @param string $value
+     * @return self
+     */
+    public function setAuthToken(string $value)
+    {
+        return $this->setData(self::AUTH_TOKEN, $value);
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthToken()
+    {
+        return $this->getData(self::AUTH_TOKEN);
     }
 
     /**

@@ -15,7 +15,9 @@
  */
 namespace Vipps\Payment\Gateway\Validator;
 
-use Magento\Payment\Gateway\Validator\{AbstractValidator, ResultInterface, ResultInterfaceFactory};
+use Magento\Payment\Gateway\Validator\AbstractValidator;
+use Magento\Payment\Gateway\Validator\ResultInterface;
+use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
 /**

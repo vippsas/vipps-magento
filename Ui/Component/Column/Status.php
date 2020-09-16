@@ -49,13 +49,14 @@ class Status implements OptionSourceInterface
     public function getOptions()
     {
         return [
-            QuoteStatusInterface::STATUS_NEW           => __('New'),
-            QuoteStatusInterface::STATUS_PROCESSING    => __('Processing'),
-            QuoteStatusInterface::STATUS_PLACED        => __('Placed'),
-            QuoteStatusInterface::STATUS_EXPIRED       => __('Expired'),
-            QuoteStatusInterface::STATUS_PLACE_FAILED  => __('Place Failed'),
-            QuoteStatusInterface::STATUS_CANCELED      => __('Canceled'),
-            QuoteStatusInterface::STATUS_CANCEL_FAILED => __('Cancel Failed')
+            QuoteStatusInterface::STATUS_NEW            => __('New'),
+            QuoteStatusInterface::STATUS_PENDING        => __('Pending'),
+            QuoteStatusInterface::STATUS_CANCELED       => __('Canceled'),
+            QuoteStatusInterface::STATUS_EXPIRED        => __('Expired'),
+            QuoteStatusInterface::STATUS_RESERVED       => __('Reserved'),
+            QuoteStatusInterface::STATUS_RESERVE_FAILED => __('Reserve Failed'),
+            QuoteStatusInterface::STATUS_REVERTED       => __('Reverted'),
+            QuoteStatusInterface::STATUS_REVERT_FAILED  => __('Revert Failed')
         ];
     }
 

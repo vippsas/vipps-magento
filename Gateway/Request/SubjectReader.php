@@ -15,7 +15,9 @@
  */
 namespace Vipps\Payment\Gateway\Request;
 
-use Magento\Payment\Gateway\Data\{AddressAdapterInterface, OrderAdapterInterface, PaymentDataObjectInterface};
+use Magento\Payment\Gateway\Data\AddressAdapterInterface;
+use Magento\Payment\Gateway\Data\OrderAdapterInterface;
+use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 
 /**
  * Class SubjectReader

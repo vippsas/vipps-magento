@@ -17,11 +17,11 @@
 
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\Data\CartInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteManagementInterface;
-use Vipps\Payment\Model\QuoteFactory;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class QuoteRepository
@@ -70,51 +70,24 @@ class QuoteManagement implements QuoteManagementInterface
     }
 
     /**
-     * Loads Vipps monitoring as extension attribute.
+     * @param QuoteInterface $quote
      *
-     * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws CouldNotSaveException
      */
-    public function loadExtensionAttribute(CartInterface $quote)
-    {
-        if ($extensionAttributes = $quote->getExtensionAttributes()) {
-            if (!$extensionAttributes->getVippsQuote()) {
-                $monitoringQuote = $this->getByQuote($quote);
-
-                $extensionAttributes->setVippsQuote($monitoringQuote);
-            }
-        }
-    }
-
-    /**
-     * @param CartInterface $cart
-     * @return Quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function getByQuote(CartInterface $cart)
-    {
-        /** @var Quote $monitoringQuote */
-        try {
-            $monitoringQuote = $this->quoteRepository->loadByQuote($cart->getId());
-        } catch (NoSuchEntityException $exception) {
-            // Setup default values for backward compatibility with current quotes.
-            $monitoringQuote = $this->quoteFactory->create()
-                ->setQuoteId($cart->getId())
-                ->setReservedOrderId($cart->getReservedOrderId());
-
-            // Backward compatibility for old quotes paid with vipps.
-            $this->quoteRepository->save($monitoringQuote);
-        }
-
-        return $monitoringQuote;
-    }
-
-    /**
-     * @param Quote $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     */
-    public function save(Quote $quote)
+    public function save(QuoteInterface $quote)
     {
         $this->quoteRepository->save($quote);
+    }
+
+    /**
+     * @param QuoteInterface $quote
+     *
+     * @return QuoteInterface|Quote
+     * @throws NoSuchEntityException
+     */
+    public function reload(QuoteInterface $quote)
+    {
+        $quote = $this->quoteRepository->load($quote->getEntityId());
+        return $quote;
     }
 }

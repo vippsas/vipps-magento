@@ -16,8 +16,11 @@
 namespace Vipps\Payment\Gateway\Response;
 
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Sales\Model\Order\{Payment, Payment\Transaction as PaymentTransaction};
-use Vipps\Payment\Gateway\{Request\SubjectReader, Transaction\Transaction, Transaction\TransactionBuilder};
+use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 
 /**
  * Class TransactionHandler
@@ -67,7 +70,7 @@ class TransactionHandler implements HandlerInterface
 
         if ($payment instanceof Payment) {
             $status = $transaction->getTransactionInfo()->getStatus();
-            $transactionId = $transaction->getTransactionInfo()->getTransactionId();
+            $transactionId = $transaction->getTransactionId();
 
             switch ($status) {
                 case Transaction::TRANSACTION_STATUS_CANCELLED:
@@ -82,7 +85,7 @@ class TransactionHandler implements HandlerInterface
             $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(
                 PaymentTransaction::RAW_DETAILS,
-                $transaction->getTransactionInfo()->getData() + $transaction->getTransactionSummary()->getData()
+                $transaction->getTransactionSummary()->getData()
             );
         }
     }

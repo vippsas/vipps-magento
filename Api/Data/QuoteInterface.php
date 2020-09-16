@@ -61,10 +61,26 @@ interface QuoteInterface extends QuoteStatusInterface
     const STORE_ID = 'store_id';
 
     /**
+     * @const string
+     */
+    const ORDER_ID = 'order_id';
+
+    /**
+     * @const string
+     */
+    const AUTH_TOKEN = 'auth_token';
+
+    /**
      * @param int $quoteId
      * @return self
      */
     public function setQuoteId(int $quoteId);
+
+    /**
+     * @param int $orderId
+     * @return self
+     */
+    public function setOrderId(int $orderId);
 
     /**
      * @param string|null $reservedOrderId
@@ -94,6 +110,11 @@ interface QuoteInterface extends QuoteStatusInterface
      * @return int
      */
     public function getQuoteId();
+
+    /**
+     * @return int
+     */
+    public function getOrderId();
 
     /**
      * @return string
@@ -130,4 +151,15 @@ interface QuoteInterface extends QuoteStatusInterface
      * @return self
      */
     public function setStoreId(int $storeId);
+
+    /**
+     * @return string
+     */
+    public function getAuthToken();
+
+    /**
+     * @param string $value
+     * @return self
+     */
+    public function setAuthToken(string $value);
 }

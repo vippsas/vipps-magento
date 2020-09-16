@@ -17,12 +17,17 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\{Api\CommandManagerInterface,
-    Api\Data\QuoteInterface,
-    Api\Data\QuoteStatusInterface,
-    Api\Quote\CancelFacadeInterface,
-    Model\QuoteRepository};
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Model\Order;
+use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\Data\QuoteStatusInterface;
+use Vipps\Payment\Api\Quote\CancelFacadeInterface;
+use Vipps\Payment\Model\Quote;
+use Vipps\Payment\Model\QuoteRepository;
+use Magento\Framework\Exception\CouldNotSaveException;
 
 /**
  * Quote Cancellation Facade.
@@ -36,58 +41,84 @@ class CancelFacade implements CancelFacadeInterface
     private $commandManager;
 
     /**
+     * @var OrderManagementInterface
+     */
+    private $orderManagement;
+
+    /**
      * @var QuoteRepository
      */
     private $quoteRepository;
+
     /**
      * @var AttemptManagement
      */
     private $attemptManagement;
 
     /**
-     * CancellationFacade constructor.
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * CancelFacade constructor.
+     *
      * @param CommandManagerInterface $commandManager
+     * @param OrderManagementInterface $orderManagement
      * @param QuoteRepository $quoteRepository
      * @param AttemptManagement $attemptManagement
+     * @param CartRepositoryInterface $cartRepository
+     * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
         CommandManagerInterface $commandManager,
+        OrderManagementInterface $orderManagement,
         QuoteRepository $quoteRepository,
-        AttemptManagement $attemptManagement
+        AttemptManagement $attemptManagement,
+        CartRepositoryInterface $cartRepository,
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->commandManager = $commandManager;
+        $this->orderManagement = $orderManagement;
         $this->quoteRepository = $quoteRepository;
         $this->attemptManagement = $attemptManagement;
+        $this->cartRepository = $cartRepository;
+        $this->orderRepository = $orderRepository;
     }
 
     /**
-     * vipps_monitoring extension attribute requires to be loaded in the quote.
+     * @param QuoteInterface|Quote $vippsQuote
      *
-     * @param QuoteInterface $vippsQuote
-     * @param CartInterface $quote
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @throws \Throwable
+     * @throws CouldNotSaveException
      */
-    public function cancel(
-        QuoteInterface $vippsQuote,
-        CartInterface $quote
-    ) {
+    public function cancel(QuoteInterface $vippsQuote)
+    {
         try {
-            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
-            // cancel order on vipps side
-            $this->commandManager->cancel($quote->getPayment());
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-            $attempt->setMessage('The order has been canceled.');
-        } catch (\Throwable $exception) {
-            // Log the exception
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
-            $attempt->setMessage($exception->getMessage());
-            throw $exception;
-        } finally {
-            if (isset($attempt)) {
-                $this->attemptManagement->save($attempt);
+            if ($vippsQuote->getOrderId()) {
+                /** @var Order $order */
+                $order = $this->orderRepository->get($vippsQuote->getOrderId());
+                $this->orderManagement->cancel($vippsQuote->getOrderId());
+                $this->commandManager->cancel($order->getPayment());
+            } else {
+                /** @var \Magento\Quote\Model\Quote $quote */
+                $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+                $this->commandManager->cancel($quote->getPayment());
             }
+
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERTED);
             $this->quoteRepository->save($vippsQuote);
+        } catch (\Throwable $t) {
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERT_FAILED);
+            $this->quoteRepository->save($vippsQuote);
+
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+            $attempt->setMessage($t->getMessage());
+            $this->attemptManagement->save($attempt);
         }
     }
 }

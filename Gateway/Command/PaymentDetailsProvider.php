@@ -17,6 +17,8 @@ namespace Vipps\Payment\Gateway\Command;
 
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 
 /**
  * Class PaymentDetailsProvider
@@ -31,24 +33,44 @@ class PaymentDetailsProvider
     private $commandManager;
 
     /**
+     * @var TransactionBuilder
+     */
+    private $transactionBuilder;
+
+    /**
+     * @var array
+     */
+    private $cache = [];
+
+    /**
      * PaymentDetailsProvider constructor.
      *
      * @param CommandManagerInterface $commandManager
+     * @param TransactionBuilder $transactionBuilder
      */
     public function __construct(
-        CommandManagerInterface $commandManager
+        CommandManagerInterface $commandManager,
+        TransactionBuilder $transactionBuilder
     ) {
         $this->commandManager = $commandManager;
+        $this->transactionBuilder = $transactionBuilder;
     }
 
     /**
-     * @param array $arguments
+     * @param string $orderId
      *
-     * @return mixed
+     * @return Transaction
      * @throws VippsException
      */
-    public function get(array $arguments)
+    public function get($orderId)
     {
-        return $this->commandManager->getPaymentDetails($arguments);
+        if (!isset($this->cache[$orderId])) {
+            $response = $this->commandManager->getPaymentDetails(['orderId' => $orderId]);
+            $transaction = $this->transactionBuilder->setData($response)->build();
+
+            $this->cache[$orderId] = $transaction;
+        }
+
+        return $this->cache[$orderId];
     }
 }
