@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -18,14 +18,17 @@ namespace Vipps\Payment\Controller\Payment\Klarna;
 use Magento\Checkout\Api\GuestPaymentInformationManagementInterface;
 use Magento\Checkout\Api\PaymentInformationManagementInterface;
 use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Checkout\Model\Type\Onepage;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -35,10 +38,9 @@ use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\Model\CurrencyValidator;
 use Vipps\Payment\Model\Method\Vipps;
-use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\Exception\CouldNotSaveException;
+use function __;
 
 /**
  * Class InitRegular
@@ -97,6 +99,11 @@ class InitRegular extends Action
     private $quoteIdToMaskedQuoteId;
 
     /**
+     * @var CurrencyValidator
+     */
+    private CurrencyValidator $currencyValidator;
+
+    /**
      * InitRegular constructor.
      *
      * @param Context $context
@@ -110,6 +117,7 @@ class InitRegular extends Action
      * @param GuestPaymentInformationManagementInterface $guestPaymentInformationManagement
      * @param PaymentInformationManagementInterface $paymentInformationManagement
      * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
+     * @param CurrencyValidator $currencyValidator
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -124,7 +132,8 @@ class InitRegular extends Action
         CartManagementInterface $cartManagement,
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
         PaymentInformationManagementInterface $paymentInformationManagement,
-        QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
+        QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId,
+        CurrencyValidator $currencyValidator
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
@@ -137,6 +146,7 @@ class InitRegular extends Action
         $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
         $this->paymentInformationManagement = $paymentInformationManagement;
         $this->quoteIdToMaskedQuoteId = $quoteIdToMaskedQuoteId;
+        $this->currencyValidator = $currencyValidator;
     }
 
     /**
@@ -152,6 +162,10 @@ class InitRegular extends Action
             $quote = $this->checkoutSession->getQuote();
             if (!$quote) {
                 throw new LocalizedException(__('Could not initiate the payment. Please, reload the page.'));
+            }
+
+            if (!$this->currencyValidator->isValid()) {
+                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
             }
 
             // init Vipps payment and retrieve redirect url

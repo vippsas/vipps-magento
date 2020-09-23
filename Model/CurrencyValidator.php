@@ -13,22 +13,49 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-namespace Vipps\Payment\Api;
+namespace Vipps\Payment\Model;
 
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Model\Quote;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Interface QuoteManagementInterface
- * @api
+ * Class CurrencyValidator
+ * @package Vipps\Payment\Model
  */
-interface QuoteManagementInterface
+class CurrencyValidator
 {
+    const NORWEGIAN_CURRENCY = 'NOK';
+
     /**
-     * @param CartInterface $cart
-     * @return QuoteInterface
+     * @var StoreManagerInterface
      */
-    public function create(CartInterface $cart);
+    private $storeManager;
+
+    /**
+     * CurrencyValidator constructor.
+     *
+     * @param StoreManagerInterface $storeManager
+     */
+    public function __construct(
+        StoreManagerInterface $storeManager
+    ) {
+        $this->storeManager = $storeManager;
+    }
+
+    /**
+     * Validate if Norwegian currency is selected in store configuration.
+     *
+     * @return bool
+     * @throws NoSuchEntityException
+     */
+    public function isValid(): bool
+    {
+        /** @var Store $store */
+        $store = $this->storeManager->getStore();
+
+        return self::NORWEGIAN_CURRENCY == $store->getBaseCurrencyCode();
+    }
 }
