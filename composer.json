@@ -3,7 +3,7 @@
     "type": "magento2-module",
     "description": "Vipps Payment Method",
     "license": "proprietary",
-    "version": "2.4.0",
+    "version": "2.4.1",
     "require": {
         "magento/framework": "103.0.*",
         "magento/module-sales": "103.0.*",
