@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -244,6 +244,17 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     }
 
     /**
+     * @param $e \Exception
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
+            ' . Exception message: ' . $e->getMessage();
+    }
+
+
+    /**
      * {@inheritdoc}
      *
      * @param RequestInterface $request
@@ -253,15 +264,5 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
-    }
-
-    /**
-     * @param $e \Exception
-     * @return string
-     */
-    private function enlargeMessage($e): string
-    {
-        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
-            ' . Exception message: ' . $e->getMessage();
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,24 +16,26 @@
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Model\Type\Onepage;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
-use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Psr\Log\LoggerInterface;
+use Vipps\Payment\Model\CurrencyValidator;
+use function __;
 
 /**
  * Class InitExpress
@@ -78,6 +80,11 @@ class InitExpress extends Action
     private $config;
 
     /**
+     * @var CurrencyValidator
+     */
+    private $currencyValidator;
+
+    /**
      * InitExpress constructor.
      *
      * @param Context $context
@@ -88,6 +95,7 @@ class InitExpress extends Action
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
      * @param ConfigInterface $config
+     * @param CurrencyValidator $currencyValidator
      */
     public function __construct(
         Context $context,
@@ -97,7 +105,8 @@ class InitExpress extends Action
         CheckoutHelper $checkoutHelper,
         CartRepositoryInterface $cartRepository,
         LoggerInterface $logger,
-        ConfigInterface $config
+        ConfigInterface $config,
+        CurrencyValidator $currencyValidator
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
@@ -107,6 +116,7 @@ class InitExpress extends Action
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
         $this->config = $config;
+        $this->currencyValidator = $currencyValidator;
     }
 
     /**
@@ -120,6 +130,10 @@ class InitExpress extends Action
         try {
             if (!$this->config->getValue('express_checkout')) {
                 throw new LocalizedException(__('Express Payment method is not available.'));
+            }
+
+            if (!$this->currencyValidator->isValid()) {
+                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
             }
 
             $responseData = $this->initiatePayment();
