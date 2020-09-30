@@ -2,7 +2,7 @@
 
 # Prerequisites
 
-1. [Magento 2.4.x](https://devdocs.magento.com/guides/v2.4/release-notes/bk-release-notes.html)
+1. Magento 2 installed ([Magento 2.2.x](https://devdocs.magento.com/guides/v2.2/release-notes/bk-release-notes.html), [Magento 2.3.x](https://devdocs.magento.com/guides/v2.3/release-notes/bk-release-notes.html), [Magento 2.4.x](https://devdocs.magento.com/guides/v2.4/release-notes/bk-release-notes.html))
 1. SSL must be installed on your site and active on your Checkout pages.
 1. You must have a Vipps merchant account. See [Vipps på Nett](https://www.vipps.no/bedrift/vipps-pa-nett)
 1. As with _all_ Magento extensions, it is highly recommended to backup your site before installation and to install and test on a staging environment prior to production deployments.
@@ -17,34 +17,36 @@
 
 # Configuration
 
-The Vipps Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via `Magento Admin`.
+The Vipps Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via `Magento Admin Panel`.
 
-From Magento Admin navigate to `Store` -> `Configuration` -> `Sales` -> `Payment Methods` section. On the Payments Methods page the Vipps Payments method should be listed together with other installed payment methods in a system.
 
-By clicking the `Configure` button, all configuration module settings will be shown. Once you have finished with the configuration simply click `Close` and `Save` button for your convenience.
+1. From Magento Admin navigate to `Store` -> `Configuration` -> `Sales` -> `Payment Methods` section. 
+1. On the Payments Methods page the Vipps Payments method should be listed together with other installed payment methods in a system.
+1. By clicking the `Configure` button, all configuration module settings will be shown. 
+1. Once you have finished with the configuration simply click `Close` and `Save` button for your convenience.
+1. [Clear Magento Cache.](https://devdocs.magento.com/guides/v2.4/config-guide/cli/config-cli-subcommands-cache.html)
 
 ## Add a separate connection for Vipps resources
-These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.
+These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.  
+
 * Duplicate 'default' connection in app/etc/env.php and name it 'vipps'. It should look like:
 ```         
-         'vipps' =>
-         array (
-           'host' => 'your_DB_host',
-           'dbname' => 'your_DB_name',
-           'username' => 'your_user',
-           'password' => 'your_password',
-           'model' => 'mysql4',
-           'engine' => 'innodb',
-           'initStatements' => 'SET NAMES utf8;',
-           'active' => '1',
+         'vipps' => array (
+             'host' => 'your_DB_host',
+             'dbname' => 'your_DB_name',
+             'username' => 'your_user',
+             'password' => 'your_password',
+             'model' => 'mysql4',
+             'engine' => 'innodb',
+             'initStatements' => 'SET NAMES utf8;',
+             'active' => '1',
          ),
 ```
 * Add also the following configuration to 'resource' array in the same file:
 ```
-   'vipps' =>
-   array (
-      'connection' => 'vipps',
-   ),
+         'vipps' => array (
+             'connection' => 'vipps',
+         ),
 ```
 
 # Settings
@@ -53,6 +55,7 @@ Vipps Payments configuration is divided by sections. It helps to quickly find an
 
 1. Basic Vipps Settings.
 1. Express Checkout Settings.
+1. Additional Settings.
 
 ![Screenshot of Vipps Settings](docs/images/vipps_method.png)
 
@@ -64,9 +67,23 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 ![Screenshot of Basic Vipps Settings](docs/images/vipps_basic.png)
 
+**Environment**  - Vipps API mode. Can be *production/develop*.  
+**Payment Action** - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).  
+**Debug** - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.  
+**Request/Response Profiling** - log all requests/responses to Vipps API into `vipps_profiling` table.
+
 # Express Checkout Settings
 
 ![Screenshot of Express Vipps Settings](docs/images/express_vipps_settings.png)
+
+# Addtional Settings
+
+![Screenshot of Vipps Additional Settings](docs/images/vipps_additional_settings.png)
+
+
+**Process type** - wether cancel quote automatically or not.  
+**Enable Partial Void** - allow cancellation for captured(not refunded) transaction (mostly used to cancel order item).
+
 
 # Quote Monitoring
 
