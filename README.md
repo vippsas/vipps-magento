@@ -13,7 +13,7 @@ For more information about Vipps Payment and Magento 2, please visit our [Vipps 
 Please see: https://github.com/vippsas/vipps-magento-v1
 
 ## Pre-Requisites
-* Magento 2.2+
+* Magento 2.2.x, Mageton 2.3.x, Magento 2.4.x
     * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
 * A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)!
@@ -64,3 +64,11 @@ Magento Inc is an Adobe company: https://magento.com/about.
 Please follow this [instruction](https://github.com/vippsas/vipps-developers/blob/master/contact.md) to contact us.
 
 See the Vipps Developers repository for Vipps contact information, etc: https://github.com/vippsas/vipps-developers
+
+# Documentation
+
+Please see our [Documentation](DOCUMENTATION.md)
+
+# FAQ
+
+Please see our [FAQ section](FAQ.md)
