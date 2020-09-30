@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,24 +15,26 @@
  */
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\Controller\Result\Json;
+use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\Action\Action;
+use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
+use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
-use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Checkout\Helper\Data as CheckoutHelper;
-use Psr\Log\LoggerInterface;
+use Vipps\Payment\Model\CurrencyValidator;
+use function __;
 
 /**
  * Class InitRegular
@@ -67,6 +69,11 @@ class InitRegular extends Action
     private $cartRepository;
 
     /**
+     * @var CurrencyValidator
+     */
+    private $currencyValidator;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -80,6 +87,7 @@ class InitRegular extends Action
      * @param SessionManagerInterface $customerSession
      * @param CheckoutHelper $checkoutHelper
      * @param CartRepositoryInterface $cartRepository
+     * @param CurrencyValidator $currencyValidator
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -89,6 +97,7 @@ class InitRegular extends Action
         SessionManagerInterface $customerSession,
         CheckoutHelper $checkoutHelper,
         CartRepositoryInterface $cartRepository,
+        CurrencyValidator $currencyValidator,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
@@ -97,6 +106,7 @@ class InitRegular extends Action
         $this->customerSession = $customerSession;
         $this->checkoutHelper = $checkoutHelper;
         $this->cartRepository = $cartRepository;
+        $this->currencyValidator = $currencyValidator;
         $this->logger = $logger;
     }
 
@@ -113,6 +123,10 @@ class InitRegular extends Action
             $quote = $this->checkoutSession->getQuote();
             if (!$quote) {
                 throw new LocalizedException(__('Could not initiate the payment. Please, reload the page.'));
+            }
+
+            if (!$this->currencyValidator->isValid()) {
+                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
             }
 
             // init Vipps payment and retrieve redirect url

@@ -1,6 +1,6 @@
 # Vipps for Magento: Frequently Asked questions
 
-## How can I get help with Vipps for Magento?
+### How can I get help with Vipps for Magento?
 
 Vipps for Magento is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
 the plugin also help with improvements, maintenance and developer assistance.
@@ -56,19 +56,29 @@ Each record in the list provides detailed information about order creation flow:
 
 Monitoring quote statuses explanation:
 
-New - payment is initiated on the Vipps side.
+*New* - payment is initiated on the Vipps side.
 
-Processing - Magento has started processing for initiated payment.
+*Processing* - Magento has started processing for initiated payment.
 
-Placed - The order has been placed.
+*Placed* - The order has been placed.
 
-Expired - The customer has not approved payment for some time.
+*Expired* - The customer has not approved payment for some time.
 
-Placement Failed - All attempts were unsuccessful.
+*Placement Failed* - All attempts were unsuccessful.
 
-Canceled - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
+*Canceled* - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
 
-Cancel Failed - Means failed to cancel payment. Record in this status require admin/developer interaction.
+*Cancel Failed* - Means failed to cancel payment. Record in this status require admin/developer interaction.
+
+## Tax Calculation for Express Checkout
+When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
+![Express Checkout notice](docs/images/express-checkout-notice.png)
+
+This means that you should change Tax Calculation Settings to be based on **Shipping Origin**:
+![Tax Calculation Settings](docs/images/tax-origin-settings.png)
+
+Otherwise an issue with calculating delivery cost might occur.
+
 
 ## Tax Calculation for Express Checkout
 When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
