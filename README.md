@@ -8,15 +8,20 @@ Vipps Payment is used by large and small companies.  From years of shopping safe
 
 For more information about Vipps Payment and Magento 2, please visit our [Vipps Payment for Magento](https://www.vipps.no/bedrift/vipps-pa-nett) site.
 
+See also the Magento documentation for order management: https://docs.magento.com/m2/ce/user_guide/sales/order-management.html
+
 ### Magento 1
 
 Please see: https://github.com/vippsas/vipps-magento-v1
 
-## Pre-Requisites
+## Prerequisites
 * Magento 2.2.x, Mageton 2.3.x, Magento 2.4.x
-    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
+   * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
-* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)!
+* Supported protocols HTTP1/HTTP1.1
+   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
+   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
+* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)
 
 ## Installation and Configuration
 
@@ -63,7 +68,7 @@ Magento Inc is an Adobe company: https://magento.com/about.
 
 Please follow this [instruction](https://github.com/vippsas/vipps-developers/blob/master/contact.md) to contact us.
 
-See the Vipps Developers repository for Vipps contact information, etc: https://github.com/vippsas/vipps-developers
+For plugin related issues please contact vipps@vaimo.no or submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento).
 
 # Documentation
 

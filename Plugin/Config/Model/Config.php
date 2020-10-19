@@ -32,7 +32,7 @@ class Config
      * @var array
      */
     private static $encryptedFields = [
-        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1', 'subscription_key2'
+        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1'
     ];
 
     /**

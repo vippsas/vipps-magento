@@ -32,7 +32,7 @@ use Magento\Framework\Json\DecoderInterface;
 use Vipps\Payment\Gateway\Exception\ExceptionFactory;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -143,7 +143,7 @@ class GatewayCommand implements CommandInterface
 
         $result = $this->client->placeRequest($transfer);
 
-        /** @var ZendResponse $response */
+        /** @var Response $response */
         $response = $result['response'];
         $responseBody = $this->jsonDecoder->decode($response->getContent());
 

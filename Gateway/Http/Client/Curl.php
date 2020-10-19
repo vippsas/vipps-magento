@@ -22,8 +22,8 @@ use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProviderInterface;
-use Zend\Http\Request;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Request;
+use Laminas\Http\Response;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Model\ModuleMetadataInterface;
 
@@ -101,7 +101,7 @@ class Curl implements ClientInterface
     {
         try {
             $response = $this->place($transfer);
-            if ($response->getStatusCode() == ZendResponse::STATUS_CODE_401) {
+            if ($response->getStatusCode() == Response::STATUS_CODE_401) {
                 $this->tokenProvider->regenerate();
                 $response = $this->place($transfer);
             }
@@ -116,7 +116,7 @@ class Curl implements ClientInterface
     /**
      * @param TransferInterface $transfer
      *
-     * @return ZendResponse
+     * @return Response
      * @throws AuthenticationException
      */
     private function place(TransferInterface $transfer)
@@ -146,10 +146,8 @@ class Curl implements ClientInterface
                 $requestHeaders,
                 $this->jsonEncoder->encode($transfer->getBody())
             );
-            $responseSting = $adapter->read();
-            $response = ZendResponse::fromString($responseSting);
 
-            return $response;
+            return Response::fromString($adapter->read());
         } finally {
             $adapter ? $adapter->close() : null;
         }
@@ -170,7 +168,7 @@ class Curl implements ClientInterface
                 self::HEADER_PARAM_X_REQUEST_ID => '',
                 self::HEADER_PARAM_X_SOURCE_ADDRESS => '',
                 self::HEADER_PARAM_X_TIMESTAMP => '',
-                self::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key2'),
+                self::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key1'),
             ],
             $headers
         );

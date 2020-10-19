@@ -21,7 +21,7 @@ use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response;
 
 /**
  * Class ConsentRemoval
@@ -38,7 +38,7 @@ class ConsentRemoval extends Action
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         /** @var Json $result */
-        $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
+        $result->setHttpResponseCode(Response::STATUS_CODE_200);
 
         return $result;
     }

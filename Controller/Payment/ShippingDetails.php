@@ -37,7 +37,7 @@ use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\Quote\AddressUpdater;
 use Vipps\Payment\Model\QuoteLocator;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response;
 
 /**
  * Class ShippingDetails
@@ -177,20 +177,20 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                     'shippingMethodId' => $methodFullCode,
                 ];
             }
-            $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
+            $result->setHttpResponseCode(Response::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
-            $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
+            $result->setHttpResponseCode(Response::STATUS_CODE_500);
             $result->setData([
-                'status' => ZendResponse::STATUS_CODE_500,
+                'status' => Response::STATUS_CODE_500,
                 'message' => $e->getMessage()
             ]);
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
-            $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
+            $result->setHttpResponseCode(Response::STATUS_CODE_500);
             $result->setData([
-                'status' => ZendResponse::STATUS_CODE_500,
+                'status' => Response::STATUS_CODE_500,
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
         } finally {
@@ -244,6 +244,17 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     }
 
     /**
+     * @param $e \Exception
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
+            ' . Exception message: ' . $e->getMessage();
+    }
+
+
+    /**
      * {@inheritdoc}
      *
      * @param RequestInterface $request
@@ -253,15 +264,5 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
     {
         return true;
-    }
-
-    /**
-     * @param $e \Exception
-     * @return string
-     */
-    private function enlargeMessage($e): string
-    {
-        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
-            ' . Exception message: ' . $e->getMessage();
     }
 }

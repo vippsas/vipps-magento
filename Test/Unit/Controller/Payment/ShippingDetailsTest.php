@@ -39,7 +39,7 @@ use Vipps\Payment\Model\Quote\AddressUpdater;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
 use Vipps\Payment\Model\QuoteLocator;
 use Vipps\Payment\Model\TransactionProcessor;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response;
 
 /**
  * Class ShippingDetailsTest
@@ -266,7 +266,7 @@ class ShippingDetailsTest extends TestCase
             ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
             ->willReturnSelf();
 
-        $errorStatus = ZendResponse::STATUS_CODE_500;
+        $errorStatus = Response::STATUS_CODE_500;
         $errorMessage2 = __('An error occurred during Shipping Details processing.');
         $responseData = [
             'status' => $errorStatus,
@@ -318,7 +318,7 @@ class ShippingDetailsTest extends TestCase
             ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
             ->willReturnSelf();
 
-        $errorStatus = ZendResponse::STATUS_CODE_500;
+        $errorStatus = Response::STATUS_CODE_500;
         $responseData = [
             'status' => $errorStatus,
             'message' => $errorMessage1
@@ -458,7 +458,7 @@ class ShippingDetailsTest extends TestCase
         ];
         $this->response->expects(self::once())
             ->method('setHttpResponseCode')
-            ->with(ZendResponse::STATUS_CODE_200)
+            ->with(Response::STATUS_CODE_200)
             ->willReturnSelf();
 
         $this->response->expects(self::once())

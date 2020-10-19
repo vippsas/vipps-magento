@@ -37,7 +37,7 @@ use Magento\Framework\Json\DecoderInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -223,10 +223,10 @@ class GatewayCommandTest extends TestCase
             'failsDescription' => ['error1', 'error2']
         ]);
         $resultFailed = [
-            'response' => ZendResponse::fromString($responseStrFail)
+            'response' => Response::fromString($responseStrFail)
         ];
         $resultSuccess = [
-            'response' => ZendResponse::fromString($responseStrOk)
+            'response' => Response::fromString($responseStrOk)
         ];
         $validationResultOk = $this->objectManagerHelper->getObject(
             Result::class,

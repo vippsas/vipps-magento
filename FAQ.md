@@ -79,3 +79,12 @@ This means that you should change Tax Calculation Settings to be based on **Ship
 
 Otherwise an issue with calculating delivery cost might occur.
 
+
+## Tax Calculation for Express Checkout
+When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
+![Express Checkout notice](docs/images/express-checkout-notice.png)
+
+This means that you should change Tax Calculation Settings to be based on **Shipping Origin**:
+![Tax Calculation Settings](docs/images/tax-origin-settings.png)
+
+Otherwise an issue with calculating delivery cost might occur.
