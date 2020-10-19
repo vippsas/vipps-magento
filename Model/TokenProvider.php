@@ -194,6 +194,7 @@ class TokenProvider implements TokenProviderInterface
             $this->logger->critical($e->getMessage());
             throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'));
         }
+
         return $jwt;
     }
 

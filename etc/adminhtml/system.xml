@@ -68,7 +68,7 @@
                             <attribute type="shared">1</attribute>
                         </field>
                         <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Saleunit Serial Number</label>
+                            <label>Merchant Serial number</label>
                             <config_path>payment/vipps/merchant_serial_number</config_path>
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
@@ -83,21 +83,12 @@
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
                         <field id="subscription_key1" translate="label" type="obscure" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Subscription Key 1</label>
+                            <label>Subscription Key</label>
                             <comment>
-                                <![CDATA[Ocp-Apim-Subscription-Key for DEFAULT product.]]>
+                                <![CDATA[Vipps-Subscription-Key (primary)]]>
                             </comment>
                             <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
                             <config_path>payment/vipps/subscription_key1</config_path>
-                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                        </field>
-                        <field id="subscription_key2" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Subscription Key 2</label>
-                            <comment>
-                                <![CDATA[Ocp-Apim-Subscription-Key for eCommerce product.]]>
-                            </comment>
-                            <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
-                            <config_path>payment/vipps/subscription_key2</config_path>
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
                     </group>

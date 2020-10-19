@@ -17,7 +17,7 @@ namespace Vipps\Payment\Model\Profiling;
 
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterface;
-use Zend\Http\Response;
+use Laminas\Http\Response;
 
 interface ProfilerInterface
 {

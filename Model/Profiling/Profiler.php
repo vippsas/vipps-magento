@@ -22,7 +22,7 @@ use Vipps\Payment\Api\Profiling\Data\ItemInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
 use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
 
-use Zend\Http\Response;
+use Laminas\Http\Response;
 use Magento\Framework\Json\DecoderInterface;
 use Vipps\Payment\Model\Gdpr\Compliance;
 

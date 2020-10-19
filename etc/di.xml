@@ -101,7 +101,6 @@
         <arguments>
             <argument name="handlers" xsi:type="array">
                 <item name="default" xsi:type="string">VippsConfigValueHandler</item>
-                <item name="can_void" xsi:type="string">Vipps\Payment\Gateway\Config\CanVoidHandler</item>
             </argument>
         </arguments>
     </virtualType>

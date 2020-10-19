@@ -32,7 +32,7 @@ use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
-use Zend\Http\Response as ZendResponse;
+use Laminas\Http\Response as Response;
 
 /**
  * Class Callback
@@ -122,15 +122,15 @@ class Callback extends Action implements CsrfAwareActionInterface
             $this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
 
             /** @var Json $result */
-            $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
-            $result->setData(['status' => ZendResponse::STATUS_CODE_200, 'message' => 'success']);
+            $result->setHttpResponseCode(Response::STATUS_CODE_200);
+            $result->setData(['status' => Response::STATUS_CODE_200, 'message' => 'success']);
         } catch (\Exception $e) {
             $orderId = $requestData['orderId'] ?? 'Missing';
             $message = 'OrderID: ' . $orderId . ' . Exception message: ' . $e->getMessage();
             $this->logger->critical($message);
-            $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
+            $result->setHttpResponseCode(Response::STATUS_CODE_500);
             $result->setData([
-                'status' => ZendResponse::STATUS_CODE_500,
+                'status' => Response::STATUS_CODE_500,
                 'message' => $message
             ]);
         } finally {
