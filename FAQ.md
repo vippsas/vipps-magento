@@ -44,6 +44,16 @@ WHERE (t1.reserved_order_id = '{insert_order_id_here}'
  
 The result output contains two columns `order_id` and `additional_information` that should be analyzed to find a reason why the order was not placed on Magento side.
 
+## Klarna Checkout
+
+There is a known issue when using Vipps as an external payment method for Klarna Checkout. 
+When customer fills in checkout form using data that were used before, customer will see an error:
+
+`Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
+
+This issue will be fixed in next releases.
+
+
 ## Quote Monitoring Tool
 
 From 1.2.1 version we released Quote Monitoring.
@@ -69,16 +79,6 @@ Monitoring quote statuses explanation:
 *Canceled* - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
 
 *Cancel Failed* - Means failed to cancel payment. Record in this status require admin/developer interaction.
-
-## Tax Calculation for Express Checkout
-When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
-![Express Checkout notice](docs/images/express-checkout-notice.png)
-
-This means that you should change Tax Calculation Settings to be based on **Shipping Origin**:
-![Tax Calculation Settings](docs/images/tax-origin-settings.png)
-
-Otherwise an issue with calculating delivery cost might occur.
-
 
 ## Tax Calculation for Express Checkout
 When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
