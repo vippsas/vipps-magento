@@ -74,11 +74,11 @@ Monitoring quote statuses explanation:
 
 *Expired* - The customer has not approved payment for some time.
 
-*Placement Failed* - All attempts were unsuccessful.
+Processing - Magento has started processing for initiated payment.
 
-*Canceled* - The payment has been canceled (Cancellation can be initiated by the customer in Vipps or manually/automatically by Magento for Quotes in Placement Failed status)
+Placed - The order has been placed.
 
-*Cancel Failed* - Means failed to cancel payment. Record in this status require admin/developer interaction.
+Expired - The customer has not approved payment for some time.
 
 ## Tax Calculation for Express Checkout
 When enabling the Express checkout payment in the configuration area you may see a notification at the top of admin panel saying:
