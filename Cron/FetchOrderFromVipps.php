@@ -13,6 +13,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 namespace Vipps\Payment\Cron;
 
@@ -44,11 +45,6 @@ class FetchOrderFromVipps
      * Order collection page size
      */
     const COLLECTION_PAGE_SIZE = 100;
-
-    /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
 
     /**
      * @var TransactionProcessor
@@ -95,7 +91,6 @@ class FetchOrderFromVipps
      *
      * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
      * @param VippsQuoteRepository $vippsQuoteRepository
-     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param TransactionProcessor $orderProcessor
      * @param LoggerInterface $logger
      * @param StoreManagerInterface $storeManager
@@ -106,7 +101,6 @@ class FetchOrderFromVipps
     public function __construct(
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         VippsQuoteRepository $vippsQuoteRepository,
-        PaymentDetailsProvider $paymentDetailsProvider,
         TransactionProcessor $orderProcessor,
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
@@ -114,7 +108,6 @@ class FetchOrderFromVipps
         Config $cancellationConfig,
         AttemptManagement $attemptManagement
     ) {
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->transactionProcessor = $orderProcessor;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
@@ -164,8 +157,7 @@ class FetchOrderFromVipps
             $vippsQuote->incrementAttempt();
             $this->vippsQuoteRepository->save($vippsQuote);
 
-            $transaction = $this->getPaymentDetails($vippsQuote->getReservedOrderId());
-            $this->transactionProcessor->process($vippsQuote, $transaction);
+            $this->transactionProcessor->process($vippsQuote);
         } catch (\Throwable $t) {
             $this->logger->critical($t->getMessage(), ['vipps_quote_id' => $vippsQuote->getId()]);
 
@@ -186,17 +178,6 @@ class FetchOrderFromVipps
         $this->scopeCodeResolver->clean();
 
         $this->storeManager->setCurrentStore($quote->getStoreId());
-    }
-
-    /**
-     * @param string $orderId
-     *
-     * @return Transaction
-     * @throws VippsException
-     */
-    private function getPaymentDetails($orderId)
-    {
-        return $this->paymentDetailsProvider->get($orderId);
     }
 
     /**

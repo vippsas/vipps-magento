@@ -13,23 +13,23 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Json as JsonResult;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
 use Laminas\Http\Response as Response;
@@ -37,10 +37,14 @@ use Laminas\Http\Response as Response;
 /**
  * Class Callback
  * @package Vipps\Payment\Controller\Payment
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Callback extends Action implements CsrfAwareActionInterface
+class Callback implements ActionInterface, CsrfAwareActionInterface
 {
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+
     /**
      * @var TransactionProcessor
      */
@@ -67,63 +71,62 @@ class Callback extends Action implements CsrfAwareActionInterface
     private $vippsQuote;
 
     /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
-
-    /**
      * @var Compliance
      */
     private $gdprCompliance;
 
     /**
+     * @var ResultFactory
+     */
+    private $resultFactory;
+
+    /**
      * Callback constructor.
      *
-     * @param Context $context
+     * @param ResultFactory $resultFactory
+     * @param RequestInterface $request
      * @param TransactionProcessor $orderManagement
      * @param QuoteRepositoryInterface $vippsQuoteRepository
-     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param Json $jsonDecoder
      * @param Compliance $compliance
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Context $context,
+        ResultFactory $resultFactory,
+        RequestInterface $request,
         TransactionProcessor $orderManagement,
         QuoteRepositoryInterface $vippsQuoteRepository,
-        PaymentDetailsProvider $paymentDetailsProvider,
         Json $jsonDecoder,
         Compliance $compliance,
         LoggerInterface $logger
     ) {
-        parent::__construct($context);
+        $this->request = $request;
+        $this->resultFactory = $resultFactory;
         $this->transactionProcessor = $orderManagement;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->jsonDecoder = $jsonDecoder;
         $this->gdprCompliance = $compliance;
         $this->logger = $logger;
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @return ResponseInterface|ResultInterface
+     * @return ResponseInterface|JsonResult|ResultInterface
      */
     public function execute()
     {
+        /** @var JsonResult $result */
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $requestData = $this->jsonDecoder->unserialize($this->getRequest()->getContent());
+            $requestData = $this->jsonDecoder->unserialize($this->request->getContent());
 
             $this->authorize($requestData);
+            $this->transactionProcessor->process($this->getVippsQuote($requestData));
 
-            $transaction = $this->getPaymentDetails($requestData);
-            $this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
-
-            /** @var Json $result */
             $result->setHttpResponseCode(Response::STATUS_CODE_200);
-            $result->setData(['status' => Response::STATUS_CODE_200, 'message' => 'success']);
+            $result->setData([
+                'status' => Response::STATUS_CODE_200,
+                'message' => 'success'
+            ]);
         } catch (\Exception $e) {
             $orderId = $requestData['orderId'] ?? 'Missing';
             $message = 'OrderID: ' . $orderId . ' . Exception message: ' . $e->getMessage();
@@ -134,38 +137,26 @@ class Callback extends Action implements CsrfAwareActionInterface
                 'message' => $message
             ]);
         } finally {
-            $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $compliant = $this->gdprCompliance->process($this->request->getContent());
             $this->logger->debug($compliant);
         }
-        return $result;
-    }
 
-    /**
-     * @param $requestData
-     *
-     * @return \Vipps\Payment\Gateway\Transaction\Transaction
-     * @throws \Vipps\Payment\Gateway\Exception\VippsException
-     */
-    private function getPaymentDetails($requestData)
-    {
-        return $this->paymentDetailsProvider->get($requestData['orderId']);
+        return $result;
     }
 
     /**
      * @param array $requestData
      *
-     * @return bool
      * @throws \Exception
      */
     private function authorize($requestData)
     {
         if (!$this->isValid($requestData)) {
-            throw new \Exception(__('Invalid request parameters'), 400); //@codingStandardsIgnoreLine
+            throw new \Exception(__('Invalid request parameters'), 400);
         }
         if (!$this->isAuthorized($requestData)) {
-            throw new \Exception(__('Invalid request'), 401); //@codingStandardsIgnoreLine
+            throw new \Exception(__('Invalid request'), 401);
         }
-        return true;
     }
 
     /**
@@ -180,7 +171,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         return array_key_exists('orderId', $requestData)
             && array_key_exists('transactionInfo', $requestData)
             && array_key_exists('status', $requestData['transactionInfo'])
-            && $this->getRequest()->getHeader('authorization');
+            && $this->request->getHeader('authorization');
     }
 
     /**
@@ -189,11 +180,12 @@ class Callback extends Action implements CsrfAwareActionInterface
      * @return QuoteInterface
      * @throws NoSuchEntityException
      */
-    private function getVippsQuote($requestData)
+    private function getVippsQuote($requestData): ?QuoteInterface
     {
         if (null === $this->vippsQuote) {
             $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($requestData['orderId']);
         }
+
         return $this->vippsQuote;
     }
 
@@ -206,11 +198,12 @@ class Callback extends Action implements CsrfAwareActionInterface
     private function isAuthorized($requestData): bool
     {
         $vippsQuote = $this->getVippsQuote($requestData);
-        if ($vippsQuote) {
-            if ($vippsQuote->getAuthToken() === $this->getRequest()->getHeader('authorization')) {
-                return true;
-            }
+        if ($vippsQuote &&
+            $vippsQuote->getAuthToken() === $this->request->getHeader('authorization')
+        ) {
+            return true;
         }
+
         return false;
     }
 

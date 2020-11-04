@@ -13,11 +13,12 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
+use Laminas\Http\Response;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
@@ -26,6 +27,7 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Framework\View\Result\Layout;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterfaceFactory;
 use Magento\Quote\Api\Data\CartInterface;
@@ -35,26 +37,39 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\Quote\AddressUpdater;
-use Vipps\Payment\Model\QuoteLocator;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
-use Laminas\Http\Response;
+use Vipps\Payment\Model\QuoteLocator;
 
 /**
  * Class ShippingDetails
  * @package Vipps\Payment\Controller\Payment
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ShippingDetails extends Action implements CsrfAwareActionInterface
+class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
 {
     /**
-     * @var CartRepositoryInterface
+     * @var ResultFactory
      */
-    private $cartRepository;
+    private $resultFactory;
+
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+
+    /**
+     * @var Compliance
+     */
+    private $gdprCompliance;
 
     /**
      * @var QuoteLocator
      */
     private $quoteLocator;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @var Json
@@ -77,50 +92,45 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
     private $addressUpdater;
 
     /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
      * @var ShippingMethodValidator
      */
     private $shippingMethodValidator;
 
     /**
-     * @var Compliance
-     */
-    private $gdprCompliance;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
      * ShippingDetails constructor.
      *
-     * @param Context $context
-     * @param CartRepositoryInterface $cartRepository
+     * @param ResultFactory $resultFactory
+     * @param RequestInterface $request
      * @param QuoteLocator $quoteLocator
+     * @param Compliance $compliance
      * @param Json $serializer
      * @param ShipmentEstimationInterface $shipmentEstimation
      * @param AddressInterfaceFactory $addressFactory
      * @param AddressUpdater $addressUpdater
      * @param ShippingMethodValidator $shippingMethodValidator
-     * @param Compliance $compliance
+     * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        Context $context,
-        CartRepositoryInterface $cartRepository,
+        ResultFactory $resultFactory,
+        RequestInterface $request,
         QuoteLocator $quoteLocator,
+        Compliance $compliance,
         Json $serializer,
         ShipmentEstimationInterface $shipmentEstimation,
         AddressInterfaceFactory $addressFactory,
         AddressUpdater $addressUpdater,
         ShippingMethodValidator $shippingMethodValidator,
-        Compliance $compliance,
+        CartRepositoryInterface $cartRepository,
         LoggerInterface $logger
     ) {
-        parent::__construct($context);
-        $this->cartRepository = $cartRepository;
+        $this->resultFactory = $resultFactory;
+        $this->request = $request;
         $this->quoteLocator = $quoteLocator;
         $this->serializer = $serializer;
         $this->shipmentEstimation = $shipmentEstimation;
@@ -128,21 +138,18 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         $this->addressUpdater = $addressUpdater;
         $this->shippingMethodValidator = $shippingMethodValidator;
         $this->gdprCompliance = $compliance;
+        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @return ResponseInterface|ResultInterface
+     * @return ResponseInterface|ResultInterface|Layout
      */
     public function execute()
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
-            $reservedOrderId = $this->getReservedOrderId();
-            $quote = $this->getQuote($reservedOrderId);
-            $vippsAddress = $this->serializer->unserialize($this->getRequest()->getContent());
+            $vippsAddress = $this->serializer->unserialize($this->request->getContent());
             $address = $this->addressFactory->create();
             $address->addData([
                 'postcode' => $vippsAddress['postCode'],
@@ -151,18 +158,23 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                 'city' => $vippsAddress['city'],
                 'country_id' => TransactionShippingDetails::NORWEGIAN_COUNTRY_ID
             ]);
+
+            $reservedOrderId = $this->getReservedOrderId();
+            $this->logger->critical($reservedOrderId);
+            $quote = $this->getQuote($reservedOrderId);
             /**
              * As Quote is deactivated, so we need to activate it for estimating shipping methods
              */
-            $quote = $this->cartRepository->get($quote->getId());
             $this->addressUpdater->fromSourceAddress($quote, $address);
             $quote->setIsActive(true);
+            $this->cartRepository->save($quote);
             $shippingMethods = $this->shipmentEstimation->estimateByExtendedAddress($quote->getId(), $address);
             $responseData = [
                 'addressId' => $vippsAddress['addressId'],
                 'orderId' => $reservedOrderId,
                 'shippingDetails' => []
             ];
+
             foreach ($shippingMethods as $key => $shippingMethod) {
                 $methodFullCode = $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode();
                 if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
@@ -177,6 +189,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                     'shippingMethodId' => $methodFullCode,
                 ];
             }
+
             $result->setHttpResponseCode(Response::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
@@ -194,10 +207,48 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
                 'message' => __('An error occurred during Shipping Details processing.')
             ]);
         } finally {
-            $compliantString = $this->gdprCompliance->process($this->getRequest()->getContent());
+            $compliantString = $this->gdprCompliance->process($this->request->getContent());
             $this->logger->debug($compliantString);
         }
+
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
+
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "Exception message: $message. Stack Trace $trace";
     }
 
     /**
@@ -207,7 +258,7 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
      */
     private function getReservedOrderId()
     {
-        $params = $this->getRequest()->getParams();
+        $params = $this->request->getParams();
         next($params);
 
         return key($params);
@@ -229,40 +280,5 @@ class ShippingDetails extends Action implements CsrfAwareActionInterface
         }
 
         return $quote;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param RequestInterface $request
-     *
-     * @return null
-     */
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException //@codingStandardsIgnoreLine
-    {
-        return null;
-    }
-
-    /**
-     * @param $e \Exception
-     * @return string
-     */
-    private function enlargeMessage($e): string
-    {
-        return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
-            ' . Exception message: ' . $e->getMessage();
-    }
-
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param RequestInterface $request
-     *
-     * @return bool
-     */
-    public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
-    {
-        return true;
     }
 }

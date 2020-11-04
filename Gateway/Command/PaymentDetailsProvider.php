@@ -62,7 +62,7 @@ class PaymentDetailsProvider
      * @return Transaction
      * @throws VippsException
      */
-    public function get($orderId)
+    public function get($orderId): ?Transaction
     {
         if (!isset($this->cache[$orderId])) {
             $response = $this->commandManager->getPaymentDetails(['orderId' => $orderId]);

@@ -57,12 +57,13 @@ class QuoteLocator
      *
      * @return CartInterface|Quote
      */
-    public function get($incrementId)
+    public function get($incrementId): ?CartInterface
     {
         $searchCriteria = $this->searchCriteriaBuilder->addFilter('reserved_order_id', $incrementId, 'eq')
             ->create();
         $quoteList = $this->quoteRepository->getList($searchCriteria)->getItems();
         $quote = current($quoteList);
+
         return $quote ?: null;
     }
 }

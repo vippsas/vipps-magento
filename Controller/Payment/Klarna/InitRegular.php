@@ -13,6 +13,8 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
+
 namespace Vipps\Payment\Controller\Payment\Klarna;
 
 use Magento\Checkout\Api\GuestPaymentInformationManagementInterface;
@@ -21,15 +23,16 @@ use Magento\Checkout\Helper\Data as CheckoutHelper;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Checkout\Model\Type\Onepage;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Payment\Gateway\Command\ResultInterface as PaymentResultInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
@@ -38,7 +41,6 @@ use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
-use Vipps\Payment\Model\CurrencyValidator;
 use Vipps\Payment\Model\Method\Vipps;
 use function __;
 
@@ -46,7 +48,7 @@ use function __;
  * Class InitRegular
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class InitRegular extends Action
+class InitRegular implements ActionInterface
 {
     /**
      * @var CommandManagerInterface
@@ -99,14 +101,19 @@ class InitRegular extends Action
     private $quoteIdToMaskedQuoteId;
 
     /**
-     * @var CurrencyValidator
+     * @var ResultFactory
      */
-    private CurrencyValidator $currencyValidator;
+    private $resultFactory;
+
+    /**
+     * @var ManagerInterface
+     */
+    private $messageManager;
 
     /**
      * InitRegular constructor.
      *
-     * @param Context $context
+     * @param ResultFactory $resultFactory
      * @param CommandManagerInterface $commandManager
      * @param SessionManagerInterface $checkoutSession
      * @param SessionManagerInterface $customerSession
@@ -117,12 +124,10 @@ class InitRegular extends Action
      * @param GuestPaymentInformationManagementInterface $guestPaymentInformationManagement
      * @param PaymentInformationManagementInterface $paymentInformationManagement
      * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
-     * @param CurrencyValidator $currencyValidator
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     * @param ManagerInterface $messageManager
      */
     public function __construct(
-        Context $context,
+        ResultFactory $resultFactory,
         CommandManagerInterface $commandManager,
         SessionManagerInterface $checkoutSession,
         SessionManagerInterface $customerSession,
@@ -133,9 +138,9 @@ class InitRegular extends Action
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
         PaymentInformationManagementInterface $paymentInformationManagement,
         QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId,
-        CurrencyValidator $currencyValidator
+        ManagerInterface $messageManager
     ) {
-        parent::__construct($context);
+        $this->resultFactory = $resultFactory;
         $this->commandManager = $commandManager;
         $this->checkoutSession = $checkoutSession;
         $this->customerSession = $customerSession;
@@ -146,7 +151,7 @@ class InitRegular extends Action
         $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
         $this->paymentInformationManagement = $paymentInformationManagement;
         $this->quoteIdToMaskedQuoteId = $quoteIdToMaskedQuoteId;
-        $this->currencyValidator = $currencyValidator;
+        $this->messageManager = $messageManager;
     }
 
     /**
@@ -160,27 +165,18 @@ class InitRegular extends Action
         $response = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             $quote = $this->checkoutSession->getQuote();
-            if (!$quote) {
-                throw new LocalizedException(__('Could not initiate the payment. Please, reload the page.'));
-            }
 
-            if (!$this->currencyValidator->isValid()) {
-                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
-            }
-
-            // init Vipps payment and retrieve redirect url
             $responseData = $this->initiatePayment($quote);
-
             $this->placeOrder($quote);
 
             $this->checkoutSession->clearStorage();
             $response->setUrl($responseData['url']);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
             $response->setPath('checkout/cart');
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
                 __('An error occurred during request to Vipps. Please try again later.')
             );
@@ -195,7 +191,7 @@ class InitRegular extends Action
      *
      * @param CartInterface|Quote $quote
      *
-     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @return PaymentResultInterface|null
      */
     private function initiatePayment(CartInterface $quote)
     {
@@ -203,7 +199,8 @@ class InitRegular extends Action
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
+                    InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
             ]
         );
     }
@@ -256,5 +253,19 @@ class InitRegular extends Action
                 $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
             }
         }
+    }
+
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }
