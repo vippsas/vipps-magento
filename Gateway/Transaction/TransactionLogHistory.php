@@ -81,13 +81,14 @@ class TransactionLogHistory extends DataObject
      *
      * @return Item|null
      */
-    public function findItem($operation)
+    public function findItem($operation): ?Item
     {
         foreach ($this->getItems() as $item) {
             if ($item->getOperation() == $operation) {
                 return $item;
             }
         }
+
         return null;
     }
 
@@ -96,13 +97,14 @@ class TransactionLogHistory extends DataObject
      *
      * @return Item|null
      */
-    public function findSuccessItemWithOperation($operation)
+    public function findSuccessItemWithOperation($operation): ?Item
     {
         foreach ($this->getItems() as $item) {
             if ($item->getOperation() == $operation && $item->isOperationSuccess()) {
                 return $item;
             }
         }
+
         return null;
     }
 }

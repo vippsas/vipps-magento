@@ -13,19 +13,20 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Checkout\Helper\Data as CheckoutHelper;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\ResultInterface as MagentoResultInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
@@ -33,20 +34,17 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
-use Vipps\Payment\Model\CurrencyValidator;
-use function __;
 
 /**
  * Class InitRegular
  * @package Vipps\Payment\Controller\Payment
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class InitRegular extends Action
+class InitRegular implements ActionInterface
 {
     /**
-     * @var CommandManagerInterface
+     * @var ResultFactory
      */
-    private $commandManager;
+    private $resultFactory;
 
     /**
      * @var CheckoutSession|SessionManagerInterface
@@ -59,19 +57,14 @@ class InitRegular extends Action
     private $customerSession;
 
     /**
-     * @var CheckoutHelper
+     * @var CommandManagerInterface
      */
-    private $checkoutHelper;
+    private $commandManager;
 
     /**
      * @var CartRepositoryInterface
      */
     private $cartRepository;
-
-    /**
-     * @var CurrencyValidator
-     */
-    private $currencyValidator;
 
     /**
      * @var LoggerInterface
@@ -81,61 +74,47 @@ class InitRegular extends Action
     /**
      * InitRegular constructor.
      *
-     * @param Context $context
-     * @param CommandManagerInterface $commandManager
+     * @param ResultFactory $resultFactory
      * @param SessionManagerInterface $checkoutSession
      * @param SessionManagerInterface $customerSession
-     * @param CheckoutHelper $checkoutHelper
+     * @param CommandManagerInterface $commandManager
      * @param CartRepositoryInterface $cartRepository
-     * @param CurrencyValidator $currencyValidator
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Context $context,
-        CommandManagerInterface $commandManager,
+        ResultFactory $resultFactory,
         SessionManagerInterface $checkoutSession,
         SessionManagerInterface $customerSession,
-        CheckoutHelper $checkoutHelper,
+        CommandManagerInterface $commandManager,
         CartRepositoryInterface $cartRepository,
-        CurrencyValidator $currencyValidator,
         LoggerInterface $logger
     ) {
-        parent::__construct($context);
-        $this->commandManager = $commandManager;
+        $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
         $this->customerSession = $customerSession;
-        $this->checkoutHelper = $checkoutHelper;
+        $this->commandManager = $commandManager;
         $this->cartRepository = $cartRepository;
-        $this->currencyValidator = $currencyValidator;
         $this->logger = $logger;
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @return ResponseInterface|ResultInterface
+     * @return ResponseInterface|MagentoResultInterface|void
      */
     public function execute()
     {
         /** @var Json $response */
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+
         try {
             $quote = $this->checkoutSession->getQuote();
-            if (!$quote) {
-                throw new LocalizedException(__('Could not initiate the payment. Please, reload the page.'));
-            }
-
-            if (!$this->currencyValidator->isValid()) {
-                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
-            }
 
             // init Vipps payment and retrieve redirect url
             $responseData = $this->initiatePayment($quote);
 
             $quote->getPayment()
                 ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
-            $this->cartRepository->save($quote);
 
+            $this->cartRepository->save($quote);
             $response->setData($responseData);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
@@ -155,7 +134,7 @@ class InitRegular extends Action
      *
      * @param CartInterface|Quote $quote
      *
-     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @return ResultInterface|null
      */
     private function initiatePayment(CartInterface $quote)
     {
@@ -163,7 +142,8 @@ class InitRegular extends Action
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
+                    InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
             ]
         );
     }
@@ -175,7 +155,10 @@ class InitRegular extends Action
      */
     private function enlargeMessage($e): string
     {
-        return 'QuoteID: ' . $this->checkoutSession->getQuoteId() ?? 'Missing' .
-            ' . Exception message: ' . $e->getMessage();
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }

@@ -13,56 +13,54 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
+
 namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Checkout\Helper\Data as CheckoutHelper;
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Model\Type\Onepage;
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\ResponseInterface;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\LocalizedExceptionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
-use Vipps\Payment\Model\CurrencyValidator;
-use function __;
 
 /**
  * Class InitExpress
  * @package Vipps\Payment\Controller\Payment
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class InitExpress extends Action
+class InitExpress implements ActionInterface
 {
     /**
-     * @var CommandManagerInterface
+     * @var ResultFactory
      */
-    private $commandManager;
+    private $resultFactory;
 
     /**
-     * @var CheckoutSession
+     * @var CheckoutSession|SessionManagerInterface
      */
     private $checkoutSession;
 
     /**
-     * @var CustomerSession
+     * @var CustomerSession|SessionManagerInterface
      */
     private $customerSession;
 
     /**
-     * @var CheckoutHelper
+     * @var CommandManagerInterface
      */
-    private $checkoutHelper;
+    private $commandManager;
 
     /**
      * @var CartRepositoryInterface
@@ -70,9 +68,9 @@ class InitExpress extends Action
     private $cartRepository;
 
     /**
-     * @var LoggerInterface
+     * @var LocalizedExceptionFactory
      */
-    private $logger;
+    private $frameworkExceptionFactory;
 
     /**
      * @var ConfigInterface
@@ -80,70 +78,73 @@ class InitExpress extends Action
     private $config;
 
     /**
-     * @var CurrencyValidator
+     * @var ManagerInterface
      */
-    private $currencyValidator;
+    private $messageManager;
 
     /**
-     * InitExpress constructor.
+     * @var CheckoutHelper
+     */
+    private $checkoutHelper;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * InitExpress1 constructor.
      *
-     * @param Context $context
-     * @param CommandManagerInterface $commandManager
+     * @param ResultFactory $resultFactory
      * @param SessionManagerInterface $checkoutSession
      * @param SessionManagerInterface $customerSession
-     * @param CheckoutHelper $checkoutHelper
+     * @param CommandManagerInterface $commandManager
      * @param CartRepositoryInterface $cartRepository
-     * @param LoggerInterface $logger
+     * @param LocalizedExceptionFactory $frameworkExceptionFactory
      * @param ConfigInterface $config
-     * @param CurrencyValidator $currencyValidator
+     * @param ManagerInterface $messageManager
+     * @param CheckoutHelper $checkoutHelper
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        Context $context,
-        CommandManagerInterface $commandManager,
+        ResultFactory $resultFactory,
         SessionManagerInterface $checkoutSession,
         SessionManagerInterface $customerSession,
-        CheckoutHelper $checkoutHelper,
+        CommandManagerInterface $commandManager,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger,
+        LocalizedExceptionFactory $frameworkExceptionFactory,
         ConfigInterface $config,
-        CurrencyValidator $currencyValidator
+        ManagerInterface $messageManager,
+        CheckoutHelper $checkoutHelper,
+        LoggerInterface $logger
     ) {
-        parent::__construct($context);
-        $this->commandManager = $commandManager;
+        $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
         $this->customerSession = $customerSession;
-        $this->checkoutHelper = $checkoutHelper;
+        $this->commandManager = $commandManager;
         $this->cartRepository = $cartRepository;
-        $this->logger = $logger;
+        $this->frameworkExceptionFactory = $frameworkExceptionFactory;
         $this->config = $config;
-        $this->currencyValidator = $currencyValidator;
+        $this->messageManager = $messageManager;
+        $this->checkoutHelper = $checkoutHelper;
+        $this->logger = $logger;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return ResponseInterface|ResultInterface
-     */
     public function execute()
     {
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             if (!$this->config->getValue('express_checkout')) {
-                throw new LocalizedException(__('Express Payment method is not available.'));
-            }
-
-            if (!$this->currencyValidator->isValid()) {
-                throw new LocalizedException(__('Not allowed currency. Please, contact store administrator.'));
+                throw $this->frameworkExceptionFactory->create(
+                    ['phrase' => __('Express Payment method is not available.')]
+                );
             }
 
             $responseData = $this->initiatePayment();
 
             $this->checkoutSession->clearStorage();
             $resultRedirect->setPath($responseData['url'], ['_secure' => true]);
-        } catch (VippsException $e) {
-            $this->logger->critical($this->enlargeMessage($e));
-            $this->messageManager->addErrorMessage($e->getMessage());
-            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
@@ -160,7 +161,7 @@ class InitExpress extends Action
     }
 
     /**
-     * @return \Magento\Payment\Gateway\Command\ResultInterface|null
+     * @return ResultInterface|null
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
@@ -172,6 +173,7 @@ class InitExpress extends Action
 
         $quote->getPayment()
             ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_EXPRESS_CHECKOUT);
+
         $shippingAddress = $quote->getShippingAddress();
         $shippingAddress->setShippingMethod(null);
         $quote->collectTotals();
@@ -194,6 +196,7 @@ class InitExpress extends Action
                 $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
             }
         }
+
         $quote->setIsActive(false);
         $this->cartRepository->save($quote);
 
@@ -207,7 +210,10 @@ class InitExpress extends Action
      */
     private function enlargeMessage($e): string
     {
-        return 'QuoteID: ' . $this->checkoutSession->getQuoteId() ?? 'Missing' .
-            ' . Exception message: ' . $e->getMessage();
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }

@@ -61,6 +61,7 @@ class Config extends OriginConfig
         if (null === $storeId) {
             $storeId = $this->storeManager->getStore()->getId();
         }
+
         return OriginConfig::getValue($field, $storeId);
     }
 }

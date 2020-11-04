@@ -13,26 +13,41 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\View\Result\Layout;
 use Laminas\Http\Response;
 
 /**
  * Class ConsentRemoval
  * @package Vipps\Payment\Controller\Payment
  */
-class ConsentRemoval extends Action
+class ConsentRemoval implements ActionInterface
 {
     /**
-     * {@inheritdoc}
+     * @var ResultFactory
+     */
+    private $resultFactory;
+
+    /**
+     * ConsentRemoval constructor.
      *
-     * @return ResponseInterface|ResultInterface
+     * @param ResultFactory $resultFactory
+     */
+    public function __construct(ResultFactory $resultFactory)
+    {
+        $this->resultFactory = $resultFactory;
+    }
+
+    /**
+     * @return ResponseInterface|Json|ResultInterface|Layout
      */
     public function execute()
     {

@@ -100,7 +100,7 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @return QuoteInterface
      * @throws NoSuchEntityException
      */
-    public function loadByOrderId($orderId)
+    public function loadByOrderId($orderId): ?QuoteInterface
     {
         $vippsQuote = $this->quoteFactory->create();
         $this->quoteResource->load($vippsQuote, $orderId, 'reserved_order_id');
