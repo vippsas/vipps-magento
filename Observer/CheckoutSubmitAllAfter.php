@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -22,7 +22,6 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\OrderManagementInterface;
-use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Model\QuoteRepository;
@@ -91,7 +90,7 @@ class CheckoutSubmitAllAfter implements ObserverInterface
                 $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
                 $this->quoteRepository->save($vippsQuote);
             } catch (\Throwable $t) {
-                $this->logger->error($t->getMessage());
+                $this->logger->error($t);
             }
         }
     }

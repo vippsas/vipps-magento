@@ -13,22 +13,41 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+namespace Vipps\Payment\Model\Adminhtml\Source;
 
-namespace Vipps\Payment\Api;
-
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Model\Quote;
+use Magento\Framework\Option\ArrayInterface;
 
 /**
- * Interface QuoteManagementInterface
- * @api
+ * Class PaymentAction
  */
-interface QuoteManagementInterface
+class OrderStatus implements ArrayInterface
 {
     /**
-     * @param CartInterface $cart
-     * @return QuoteInterface
+     * @var string
      */
-    public function create(CartInterface $cart);
+    const STATUS_PAYMENT_REVIEW = 'payment_review';
+
+    /**
+     * @var string
+     */
+    const STATUS_PENDING = 'pending';
+
+    /**
+     * Possible actions on order place
+     *
+     * @return array
+     */
+    public function toOptionArray()
+    {
+        return [
+            [
+                'value' => self::STATUS_PAYMENT_REVIEW,
+                'label' => __('Payment Review'),
+            ],
+            [
+                'value' => self::STATUS_PENDING,
+                'label' => __('Pending'),
+            ]
+        ];
+    }
 }

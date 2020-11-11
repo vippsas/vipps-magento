@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -37,6 +37,7 @@ use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
+use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
@@ -103,6 +104,11 @@ class TransactionProcessor
     private $orderManagement;
 
     /**
+     * @var PaymentDetailsProvider
+     */
+    private $paymentDetailsProvider;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -120,6 +126,7 @@ class TransactionProcessor
      * @param ConfigInterface $config
      * @param QuoteManagement $quoteManagement
      * @param OrderManagementInterface $orderManagement
+     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param LoggerInterface $logger
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -135,6 +142,7 @@ class TransactionProcessor
         ConfigInterface $config,
         QuoteManagement $quoteManagement,
         OrderManagementInterface $orderManagement,
+        PaymentDetailsProvider $paymentDetailsProvider,
         LoggerInterface $logger
     ) {
         $this->orderRepository = $orderRepository;
@@ -147,12 +155,12 @@ class TransactionProcessor
         $this->config = $config;
         $this->quoteManagement = $quoteManagement;
         $this->orderManagement = $orderManagement;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->logger = $logger;
     }
 
     /**
      * @param QuoteInterface $vippsQuote
-     * @param Transaction $transaction
      *
      * @throws AlreadyExistsException
      * @throws CouldNotSaveException
@@ -164,11 +172,15 @@ class TransactionProcessor
      * @throws AcquireLockException
      * @throws \Exception
      */
-    public function process(QuoteInterface $vippsQuote, Transaction $transaction)
+    public function process(QuoteInterface $vippsQuote)
     {
-        $lockName = $this->acquireLock($vippsQuote->getReservedOrderId());
-
         try {
+            $lockName = $this->acquireLock($vippsQuote->getReservedOrderId());
+
+            $transaction = $this->paymentDetailsProvider->get(
+                $vippsQuote->getReservedOrderId()
+            );
+
             // reload quote because it could be changed by another process
             $vippsQuote = $this->quoteManagement->reload($vippsQuote);
 
@@ -179,6 +191,8 @@ class TransactionProcessor
             } elseif ($transaction->isTransactionExpired()) {
                 $this->processExpiredTransaction($vippsQuote, $transaction);
             }
+
+            return $transaction;
         } finally {
             $this->releaseLock($lockName);
         }
@@ -196,6 +210,7 @@ class TransactionProcessor
         if ($vippsQuote->getOrderId()) {
             $this->orderManagement->cancel($vippsQuote->getOrderId());
         }
+
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
         $this->quoteManagement->save($vippsQuote);
     }
@@ -243,6 +258,7 @@ class TransactionProcessor
         if ($vippsQuote->getOrderId()) {
             $this->orderManagement->cancel($vippsQuote->getOrderId());
         }
+
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_EXPIRED);
         $this->quoteManagement->save($vippsQuote);
     }
@@ -277,10 +293,25 @@ class TransactionProcessor
     private function acquireLock($reservedOrderId)
     {
         $lockName = 'vipps_place_order_' . $reservedOrderId;
-        if ($reservedOrderId && $this->lockManager->lock($lockName, 10)) {
-            return $lockName;
+        $retries = 0;
+        do {
+            $canLock = $this->lockManager->lock($lockName, 10);
+            //If we could acquire a lock retry in 0.2 sec
+            if (!$canLock) {
+                usleep(200000);
+                $retries++;
+            }
+            //try to acquire lock for 10 times ~ 2 sec
+        } while (!$canLock && ($retries < 10));
+
+        if (!$canLock) {
+            throw new AcquireLockException(
+                __('Can not acquire lock for order "%1"', $reservedOrderId)
+            );
+
         }
-        throw new AcquireLockException(__('Can not acquire lock for order "%1"', $reservedOrderId)); //@codingStandardsIgnoreLine
+
+        return $lockName;
     }
 
     /**
@@ -380,7 +411,7 @@ class TransactionProcessor
      */
     private function capture(OrderInterface $order, Transaction $transaction) //@codingStandardsIgnoreLine
     {
-        if ($order->getState() !== Order::STATE_NEW) {
+        if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
         }
 
@@ -406,7 +437,7 @@ class TransactionProcessor
      */
     private function authorize(OrderInterface $order, Transaction $transaction)
     {
-        if ($order->getState() !== Order::STATE_NEW) {
+        if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
         }
 

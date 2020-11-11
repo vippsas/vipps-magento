@@ -17,24 +17,50 @@ namespace Vipps\Payment\Gateway\Validator;
 
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class InitiateValidator
  * @package Vipps\Payment\Gateway\Validator
  */
-class InitiateValidator extends AbstractValidator
+class AvailabilityValidator extends AbstractValidator
 {
+    const NORWEGIAN_CURRENCY = 'NOK';
+
     /**
-     * @inheritdoc
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
+     * CurrencyValidator constructor.
      *
+     * @param StoreManagerInterface $storeManager
+     */
+    public function __construct(
+        ResultInterfaceFactory $resultFactory,
+        StoreManagerInterface $storeManager
+    ) {
+        parent::__construct($resultFactory);
+        $this->storeManager = $storeManager;
+    }
+
+    /**
      * @param array $validationSubject
      *
      * @return ResultInterface
+     * @throws NoSuchEntityException
      */
     public function validate(array $validationSubject)
     {
-        $isValid = (bool)$validationSubject['jsonData']['url'] ?? false;
-        $errorMessages = $isValid ? [] : [__('Gateway response error. Incorrect initiate payment parameters.')];
+        /** @var Store $store */
+        $store = $this->storeManager->getStore();
+
+        $isValid = self::NORWEGIAN_CURRENCY == $store->getBaseCurrencyCode();
+        $errorMessages = $isValid ? [] : [__('Not allowed currency. Please, contact store administrator.')];
 
         return $this->createResult($isValid, $errorMessages);
     }

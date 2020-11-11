@@ -13,22 +13,31 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-namespace Vipps\Payment\Api;
+namespace Vipps\Payment\Plugin\Sales\OrderManagement;
 
-use Magento\Quote\Api\Data\CartInterface;
-use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Model\Quote;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderManagementInterface;
 
 /**
- * Interface QuoteManagementInterface
- * @api
+ * Class OrderManagementPlugin
+ * @package Vipps\Payment\Plugin\Sales\OrderManagement
  */
-interface QuoteManagementInterface
+class OrderManagementPlugin
 {
     /**
-     * @param CartInterface $cart
-     * @return QuoteInterface
+     * @param OrderManagementInterface $subject
+     * @param OrderInterface $order
+     * @return OrderInterface
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function create(CartInterface $cart);
+    public function afterPlace(OrderManagementInterface $subject, OrderInterface $order): OrderInterface
+    {
+        if ('vipps' == $order->getPayment()->getMethod()) {
+            $order->setCanSendNewEmailFlag(false);
+        }
+
+        return $order;
+    }
 }

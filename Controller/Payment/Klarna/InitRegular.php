@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -150,9 +150,6 @@ class InitRegular extends Action
         $response = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             $quote = $this->checkoutSession->getQuote();
-            if (!$quote) {
-                throw new LocalizedException(__('Could not initiate the payment. Please, reload the page.'));
-            }
 
             // init Vipps payment and retrieve redirect url
             $responseData = $this->initiatePayment($quote);
@@ -162,11 +159,11 @@ class InitRegular extends Action
             $this->checkoutSession->clearStorage();
             $response->setUrl($responseData['url']);
         } catch (LocalizedException $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
             $response->setPath('checkout/cart');
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
                 __('An error occurred during request to Vipps. Please try again later.')
             );
@@ -242,5 +239,19 @@ class InitRegular extends Action
                 $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
             }
         }
+    }
+
+    /**
+     * @param $e \Exception
+     *
+     * @return string
+     */
+    private function enlargeMessage($e): string
+    {
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }

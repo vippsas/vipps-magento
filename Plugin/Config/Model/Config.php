@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -32,7 +32,7 @@ class Config
      * @var array
      */
     private static $encryptedFields = [
-        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1', 'subscription_key2'
+        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1'
     ];
 
     /**
@@ -118,6 +118,7 @@ class Config
                 break;
             }
         }
+
         return $hasChanged;
     }
 
@@ -135,6 +136,7 @@ class Config
         if ($newEnv && $newEnv != $oldEnv) {
             return true;
         }
+
         return false;
     }
 
