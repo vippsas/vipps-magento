@@ -262,7 +262,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     {
         if ($transaction->transactionWasCancelled()) {
             $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
-        } elseif ($transaction->isTransactionReserved()) {
+        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
             return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } elseif ($transaction->isTransactionExpired()) {
             $this->messageManager->addErrorMessage(

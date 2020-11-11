@@ -405,7 +405,7 @@ class TransactionProcessor
      */
     private function capture(OrderInterface $order)
     {
-        if ($order->getState() !== Order::STATE_NEW) {
+        if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
         }
 
@@ -431,7 +431,7 @@ class TransactionProcessor
      */
     private function authorize(OrderInterface $order, Transaction $transaction)
     {
-        if ($order->getState() !== Order::STATE_NEW) {
+        if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
         }
 

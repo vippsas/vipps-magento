@@ -69,6 +69,7 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 **Environment**  - Vipps API mode. Can be *production/develop*.  
 **Payment Action** - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).  
+**Order Status** - default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.  
 **Debug** - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.  
 **Request/Response Profiling** - log all requests/responses to Vipps API into `vipps_profiling` table.
 

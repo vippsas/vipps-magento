@@ -67,6 +67,12 @@
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                             <attribute type="shared">1</attribute>
                         </field>
+                        <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Order status: order creation</label>
+                            <tooltip>Status given to newly created orders before payment result confirmation via server notifications from Vipps.</tooltip>
+                            <source_model>Vipps\Payment\Model\Adminhtml\Source\OrderStatus</source_model>
+                            <config_path>payment/vipps/order_status</config_path>
+                        </field>
                         <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Merchant Serial number</label>
                             <config_path>payment/vipps/merchant_serial_number</config_path>
