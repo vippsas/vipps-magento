@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -142,31 +142,32 @@ class Fallback extends Action implements CsrfAwareActionInterface
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             $this->authorize();
-
             $vippsQuote = $this->getVippsQuote();
-            $transaction = $this->getPaymentDetails();
 
             // main transaction process
-            $this->transactionProcessor->process($vippsQuote, $transaction);
-
-            $this->prepareResponse($resultRedirect, $transaction);
+            $transaction = $this->transactionProcessor->process($vippsQuote);
+            $resultRedirect = $this->prepareResponse($resultRedirect, $transaction);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
-            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
-        } catch (AcquireLockException $e) {
-            $this->logger->critical($e->getMessage());
-            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
                 __('A server error stopped your transaction from being processed.'
                     . ' Please contact to store administrator.')
             );
-            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
         } finally {
+            $this->storeLastOrderOrRestoreQuote();
+            if (isset($e)) {
+                if ($this->getVippsQuote()->getOrderId()) {
+                    $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+                } else {
+                    $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+                }
+            }
             $this->logger->debug($this->getRequest()->getRequestString());
         }
+
         return $resultRedirect;
     }
 
@@ -207,46 +208,31 @@ class Fallback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * @return Transaction
-     * @throws VippsException
+     * Method to update Checkout session with Last Placed Order
+     * Or restore quote if order was not placed (ex. Express Checkout)
      */
-    private function getPaymentDetails()
+    private function storeLastOrderOrRestoreQuote()
     {
-        return $this->paymentDetailsProvider->get($this->getRequest()->getParam('order_id'));
-    }
-
-    /**
-     * @param QuoteInterface $vippsQuote
-     *
-     * @throws NoSuchEntityException
-     */
-    private function restoreQuote(QuoteInterface $vippsQuote)
-    {
-        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-
-        /** @var Quote $quote */
-        $quote->setIsActive(true);
-        $quote->setReservedOrderId(null);
-        $this->cartRepository->save($quote);
-
-        $this->checkoutSession->setLastQuoteId($quote->getId());
-        $this->checkoutSession->replaceQuote($quote);
-    }
-
-    /**
-     * Method to update Checkout session for success page when order was placed with Callback Controller.
-     *
-     * @param QuoteInterface $vippsQuote
-     */
-    private function storeSuccessDataToCheckoutSession(QuoteInterface $vippsQuote)
-    {
-        $this->checkoutSession->clearStorage();
-        $this->checkoutSession->setLastQuoteId($vippsQuote->getQuoteId());
+        $vippsQuote = $this->getVippsQuote(true);
         if ($vippsQuote->getOrderId()) {
-            $this->checkoutSession->setLastSuccessQuoteId($vippsQuote->getQuoteId());
-            $this->checkoutSession->setLastOrderId($vippsQuote->getOrderId());
-            $this->checkoutSession->setLastRealOrderId($vippsQuote->getReservedOrderId());
-            $this->checkoutSession->setLastOrderStatus($this->orderManagement->getStatus($vippsQuote->getOrderId()));
+            $this->checkoutSession
+                ->clearStorage()
+                ->setLastQuoteId($vippsQuote->getQuoteId())
+                ->setLastSuccessQuoteId($vippsQuote->getQuoteId())
+                ->setLastOrderId($vippsQuote->getOrderId())
+                ->setLastRealOrderId($vippsQuote->getReservedOrderId())
+                ->setLastOrderStatus(
+                    $this->orderManagement->getStatus($vippsQuote->getOrderId())
+                );
+        } else {
+            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+
+            /** @var Quote $quote */
+            $quote->setIsActive(true);
+            $quote->setReservedOrderId(null);
+
+            $this->cartRepository->save($quote);
+            $this->checkoutSession->replaceQuote($quote);
         }
     }
 
@@ -255,42 +241,29 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @param Transaction $transaction
      *
      * @return Redirect
-     * @throws NoSuchEntityException
      * @throws \Exception
      */
     private function prepareResponse(Redirect $resultRedirect, Transaction $transaction)
     {
-        $vippsQuote = $this->getVippsQuote(true);
-
         if ($transaction->transactionWasCancelled()) {
-            $this->restoreQuote($vippsQuote);
             $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
-            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
-
-            return $resultRedirect;
-        }
-
-        if ($transaction->isTransactionReserved()) {
-            $this->storeSuccessDataToCheckoutSession($vippsQuote);
-            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
-
-            return $resultRedirect;
-        }
-
-        if ($transaction->isTransactionExpired()) {
-            $this->restoreQuote($vippsQuote);
+        } elseif ($transaction->isTransactionReserved()) {
+            return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+        } elseif ($transaction->isTransactionExpired()) {
             $this->messageManager->addErrorMessage(
                 __('Transaction was expired. Please, place your order again')
             );
-            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
-
-            return $resultRedirect;
+        } else {
+            $this->messageManager->addWarningMessage(
+                __('We have not received a confirmation that order was reserved. It will be checked later again.')
+            );
         }
 
-        $this->messageManager->addWarningMessage(
-            __('We have not received a confirmation that order was reserved. It will be checked later again.')
-        );
-        $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+        if ($this->getVippsQuote()->getOrderId()) {
+            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+        } else {
+            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+        }
 
         return $resultRedirect;
     }
@@ -326,8 +299,10 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     private function enlargeMessage($e): string
     {
-        return 'OrderID: ' .
-            $this->getRequest()->getParam('order_id', 'Missing') .
-            ' . Error Message: ' . $e->getMessage();
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }

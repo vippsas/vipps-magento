@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -193,7 +193,10 @@ class InitExpress extends Action
      */
     private function enlargeMessage($e): string
     {
-        return 'QuoteID: ' . $this->checkoutSession->getQuoteId() ?? 'Missing' .
-            ' . Exception message: ' . $e->getMessage();
+        $quoteId = $this->checkoutSession->getQuoteId();
+        $trace = $e->getTraceAsString();
+        $message = $e->getMessage();
+
+        return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
     }
 }

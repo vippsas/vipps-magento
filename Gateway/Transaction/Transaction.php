@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -218,7 +218,7 @@ class Transaction
     /**
      * @return bool
      */
-    public function isExpressCheckout()
+    public function isExpressCheckout(): bool
     {
         return $this->userDetails === null ? false : true;
     }
@@ -246,24 +246,26 @@ class Transaction
     /**
      * @return bool
      */
-    public function isTransactionInitiated()
+    public function isTransactionInitiated(): bool
     {
         $item = $this->getTransactionLogHistory()->getLastSuccessItem();
         if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_INITIATE) {
             return true;
         }
+
         return false;
     }
 
     /**
      * @return bool
      */
-    public function isTransactionReserved()
+    public function isTransactionReserved(): bool
     {
         $item = $this->transactionLogHistory->getLastSuccessItem();
         if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_RESERVE) {
             return true;
         }
+
         return false;
     }
 
@@ -271,7 +273,7 @@ class Transaction
      * @return bool
      * @throws \Exception
      */
-    public function isTransactionExpired()
+    public function isTransactionExpired(): bool
     {
         if ($this->isTransactionInitiated()) {
             $item = $this->getTransactionLogHistory()->getLastSuccessItem();
@@ -301,13 +303,14 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasInitiated()
+    public function transactionWasInitiated(): bool
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_INITIATE);
         if ($item) {
             return true;
         }
+
         return false;
     }
 
@@ -316,13 +319,14 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasCancelled()
+    public function transactionWasCancelled(): bool
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_CANCEL);
         if ($item) {
             return true;
         }
+
         return false;
     }
 
@@ -331,13 +335,14 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasVoided()
+    public function transactionWasVoided(): bool
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_VOID);
         if ($item) {
             return true;
         }
+
         return false;
     }
 
@@ -346,13 +351,14 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasReserved()
+    public function transactionWasReserved(): bool
     {
         $item = $this->getTransactionLogHistory()
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_RESERVE);
         if ($item) {
             return true;
         }
+
         return false;
     }
 

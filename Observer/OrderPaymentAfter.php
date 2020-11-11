@@ -13,71 +13,61 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Vipps\Payment\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\MailException;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Sales\Model\Order;
-use Vipps\Payment\Model\Order\PartialVoid\SendMail;
-use Vipps\Payment\Model\Order\PartialVoid\Config as PartialVoidConfig;
+use Psr\Log\LoggerInterface;
+use Vipps\Payment\Model\Adminhtml\Source\OrderStatus;
 
 /**
- * Class SendOfflineVoidEmail
+ * Class OrderPaymentAfter
  * @package Vipps\Payment\Observer
  */
-class SendOfflineVoidEmail implements ObserverInterface
+class OrderPaymentAfter implements ObserverInterface
 {
     /**
-     * @var SendMail
-     */
-    private $sendMail;
-
-    /**
-     * @var PartialVoidConfig
+     * @var ConfigInterface
      */
     private $config;
 
     /**
-     * SendOfflineVoidEmail constructor.
-     *
-     * @param SendMail $sendMail
-     * @param PartialVoidConfig $config
+     * @var LoggerInterface
      */
-    public function __construct(
-        SendMail $sendMail,
-        PartialVoidConfig $config
-    ) {
-        $this->sendMail = $sendMail;
+    private $logger;
+
+    /**
+     * OrderPaymentAfter constructor.
+     *
+     * @param ConfigInterface $config
+     * @param LoggerInterface $logger
+     */
+    public function __construct(ConfigInterface $config, LoggerInterface $logger)
+    {
         $this->config = $config;
+        $this->logger = $logger;
     }
 
     /**
-     * Send email to customer about offline void
-     *
      * @param Observer $observer
-     *
-     * @throws LocalizedException
-     * @throws MailException
      */
     public function execute(Observer $observer)
     {
-        /** @var Order $order */
-        $order = $observer->getData('order');
-        $payment = $order->getPayment();
+        /** @var Order\Payment $payment */
+        $payment = $observer->getPayment();
+        $order = $payment->getOrder();
 
-        $offlineVoidEnabled = $this->config->isOfflinePartialVoidEnabled($order->getStoreId());
-        $sendMailEnabled = $this->config->isSendMailEnabled($order->getStoreId());
-
-        if ($payment->getMethod() === 'vipps'
-            && $offlineVoidEnabled
-            && $sendMailEnabled
-            && $order->getTotalDue() > 0
-        ) {
-            $this->sendMail->send($order);
+        $status = $this->config->getValue('order_status');
+        if ($status == OrderStatus::STATUS_PAYMENT_REVIEW) {
+            $order->setState(Order::STATE_PAYMENT_REVIEW);
+            $order->setStatus(Order::STATE_PAYMENT_REVIEW);
         }
+
+        return;
     }
 }

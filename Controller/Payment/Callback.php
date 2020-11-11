@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -29,7 +29,6 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
 use Zend\Http\Response as ZendResponse;
@@ -67,11 +66,6 @@ class Callback extends Action implements CsrfAwareActionInterface
     private $vippsQuote;
 
     /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
-
-    /**
      * @var Compliance
      */
     private $gdprCompliance;
@@ -82,7 +76,6 @@ class Callback extends Action implements CsrfAwareActionInterface
      * @param Context $context
      * @param TransactionProcessor $orderManagement
      * @param QuoteRepositoryInterface $vippsQuoteRepository
-     * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param Json $jsonDecoder
      * @param Compliance $compliance
      * @param LoggerInterface $logger
@@ -91,7 +84,6 @@ class Callback extends Action implements CsrfAwareActionInterface
         Context $context,
         TransactionProcessor $orderManagement,
         QuoteRepositoryInterface $vippsQuoteRepository,
-        PaymentDetailsProvider $paymentDetailsProvider,
         Json $jsonDecoder,
         Compliance $compliance,
         LoggerInterface $logger
@@ -99,7 +91,6 @@ class Callback extends Action implements CsrfAwareActionInterface
         parent::__construct($context);
         $this->transactionProcessor = $orderManagement;
         $this->vippsQuoteRepository = $vippsQuoteRepository;
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->jsonDecoder = $jsonDecoder;
         $this->gdprCompliance = $compliance;
         $this->logger = $logger;
@@ -118,8 +109,7 @@ class Callback extends Action implements CsrfAwareActionInterface
 
             $this->authorize($requestData);
 
-            $transaction = $this->getPaymentDetails($requestData);
-            $this->transactionProcessor->process($this->getVippsQuote($requestData), $transaction);
+            $this->transactionProcessor->process($this->getVippsQuote($requestData));
 
             /** @var Json $result */
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
@@ -137,18 +127,8 @@ class Callback extends Action implements CsrfAwareActionInterface
             $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());
             $this->logger->debug($compliant);
         }
-        return $result;
-    }
 
-    /**
-     * @param $requestData
-     *
-     * @return \Vipps\Payment\Gateway\Transaction\Transaction
-     * @throws \Vipps\Payment\Gateway\Exception\VippsException
-     */
-    private function getPaymentDetails($requestData)
-    {
-        return $this->paymentDetailsProvider->get($requestData['orderId']);
+        return $result;
     }
 
     /**
@@ -165,6 +145,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         if (!$this->isAuthorized($requestData)) {
             throw new \Exception(__('Invalid request'), 401); //@codingStandardsIgnoreLine
         }
+
         return true;
     }
 
@@ -194,6 +175,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         if (null === $this->vippsQuote) {
             $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($requestData['orderId']);
         }
+
         return $this->vippsQuote;
     }
 
@@ -211,6 +193,7 @@ class Callback extends Action implements CsrfAwareActionInterface
                 return true;
             }
         }
+
         return false;
     }
 

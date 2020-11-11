@@ -1,20 +1,18 @@
 <?xml version="1.0"?>
 <!--
-/**
- * Copyright 2018 Vipps
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
--->
+  ~ Copyright 2020 Vipps
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+  ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+  ~ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+  ~ and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+  ~ TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+  ~ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  ~ IN THE SOFTWARE.
+  -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
@@ -23,11 +21,11 @@
                 <model>Vipps\Payment\Model\Method\Vipps</model>
                 <title>Vipps</title>
                 <active>1</active>
-                <order_status>processing</order_status>
+                <order_status>pending</order_status>
                 <is_gateway>1</is_gateway>
                 <can_use_checkout>1</can_use_checkout>
                 <can_initialize>0</can_initialize>
-                <can_authorize>0</can_authorize>
+                <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
                 <can_refund>1</can_refund>
                 <can_capture_partial>1</can_capture_partial>
@@ -39,7 +37,6 @@
                 <environment>develop</environment>
                 <client_secret backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <subscription_key1 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
-                <subscription_key2 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <client_id backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <merchant_serial_number backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <cancellation_type>auto</cancellation_type>
