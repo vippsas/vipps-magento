@@ -271,6 +271,19 @@ class Transaction
 
     /**
      * @return bool
+     */
+    public function isTransactionCaptured(): bool
+    {
+        $item = $this->transactionLogHistory->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_CAPTURE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
      * @throws \Exception
      */
     public function isTransactionExpired(): bool
