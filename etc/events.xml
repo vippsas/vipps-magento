@@ -23,4 +23,7 @@
     <event name="checkout_submit_all_after">
         <observer name="vipps_checkout_submit_all_after" instance="Vipps\Payment\Observer\CheckoutSubmitAllAfter"/>
     </event>
+    <event name="sales_order_payment_place_end">
+        <observer name="vipps_payment_place_after" instance="Vipps\Payment\Observer\OrderPaymentAfter"/>
+    </event>
 </config>

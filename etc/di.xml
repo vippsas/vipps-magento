@@ -272,7 +272,8 @@
         <arguments>
             <argument name="validators" xsi:type="array">
                 <item name="initiate" xsi:type="string">Vipps\Payment\Gateway\Validator\InitiateValidator</item>
-            </argument>
+                <item name="availability" xsi:type="string">Vipps\Payment\Gateway\Validator\AvailabilityValidator</item>
+          </argument>
         </arguments>
     </virtualType>
     <virtualType name="VippsInitiateValidator" type="Magento\Payment\Gateway\Validator\ValidatorComposite">
@@ -396,6 +397,12 @@
     </type>
 
     <type name="Vipps\Payment\Plugin\Config\Model\Config">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Observer\OrderPaymentAfter">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>

@@ -65,8 +65,6 @@ If you have experienced any issue with Vipps try to enable `Request Profiling` a
 
 `Stores -> Configuration -> Sales -> Payment Methods -> Vipps`
 
-![Screenshot of Vipps Configuration Area](docs/images/vipps_basic.png) 
-
 After that, all information related to vipps payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
 
 Requests Profiling is a page in Magento admin panel that helps you to track a communication between Vipps and Magento.
@@ -99,6 +97,7 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 **Environment**  - Vipps API mode. Can be *production/develop*.  
 **Payment Action** - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).  
+**Order Status** - default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.  
 **Debug** - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.  
 **Request/Response Profiling** - log all requests/responses to Vipps API into `vipps_profiling` table.
 
