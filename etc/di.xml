@@ -272,7 +272,8 @@
         <arguments>
             <argument name="validators" xsi:type="array">
                 <item name="initiate" xsi:type="string">Vipps\Payment\Gateway\Validator\InitiateValidator</item>
-                <item name="availability" xsi:type="string">Vipps\Payment\Gateway\Validator\AvailabilityValidator</item>            </argument>
+                <item name="availability" xsi:type="string">Vipps\Payment\Gateway\Validator\AvailabilityValidator</item>
+          </argument>
         </arguments>
     </virtualType>
     <virtualType name="VippsInitiateValidator" type="Magento\Payment\Gateway\Validator\ValidatorComposite">
