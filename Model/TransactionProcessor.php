@@ -43,7 +43,6 @@ use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 use Vipps\Payment\Model\Exception\AcquireLockException;
-use Vipps\Payment\Model\Method\Vipps;
 
 /**
  * Class TransactionProcessor
