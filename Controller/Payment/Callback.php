@@ -18,7 +18,6 @@ namespace Vipps\Payment\Controller\Payment;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
@@ -38,7 +37,7 @@ use Zend\Http\Response as ZendResponse;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Callback extends Action implements CsrfAwareActionInterface
+class Callback extends Action
 {
     /**
      * @var TransactionProcessor
@@ -195,28 +194,5 @@ class Callback extends Action implements CsrfAwareActionInterface
         }
 
         return false;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param RequestInterface $request
-     *
-     * @return InvalidRequestException|null
-     */
-    public function createCsrfValidationException(RequestInterface $request)
-    {
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @param RequestInterface $request
-     *
-     * @return bool
-     */
-    public function validateForCsrf(RequestInterface $request)
-    {
-        return true;
     }
 }

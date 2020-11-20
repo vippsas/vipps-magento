@@ -19,7 +19,6 @@ namespace Vipps\Payment\Controller\Payment;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
@@ -48,7 +47,7 @@ use Vipps\Payment\Gateway\Exception\VippsException;
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Fallback extends Action implements CsrfAwareActionInterface
+class Fallback extends Action
 {
     /**
      * @var PaymentDetailsProvider
@@ -266,30 +265,6 @@ class Fallback extends Action implements CsrfAwareActionInterface
         }
 
         return $resultRedirect;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param RequestInterface $request
-     *
-     * @return null
-     */
-    public function createCsrfValidationException(RequestInterface $request)
-    {
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param RequestInterface $request
-     *
-     * @return bool
-     */
-    public function validateForCsrf(RequestInterface $request)
-    {
-        return true;
     }
 
     /**
