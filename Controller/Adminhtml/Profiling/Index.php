@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Controller\Adminhtml\Profiling;
 
-use Magento\Backend\{App\Action, Model\View\Result\Page};
+use Magento\Backend\App\Action;
+use Magento\Backend\Model\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 
 /**

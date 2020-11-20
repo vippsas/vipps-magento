@@ -1,27 +1,29 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- *  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- *  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- *  and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- *  TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
- *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- *  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- *  IN THE SOFTWARE.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  */
 
 namespace Vipps\Payment\Model;
 
+use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\Model\QuoteFactory;
 use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
 
 /**
@@ -33,21 +35,48 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @var QuoteResource
      */
     private $quoteResource;
+
     /**
      * @var QuoteFactory
      */
     private $quoteFactory;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    private $searchCriteriaBuilder;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * QuoteRepository constructor.
      *
      * @param QuoteResource $quoteResource .
      * @param QuoteFactory $quoteFactory
+     * @param OrderRepositoryInterface $orderRepository
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param LoggerInterface $logger
      */
-    public function __construct(QuoteResource $quoteResource, QuoteFactory $quoteFactory)
-    {
+    public function __construct(
+        QuoteResource $quoteResource,
+        QuoteFactory $quoteFactory,
+        OrderRepositoryInterface $orderRepository,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        LoggerInterface $logger
+    ) {
         $this->quoteResource = $quoteResource;
         $this->quoteFactory = $quoteFactory;
+        $this->orderRepository = $orderRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->logger = $logger;
     }
 
     /**
@@ -61,9 +90,9 @@ class QuoteRepository implements QuoteRepositoryInterface
     {
         try {
             $this->quoteResource->save($quote);
-
             return $quote;
         } catch (\Exception $e) {
+            $this->logger->error($e);
             throw new CouldNotSaveException(
                 __(
                     'Could not save Vipps Quote: %1',
@@ -78,36 +107,88 @@ class QuoteRepository implements QuoteRepositoryInterface
      * Load monitoring quote by quote.
      *
      * @param $quoteId
+     *
+     * @return Quote
      * @throws NoSuchEntityException
      */
     public function loadByQuote($quoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create();
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $quoteId, 'quote_id');
 
-        $this->quoteResource->load($monitoringQuote, $quoteId, 'quote_id');
-
-        if (!$monitoringQuote->getId()) {
+        if (!$vippsQuote->getId()) {
             throw NoSuchEntityException::singleField('quote_id', $quoteId);
         }
 
-        return $monitoringQuote;
+        return $vippsQuote;
     }
 
     /**
-     * @param int $monitoringQuoteId
+     * @param string $reservedOrderId
+     *
+     * @return QuoteInterface
+     * @throws NoSuchEntityException
+     */
+    public function loadByOrderId($reservedOrderId)
+    {
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $reservedOrderId, 'reserved_order_id');
+
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('reserved_order_id', $reservedOrderId);
+        }
+
+        if (!$vippsQuote->getOrderId()) {
+            $order = $this->tryLocateOrder($reservedOrderId);
+            if ($order) {
+                try {
+                    $vippsQuote->setOrderId((int)$order->getEntityId());
+                    if ($vippsQuote->getStatus() == QuoteInterface::STATUS_NEW) {
+                        $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
+                    }
+                    $vippsQuote = $this->save($vippsQuote);
+                } catch (\Throwable $t) {
+                    $this->logger->error($t);
+                }
+            }
+        }
+
+        return $vippsQuote;
+    }
+
+    /**
+     * @param int $vippsQuoteId
+     *
      * @return Quote
      * @throws NoSuchEntityException
      */
-    public function load(int $monitoringQuoteId)
+    public function load(int $vippsQuoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create();
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $vippsQuoteId);
 
-        $this->quoteResource->load($monitoringQuote, $monitoringQuoteId);
-
-        if (!$monitoringQuote->getId()) {
-            throw NoSuchEntityException::singleField('entity_id', $monitoringQuoteId);
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
         }
 
-        return $monitoringQuote;
+        return $vippsQuote;
+    }
+
+    /**
+     * @param $reservedOrderId
+     *
+     * @return OrderInterface|null
+     */
+    private function tryLocateOrder($reservedOrderId)
+    {
+        $this->searchCriteriaBuilder->addFilter(OrderInterface::INCREMENT_ID, $reservedOrderId);
+        $criteria = $this->searchCriteriaBuilder->create();
+        $orders = $this->orderRepository->getList($criteria)->getItems();
+
+        if (empty($orders)) {
+            return null;
+        }
+
+        return current($orders);
     }
 }

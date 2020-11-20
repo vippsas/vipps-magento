@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,7 +15,9 @@
  */
 namespace Vipps\Payment\Block\Express;
 
-use Magento\Framework\View\{Element\Template, Asset\Repository, Element\AbstractBlock};
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Asset\Repository;
+use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\Math\Random;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Catalog\Block\ShortcutInterface;

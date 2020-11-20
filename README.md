@@ -8,20 +8,15 @@ Vipps Payment is used by large and small companies.  From years of shopping safe
 
 For more information about Vipps Payment and Magento 2, please visit our [Vipps Payment for Magento](https://www.vipps.no/bedrift/vipps-pa-nett) site.
 
-See also the Magento documentation for order management: https://docs.magento.com/m2/ce/user_guide/sales/order-management.html
-
 ### Magento 1
 
 Please see: https://github.com/vippsas/vipps-magento-v1
 
-## Prerequisites
+## Pre-Requisites
 * Magento 2.2+
-   * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
+    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
-* Supported protocols HTTP1/HTTP1.1
-   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
-   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
-* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)
+* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)!
 
 ## Installation and Configuration
 
@@ -55,16 +50,6 @@ By clicking on a link `Show` in an `Action` column of grid you can find appropri
 
 Using built-in Magento grid filter you could easily find all requests per order that you are interested in.
 
-# Integration
-
-## Klarna Checkout
-
-There is a known issue when using Vipps as an external payment method for Klarna Checkout. 
-When customer fills in checkout form using data that were used before, customer will see an error:
-
-`Please check the shipping address information. "firstname" is required. Enter and try again. "lastname" is required. Enter and try again. "street" is required. Enter and try again. "city" is required. Enter and try again. "telephone" is required. Enter and try again. "postcode" is required. Enter and try again.`
-
-This issue will be fixed in next releases.
 
 # Magento
 
@@ -72,7 +57,7 @@ Magento is an open-source e-commerce platform written in PHP: https://magento.co
 
 For Magento support, please see the Magento Help Center: https://support.magento.com/hc/en-us
 
-Magento Inc is an Adobe company: https://magento.com/about
+Magento Inc is an Adobe company: https://magento.com/about.
 
 # Vipps contact information
 

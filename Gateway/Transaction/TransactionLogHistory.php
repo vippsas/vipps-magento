@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -28,10 +28,11 @@ class TransactionLogHistory extends DataObject
      * @var string
      */
     const ITEMS = 'items';
+
     /**
      * @var Item
      */
-    private $lastItem = null;
+    private $lastSuccessItem = null;
 
     /**
      * @return Item[]
@@ -49,8 +50,8 @@ class TransactionLogHistory extends DataObject
     public function getLastTransactionId()
     {
         $transactionId = null;
-        if ($this->getLastItem()) {
-            $transactionId = $this->getLastItem()->getTransactionId();
+        if ($this->getLastSuccessItem()) {
+            $transactionId = $this->getLastSuccessItem()->getTransactionId();
         }
         return $transactionId;
     }
@@ -60,18 +61,48 @@ class TransactionLogHistory extends DataObject
      *
      * @return Item|null
      */
-    public function getLastItem()
+    public function getLastSuccessItem()
     {
-        if (!$this->lastItem) {
+        if (!$this->lastSuccessItem) {
             $items = $this->getItems();
             $lastTransactionTime = 0;
             foreach ($items as $item) {
-                if ($item->getTimeStamp() >= $lastTransactionTime) {
+                if ($item->isOperationSuccess() && $item->getTimeStamp() >= $lastTransactionTime) {
                     $lastTransactionTime = $item->getTimeStamp();
-                    $this->lastItem = $item;
+                    $this->lastSuccessItem = $item;
                 }
             }
         }
-        return $this->lastItem;
+        return $this->lastSuccessItem;
+    }
+
+    /**
+     * @param string $operation
+     *
+     * @return Item|null
+     */
+    public function findItem($operation)
+    {
+        foreach ($this->getItems() as $item) {
+            if ($item->getOperation() == $operation) {
+                return $item;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param string $operation
+     *
+     * @return Item|null
+     */
+    public function findSuccessItemWithOperation($operation)
+    {
+        foreach ($this->getItems() as $item) {
+            if ($item->getOperation() == $operation && $item->isOperationSuccess()) {
+                return $item;
+            }
+        }
+        return null;
     }
 }

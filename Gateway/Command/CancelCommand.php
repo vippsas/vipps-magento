@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,22 +16,24 @@
 namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Payment\Helper\Formatter;
-use Magento\Payment\Gateway\{
-    Http\ClientInterface, Http\TransferFactoryInterface,
-    Request\BuilderInterface, Response\HandlerInterface,
-    Validator\ValidatorInterface, Command\ResultInterface,
-    Http\ClientException, Http\ConverterException
-};
-use Magento\Framework\{
-    Exception\LocalizedException,
-    Json\DecoderInterface
-};
-use Vipps\Payment\Gateway\{
-    Exception\ExceptionFactory, Exception\VippsException, Request\SubjectReader, Transaction\Transaction,
-    Transaction\TransactionBuilder, Transaction\TransactionSummary,
-    Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem
-};
+use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Json\DecoderInterface;
+use Vipps\Payment\Gateway\Exception\ExceptionFactory;
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionSummary;
+use Vipps\Payment\Gateway\Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
+use Vipps\Payment\Model\Order\PartialVoid\Config;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -89,14 +91,14 @@ class CancelCommand extends GatewayCommand
     private $profiler;
 
     /**
+     * @var Config
+     */
+    private $config;
+
+    /**
      * @var PaymentDetailsProvider
      */
     private $paymentDetailsProvider;
-
-    /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
 
     /**
      * @var SubjectReader
@@ -106,6 +108,7 @@ class CancelCommand extends GatewayCommand
     /**
      * CancelCommand constructor.
      *
+     * @param Config $config
      * @param BuilderInterface $requestBuilder
      * @param TransferFactoryInterface $transferFactory
      * @param ClientInterface $client
@@ -114,7 +117,6 @@ class CancelCommand extends GatewayCommand
      * @param DecoderInterface $jsonDecoder
      * @param ProfilerInterface $profiler
      * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param SubjectReader $subjectReader
      * @param HandlerInterface|null $handler
      * @param ValidatorInterface|null $validator
@@ -122,6 +124,7 @@ class CancelCommand extends GatewayCommand
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
+        Config $config,
         BuilderInterface $requestBuilder,
         TransferFactoryInterface $transferFactory,
         ClientInterface $client,
@@ -130,7 +133,6 @@ class CancelCommand extends GatewayCommand
         DecoderInterface $jsonDecoder,
         ProfilerInterface $profiler,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         SubjectReader $subjectReader,
         HandlerInterface $handler = null,
         ValidatorInterface $validator = null
@@ -146,6 +148,7 @@ class CancelCommand extends GatewayCommand
             $handler,
             $validator
         );
+        $this->config = $config;
         $this->requestBuilder = $requestBuilder;
         $this->transferFactory = $transferFactory;
         $this->client = $client;
@@ -156,7 +159,6 @@ class CancelCommand extends GatewayCommand
         $this->jsonDecoder = $jsonDecoder;
         $this->profiler = $profiler;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->subjectReader = $subjectReader;
     }
 
@@ -173,16 +175,21 @@ class CancelCommand extends GatewayCommand
      */
     public function execute(array $commandSubject)
     {
-        $response = $this->paymentDetailsProvider->get($commandSubject);
-        $transaction = $this->transactionBuilder->setData($response)->build();
+        $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
+        $transaction = $this->paymentDetailsProvider->get($orderId);
 
         // try to cancel based on payment details data
         if ($this->cancelBasedOnPaymentDetails($commandSubject, $transaction)) {
             return true;
         }
 
+        $offlineVoidEnabled = $this->config->isOfflinePartialVoidEnabled();
         if ($transaction->getTransactionSummary()->getCapturedAmount() > 0) {
-            throw new LocalizedException(__('Can\'t cancel captured transaction.'));
+            if (!$offlineVoidEnabled) {
+                throw new LocalizedException(__('Can\'t cancel captured transaction.'));
+            }
+
+            return true;
         }
 
         // if previous cancel was failed - use the same request id

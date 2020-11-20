@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,32 +13,30 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Plugin\Sales\Model\Order;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order\Invoice as CoreInvoice;
-
-/**
- * Class Invoice
- * @package Vipps\Payment\Plugin\Sales\Model\Order
- */
-class Invoice
-{
-    /**
-     * Before Invoice register plugin.
-     *
-     * Plugin prevents creating invoice with 'Capture Offline' for orders with vipps payment method
-     *
-     * @param CoreInvoice $subject
-     * @throws LocalizedException
-     */
-    public function beforeRegister(CoreInvoice $subject)
-    {
-        $captureCase = $subject->getRequestedCaptureCase();
-        $paymentMethod = $subject->getOrder()->getPayment()->getMethod();
-
-        if (CoreInvoice::CAPTURE_OFFLINE === $captureCase && $paymentMethod === 'vipps') {
-            throw new LocalizedException(__('Vipps payment method does not support Capture Offline'));
-        }
-    }
-}
+return \json_decode(
+    '{
+        "orderId": "testOrderId",
+        "transactionLogHistory": [
+            {
+                "amount": 20000,
+                "transactionText": "One pair of Vipps socks",
+                "transactionId": "5001420062",
+                "timeStamp": "2018-11-14T15:21:22.126Z",
+                "operation": "RESERVE",
+                "requestId": "",
+                "operationSuccess": false
+            },
+            {
+                "amount": 20000,
+                "transactionText": "One pair of Vipps socks",
+                "transactionId": "5001420062",
+                "timeStamp": "2018-11-14T15:21:04.697Z",
+                "operation": "INITIATE",
+                "requestId": "",
+                "operationSuccess": true
+            }
+        ]
+    }',
+    true
+);

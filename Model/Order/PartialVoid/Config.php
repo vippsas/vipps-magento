@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -83,7 +83,8 @@ class Config
      */
     public function isSendMailEnabled($storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_IS_SEND_MAIL_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
+        return $this->scopeConfig
+            ->isSetFlag(self::XML_PATH_IS_SEND_MAIL_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     /**

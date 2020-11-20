@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -59,6 +59,20 @@ class OrderLocator
     public function get($incrementId)
     {
         $searchCriteria = $this->searchCriteriaBuilder->addFilter('increment_id', $incrementId, 'eq')->create();
+        $orderList = $this->orderRepository->getList($searchCriteria)->getItems();
+
+        $order = current($orderList);
+        return $order ?: null;
+    }
+
+    /**
+     * @param $quoteId
+     *
+     * @return OrderInterface|null
+     */
+    public function getByQuoteId($quoteId)
+    {
+        $searchCriteria = $this->searchCriteriaBuilder->addFilter('quote_id', $quoteId, 'eq')->create();
         $orderList = $this->orderRepository->getList($searchCriteria)->getItems();
 
         $order = current($orderList);

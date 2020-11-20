@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Api;
 
-use Magento\Payment\{Gateway\Command\ResultInterface, Model\InfoInterface};
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Model\InfoInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
@@ -44,16 +45,6 @@ interface CommandManagerInterface
      * @throws VippsException
      */
     public function getPaymentDetails($arguments = []);
-
-    /**
-     * Method to execute getOrderStatus Command.
-     *
-     * @param string $orderId
-     *
-     * @return ResultInterface|null
-     * @throws VippsException
-     */
-    public function getOrderStatus($orderId);
 
     /**
      * Method to execute cancel Command.

@@ -1,20 +1,18 @@
 <?xml version="1.0"?>
 <!--
-/**
- * Copyright 2018 Vipps
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
--->
+  ~ Copyright 2020 Vipps
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+  ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+  ~ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+  ~ and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+  ~ TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+  ~ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  ~ IN THE SOFTWARE.
+  -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="payment">
@@ -65,9 +63,15 @@
                         </field>
                         <field id="payment_action" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Payment Action</label>
-                            <config_path>payment/vipps/payment_action</config_path>
+                            <config_path>payment/vipps/vipps_payment_action</config_path>
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                             <attribute type="shared">1</attribute>
+                        </field>
+                        <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Order status: order creation</label>
+                            <tooltip>Status given to newly created orders before payment result confirmation via server notifications from Vipps.</tooltip>
+                            <source_model>Vipps\Payment\Model\Adminhtml\Source\OrderStatus</source_model>
+                            <config_path>payment/vipps/order_status</config_path>
                         </field>
                         <field id="merchant_serial_number" translate="label" type="obscure" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Saleunit Serial Number</label>
@@ -85,21 +89,12 @@
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
                         <field id="subscription_key1" translate="label" type="obscure" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Subscription Key 1</label>
+                            <label>Subscription Key</label>
                             <comment>
-                                <![CDATA[Ocp-Apim-Subscription-Key for DEFAULT product.]]>
+                                <![CDATA[Vipps-Subscription-Key (primary)]]>
                             </comment>
                             <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
                             <config_path>payment/vipps/subscription_key1</config_path>
-                            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                        </field>
-                        <field id="subscription_key2" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Subscription Key 2</label>
-                            <comment>
-                                <![CDATA[Ocp-Apim-Subscription-Key for eCommerce product.]]>
-                            </comment>
-                            <tooltip>This can be found in User Profile page on Merchant developer portal after merchant account is created.</tooltip>
-                            <config_path>payment/vipps/subscription_key2</config_path>
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
                     </group>

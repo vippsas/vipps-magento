@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -100,6 +100,11 @@ class Transaction
     /**
      * @var string
      */
+    const TRANSACTION_OPERATION_INITIATE = 'initiate';
+
+    /**
+     * @var string
+     */
     const TRANSACTION_OPERATION_RESERVE = 'reserve';
 
     /**
@@ -121,6 +126,11 @@ class Transaction
      * @var string
      */
     const TRANSACTION_OPERATION_VOID = 'void';
+
+    /**
+     * @var string
+     */
+    private $orderId;
 
     /**
      * @var TransactionInfo
@@ -150,6 +160,7 @@ class Transaction
     /**
      * Transaction constructor.
      *
+     * @param string $orderId
      * @param TransactionInfo $transactionInfo
      * @param TransactionSummary $transactionSummary
      * @param TransactionLogHistory $transactionLogHistory
@@ -157,17 +168,27 @@ class Transaction
      * @param ShippingDetails|null $shippingDetails
      */
     public function __construct(
+        $orderId,
         TransactionInfo $transactionInfo,
         TransactionSummary $transactionSummary,
         TransactionLogHistory $transactionLogHistory,
         UserDetails $userDetails = null,
         ShippingDetails $shippingDetails = null
     ) {
+        $this->orderId = $orderId;
         $this->transactionInfo = $transactionInfo;
         $this->transactionSummary = $transactionSummary;
         $this->transactionLogHistory = $transactionLogHistory;
         $this->userDetails = $userDetails;
         $this->shippingDetails = $shippingDetails;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderId()
+    {
+        return $this->orderId;
     }
 
     /**
@@ -197,19 +218,89 @@ class Transaction
     /**
      * @return bool
      */
-    public function isExpressCheckout()
+    public function isExpressCheckout(): bool
     {
         return $this->userDetails === null ? false : true;
     }
 
     /**
-     * Is initiate transaction.
-     *
+     * @return string|null
+     */
+    public function getTransactionStatus()
+    {
+        if ($this->transactionWasCancelled() || $this->transactionWasVoided()) {
+            return self::TRANSACTION_STATUS_CANCELLED;
+        }
+
+        if ($this->transactionWasReserved()) {
+            return self::TRANSACTION_STATUS_RESERVED;
+        }
+
+        if ($this->transactionWasInitiated()) {
+            return self::TRANSACTION_STATUS_INITIATED;
+        }
+
+        return null;
+    }
+
+    /**
      * @return bool
      */
-    public function isInitiate()
+    public function isTransactionInitiated(): bool
     {
-        return $this->getTransactionInfo()->getStatus() === Transaction::TRANSACTION_STATUS_INITIATE;
+        $item = $this->getTransactionLogHistory()->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_INITIATE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTransactionReserved(): bool
+    {
+        $item = $this->transactionLogHistory->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_RESERVE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTransactionCaptured(): bool
+    {
+        $item = $this->transactionLogHistory->getLastSuccessItem();
+        if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_CAPTURE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     * @throws \Exception
+     */
+    public function isTransactionExpired(): bool
+    {
+        if ($this->isTransactionInitiated()) {
+            $item = $this->getTransactionLogHistory()->getLastSuccessItem();
+
+            $now = new \DateTime(); //@codingStandardsIgnoreLine
+            $createdAt = new \DateTime($item->getTimeStamp()); //@codingStandardsIgnoreLine
+
+            $interval = new \DateInterval("PT5M");  //@codingStandardsIgnoreLine
+            $createdAt->add($interval);
+
+            return !$createdAt->diff($now)->invert;
+        }
+
+        return false;
     }
 
     /**
@@ -221,34 +312,63 @@ class Transaction
     }
 
     /**
-     * @return bool
-     */
-    public function isTransactionAborted()
-    {
-        $abortedStatuses = [
-            Transaction::TRANSACTION_STATUS_CANCEL,
-            Transaction::TRANSACTION_STATUS_CANCELLED,
-            Transaction::TRANSACTION_STATUS_AUTOCANCEL,
-            Transaction::TRANSACTION_STATUS_REJECTED,
-            Transaction::TRANSACTION_STATUS_FAILED,
-            Transaction::TRANSACTION_STATUS_VOID
-        ];
-
-        return in_array($this->getTransactionInfo()->getStatus(), $abortedStatuses);
-    }
-
-    /**
-     * Check that transaction has not been reserved yet
+     * Check that transaction has been initiated
      *
      * @return bool
      */
-    public function isTransactionReserved()
+    public function transactionWasInitiated(): bool
     {
-        $statuses = [
-            Transaction::TRANSACTION_STATUS_RESERVE,
-            Transaction::TRANSACTION_STATUS_RESERVED
-        ];
-        if (in_array($this->getTransactionInfo()->getStatus(), $statuses)) {
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_INITIATE);
+        if ($item) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check that transaction has been cancelled
+     *
+     * @return bool
+     */
+    public function transactionWasCancelled(): bool
+    {
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_CANCEL);
+        if ($item) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check that transaction has been cancelled
+     *
+     * @return bool
+     */
+    public function transactionWasVoided(): bool
+    {
+        $item = $this->transactionLogHistory
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_VOID);
+        if ($item) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check that transaction has been reserved
+     *
+     * @return bool
+     */
+    public function transactionWasReserved(): bool
+    {
+        $item = $this->getTransactionLogHistory()
+            ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_RESERVE);
+        if ($item) {
             return true;
         }
 

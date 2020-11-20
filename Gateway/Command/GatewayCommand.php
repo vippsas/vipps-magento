@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,19 +15,22 @@
  */
 namespace Vipps\Payment\Gateway\Command;
 
-use Magento\Payment\Gateway\{
-    Command\CommandException, CommandInterface,
-    Http\ClientInterface, Http\TransferFactoryInterface,
-    Request\BuilderInterface, Response\HandlerInterface,
-    Validator\ValidatorInterface, Command\ResultInterface,
-    Http\ClientException, Http\ConverterException
-};
-use Magento\Framework\{
-    Exception\LocalizedException,
-    Phrase,
-    Json\DecoderInterface
-};
-use Vipps\Payment\Gateway\{Exception\ExceptionFactory, Exception\VippsException};
+use Magento\Payment\Gateway\Command\CommandException;
+use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
+use Magento\Framework\Json\DecoderInterface;
+use Vipps\Payment\Gateway\Exception\ExceptionFactory;
+use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
 use Zend\Http\Response as ZendResponse;
 use Psr\Log\LoggerInterface;
@@ -136,6 +139,8 @@ class GatewayCommand implements CommandInterface
             $this->requestBuilder->build($commandSubject)
         );
 
+        $commandSubject['transferObject'] = $transfer;
+
         $result = $this->client->placeRequest($transfer);
 
         /** @var ZendResponse $response */
@@ -220,6 +225,7 @@ class GatewayCommand implements CommandInterface
         if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
             $orderId = $matches[2] ?? null;
         }
+
         return $orderId ?? ($transfer->getBody()['transaction']['orderId'] ?? ($responseBody['orderId'] ?? null));
     }
 }

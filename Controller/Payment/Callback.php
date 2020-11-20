@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,45 +13,42 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Controller\Payment;
 
-use Magento\Framework\{
-    Controller\ResultFactory,
-    App\Action\Action,
-    App\Action\Context,
-    Controller\ResultInterface,
-    App\ResponseInterface,
-    Serialize\Serializer\Json
-};
-use Vipps\Payment\{
-    Gateway\Request\Initiate\MerchantDataBuilder,
-    Gateway\Transaction\TransactionBuilder,
-    Model\OrderPlace,
-    Model\QuoteLocator,
-    Model\Gdpr\Compliance
-};
-use Magento\Quote\{
-    Api\Data\CartInterface, Model\Quote
-};
-use Zend\Http\Response as ZendResponse;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\TransactionProcessor;
+use Zend\Http\Response as ZendResponse;
 
 /**
  * Class Callback
  * @package Vipps\Payment\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Callback extends Action
+class Callback extends Action implements CsrfAwareActionInterface
 {
     /**
-     * @var OrderPlace
+     * @var TransactionProcessor
      */
-    private $orderPlace;
+    private $transactionProcessor;
 
     /**
-     * @var QuoteLocator
+     * @var QuoteRepositoryInterface
      */
-    private $quoteLocator;
+    private $vippsQuoteRepository;
 
     /**
      * @var Json
@@ -59,19 +56,14 @@ class Callback extends Action
     private $jsonDecoder;
 
     /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
 
     /**
-     * @var CartInterface
+     * @var QuoteInterface
      */
-    private $quote;
+    private $vippsQuote;
 
     /**
      * @var Compliance
@@ -82,28 +74,26 @@ class Callback extends Action
      * Callback constructor.
      *
      * @param Context $context
-     * @param OrderPlace $orderManagement
-     * @param QuoteLocator $quoteLocator
+     * @param TransactionProcessor $orderManagement
+     * @param QuoteRepositoryInterface $vippsQuoteRepository
      * @param Json $jsonDecoder
-     * @param TransactionBuilder $transactionBuilder
+     * @param Compliance $compliance
      * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
-        OrderPlace $orderManagement,
-        QuoteLocator $quoteLocator,
+        TransactionProcessor $orderManagement,
+        QuoteRepositoryInterface $vippsQuoteRepository,
         Json $jsonDecoder,
-        TransactionBuilder $transactionBuilder,
         Compliance $compliance,
         LoggerInterface $logger
     ) {
         parent::__construct($context);
-        $this->orderPlace = $orderManagement;
-        $this->quoteLocator = $quoteLocator;
+        $this->transactionProcessor = $orderManagement;
+        $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->jsonDecoder = $jsonDecoder;
-        $this->transactionBuilder = $transactionBuilder;
-        $this->logger = $logger;
         $this->gdprCompliance = $compliance;
+        $this->logger = $logger;
     }
 
     /**
@@ -118,28 +108,31 @@ class Callback extends Action
             $requestData = $this->jsonDecoder->unserialize($this->getRequest()->getContent());
 
             $this->authorize($requestData);
-            $transaction = $this->transactionBuilder->setData($requestData)->build();
-            $this->orderPlace->execute($this->getQuote($requestData), $transaction);
+
+            $this->transactionProcessor->process($this->getVippsQuote($requestData));
 
             /** @var Json $result */
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_200);
             $result->setData(['status' => ZendResponse::STATUS_CODE_200, 'message' => 'success']);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $orderId = $requestData['orderId'] ?? 'Missing';
+            $message = 'OrderID: ' . $orderId . ' . Exception message: ' . $e->getMessage();
+            $this->logger->critical($message);
             $result->setHttpResponseCode(ZendResponse::STATUS_CODE_500);
             $result->setData([
                 'status' => ZendResponse::STATUS_CODE_500,
-                'message' => 'An error occurred during callback processing. ' . $e->getMessage()
+                'message' => $message
             ]);
         } finally {
             $compliant = $this->gdprCompliance->process($this->getRequest()->getContent());
             $this->logger->debug($compliant);
         }
+
         return $result;
     }
 
     /**
-     * @param $requestData
+     * @param array $requestData
      *
      * @return bool
      * @throws \Exception
@@ -152,6 +145,7 @@ class Callback extends Action
         if (!$this->isAuthorized($requestData)) {
             throw new \Exception(__('Invalid request'), 401); //@codingStandardsIgnoreLine
         }
+
         return true;
     }
 
@@ -171,48 +165,58 @@ class Callback extends Action
     }
 
     /**
-     * Return order id
-     *
      * @param $requestData
      *
-     * @return string|null
+     * @return QuoteInterface
+     * @throws NoSuchEntityException
      */
-    private function getOrderId($requestData)
+    private function getVippsQuote($requestData)
     {
-        return $requestData['orderId'] ?? null;
-    }
-
-    /**
-     * Retrieve a quote from repository based on request parameter order id
-     *
-     * @param $requestData
-     *
-     * @return bool|CartInterface|Quote
-     */
-    private function getQuote($requestData)
-    {
-        if (null === $this->quote) {
-            $this->quote = $this->quoteLocator->get($this->getOrderId($requestData)) ?: false;
+        if (null === $this->vippsQuote) {
+            $this->vippsQuote = $this->vippsQuoteRepository->loadByOrderId($requestData['orderId']);
         }
-        return $this->quote;
+
+        return $this->vippsQuote;
     }
 
     /**
-     * @param array $requestData
+     * @param $requestData
      *
      * @return bool
+     * @throws NoSuchEntityException
      */
     private function isAuthorized($requestData): bool
     {
-        $quote = $this->getQuote($requestData);
-        if ($quote) {
-            $additionalInfo = $quote->getPayment()->getAdditionalInformation();
-            $authToken = $additionalInfo[MerchantDataBuilder::MERCHANT_AUTH_TOKEN] ?? null;
-
-            if ($authToken === $this->getRequest()->getHeader('authorization')) {
+        $vippsQuote = $this->getVippsQuote($requestData);
+        if ($vippsQuote) {
+            if ($vippsQuote->getAuthToken() === $this->getRequest()->getHeader('authorization')) {
                 return true;
             }
         }
+
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param RequestInterface $request
+     *
+     * @return InvalidRequestException|null
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException //@codingStandardsIgnoreLine
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool //@codingStandardsIgnoreLine
+    {
+        return true;
     }
 }

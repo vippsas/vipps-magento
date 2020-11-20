@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,7 +16,10 @@
 
 namespace Vipps\Payment\Model\Quote;
 
-use Magento\Quote\{Model\Quote, Model\Quote\Address};
+use Magento\Quote\Api\Data\AddressInterface;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Address;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Model\Helper\Utility;
 
@@ -43,8 +46,8 @@ class AddressUpdater
     /**
      * Update quote addresses from source address.
      *
-     * @param Quote $quote
-     * @param Address $sourceAddress
+     * @param Quote|CartInterface $quote
+     * @param Address|AddressInterface $sourceAddress
      * @throws \Exception
      */
     public function fromSourceAddress(Quote $quote, Address $sourceAddress)

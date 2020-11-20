@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2019 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -49,8 +49,10 @@ class Uninstall implements UninstallInterface
      * @param ModuleContextInterface $context
      * @return void
      * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function uninstall(SchemaSetupInterface $setup, ModuleContextInterface $context)
+    public function uninstall(SchemaSetupInterface $setup, ModuleContextInterface $context) //@codingStandardsIgnoreLine
     {
         /** @var AdapterInterface $connection */
         $connection = $setup->getConnection();
@@ -62,11 +64,10 @@ class Uninstall implements UninstallInterface
 
         $tableName = $this->config->getMainTable();
         $select = $connection
-            ->select()
-            ->from($tableName)
-            ->where('path like "%?%"', 'payment/vipps');
+            ->select() //@codingStandardsIgnoreLine
+            ->from($tableName) //@codingStandardsIgnoreLine
+            ->where('path like "%?%"', 'payment/vipps'); //@codingStandardsIgnoreLine
 
         $connection->deleteFromSelect($select, $tableName);
-
     }
 }

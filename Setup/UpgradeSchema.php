@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -17,7 +17,9 @@
 namespace Vipps\Payment\Setup;
 
 use Magento\Framework\DB\Ddl\Table;
-use Magento\Framework\Setup\{ModuleContextInterface, SchemaSetupInterface, UpgradeSchemaInterface};
+use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\SchemaSetupInterface;
+use Magento\Framework\Setup\UpgradeSchemaInterface;
 
 class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreLine
 {
@@ -45,6 +47,36 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
 
         if (version_compare($context->getVersion(), '1.2.1', '<')) {
             $this->addStoreIdToQuote($installer);
+        }
+
+        if (version_compare($context->getVersion(), '2.3.0', '<')) {
+            $connection = $installer->getConnection();
+            $tableName = $installer->getTable('vipps_quote');
+
+            $connection
+                ->addColumn(
+                    $tableName,
+                    'order_id',
+                    [
+                        'type' => Table::TYPE_INTEGER,
+                        'nullable' => true,
+                        'unsigned' => true,
+                        'default' => null,
+                        'after' => 'quote_id',
+                        'comment' => 'Order Id'
+                    ]
+                );
+
+            $connection
+                ->addColumn(
+                    $tableName,
+                    'auth_token',
+                    [
+                        'type'     => Table::TYPE_TEXT,
+                        'length'   => 32,
+                        'comment'  => 'Auth Token'
+                    ]
+                );
         }
 
         $installer->endSetup();
@@ -170,7 +202,8 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
             )
             ->addIndex($installer->getIdxName('vipps_quote_attempts', 'parent_id'), 'parent_id')
             ->addForeignKey(
-                $installer->getFkName('vipps_quote_attempts', 'parent_id', $installer->getTable('vipps_quote'), 'entity_id'),
+                $installer
+                    ->getFkName('vipps_quote_attempts', 'parent_id', $installer->getTable('vipps_quote'), 'entity_id'),
                 'parent_id',
                 $installer->getTable('vipps_quote'),
                 'entity_id',

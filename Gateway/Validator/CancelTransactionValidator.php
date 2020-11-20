@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,10 +15,11 @@
  */
 namespace Vipps\Payment\Gateway\Validator;
 
-use Magento\Payment\Gateway\Validator\{
-    AbstractValidator, ResultInterface, ResultInterfaceFactory
-};
-use Vipps\Payment\Gateway\Transaction\{Transaction, TransactionBuilder};
+use Magento\Payment\Gateway\Validator\AbstractValidator;
+use Magento\Payment\Gateway\Validator\ResultInterface;
+use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 
 /**
  * Class CancelTransactionValidator

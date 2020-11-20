@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,7 +16,8 @@
 namespace Vipps\Payment\Plugin\Config\Model;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\{ScopeResolverInterface, ResourceConnection};
+use Magento\Framework\App\ScopeResolverInterface;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Config\Model\Config as CoreConfig;
 use Magento\Payment\Gateway\ConfigInterface;
 use Psr\Log\LoggerInterface;
@@ -31,7 +32,7 @@ class Config
      * @var array
      */
     private static $encryptedFields = [
-        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1', 'subscription_key2'
+        'client_id', 'merchant_serial_number', 'client_secret', 'subscription_key1'
     ];
 
     /**
@@ -117,6 +118,7 @@ class Config
                 break;
             }
         }
+
         return $hasChanged;
     }
 
@@ -134,6 +136,7 @@ class Config
         if ($newEnv && $newEnv != $oldEnv) {
             return true;
         }
+
         return false;
     }
 

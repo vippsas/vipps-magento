@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -18,9 +18,9 @@ namespace Vipps\Payment\Model\Profiling;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Store\Model\ScopeInterface;
-use Vipps\Payment\Api\Profiling\ {
-    Data\ItemInterface, Data\ItemInterfaceFactory, ItemRepositoryInterface
-};
+use Vipps\Payment\Api\Profiling\Data\ItemInterface;
+use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
+use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
 
 use Zend\Http\Response;
 use Magento\Framework\Json\DecoderInterface;

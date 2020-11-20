@@ -1,18 +1,17 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- *  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- *  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- *  and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- *  TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
- *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- *  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- *  IN THE SOFTWARE.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  */
 //@codingStandardsIgnoreFile
 /** @var \Vipps\Payment\Block\Monitoring\View $block */
@@ -29,6 +28,14 @@ $quote = $block->getQuote();
         <tr>
             <th style="width: 30%;"><?= __('Vipps Quote ID'); ?></th>
             <td><?= $vippsQuote->getEntityId(); ?></td>
+        </tr>
+        <tr>
+            <th style="width: 30%;"><?= __('Quote ID'); ?></th>
+            <td><?= $vippsQuote->getQuoteId(); ?></td>
+        </tr>
+        <tr>
+            <th style="width: 30%;"><?= __('Order ID'); ?></th>
+            <td><?= $vippsQuote->getOrderId(); ?></td>
         </tr>
         <tr>
             <th><?= __('Reserved Order ID'); ?></th>
@@ -67,18 +74,6 @@ $quote = $block->getQuote();
     <?php else: ?>
         <table class="admin__table-secondary">
             <tbody>
-            <tr>
-                <th style="width: 30%;"><?= __('Quote ID'); ?></th>
-                <td><?= $quote->getId(); ?></td>
-            </tr>
-            <tr>
-                <th style="width: 30%;"><?= __('Store ID'); ?></th>
-                <td><?= $quote->getStoreId(); ?></td>
-            </tr>
-            <tr>
-                <th><?= __('Reserved Order ID'); ?></th>
-                <td><?= $quote->getReservedOrderId(); ?></td>
-            </tr>
             <tr>
                 <th><?= __('Customer Email'); ?></th>
                 <td><?= $quote->getCustomerEmail(); ?></td>
@@ -124,9 +119,5 @@ $quote = $block->getQuote();
             <?php endforeach; ?>
             </tbody>
         </table>
-    <?php else : ?>
-        <div class="fieldset-wrapper-title">
-            <span class="title"><?= __('No attempts found.') ?></span>
-        </div>
     <?php endif; ?>
 </div>

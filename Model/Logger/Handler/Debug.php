@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Model\Logger\Handler;
 
-use Magento\Framework\{Filesystem\DriverInterface, Logger\Handler\Base};
+use Magento\Framework\Filesystem\DriverInterface;
+use Magento\Framework\Logger\Handler\Base;
 use Magento\Payment\Gateway\ConfigInterface;
 use Monolog\Logger;
 

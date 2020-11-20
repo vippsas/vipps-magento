@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,17 +16,21 @@
 
 namespace Vipps\Payment\Test\Unit\Gateway\Response;
 
-use Magento\Framework\{Exception\LocalizedException, TestFramework\Unit\Helper\ObjectManager};
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 use Vipps\Payment\Gateway\Response\TransactionHandler;
-use Vipps\Payment\Gateway\Transaction\{
-    Transaction, TransactionBuilder, TransactionInfo, TransactionLogHistory, TransactionSummary, UserDetails,
-    ShippingDetails
-};
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
+use Vipps\Payment\Gateway\Transaction\TransactionInfo;
+use Vipps\Payment\Gateway\Transaction\TransactionLogHistory;
+use Vipps\Payment\Gateway\Transaction\TransactionSummary;
+use Vipps\Payment\Gateway\Transaction\UserDetails;
+use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -126,7 +130,7 @@ class TransactionHandlerTest extends TestCase
             ->method('setTransactionId')
             ->willReturnSelf();
 
-        $this->action->handle([], []);
+        $this->action->handle([], ['orderId' => 'testOrderId']);
     }
 
     public function dataProvider()

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -14,9 +14,12 @@
  * IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Vipps\Payment\Model\Quote;
 
 use Vipps\Payment\Gateway\Config\Config;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Validate shipping method on allowance for Vipps payment.
@@ -27,6 +30,11 @@ class ShippingMethodValidator
      * @var Config
      */
     private $config;
+
+    /**
+     * @var array|null
+     */
+    private $disabledShippingMethods = null;
 
     /**
      * ShippingMethodValidator constructor.
@@ -40,11 +48,17 @@ class ShippingMethodValidator
     /**
      * @param string $methodCode
      * @return bool
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
-    public function isValid($methodCode)
+    public function isValid($methodCode): bool
     {
-        $disabledShippingMethods = explode(',', $this->config->getValue('disallowed_shipping_methods'));
-        return !in_array($methodCode, $disabledShippingMethods);
+        if (!is_array($this->disabledShippingMethods)) {
+            $disabledShippingMethods = $this->config->getValue('disallowed_shipping_methods');
+            $this->disabledShippingMethods = !empty($disabledShippingMethods)
+                ? explode(',', $disabledShippingMethods)
+                : [];
+        }
+
+        return !in_array($methodCode, $this->disabledShippingMethods);
     }
 }

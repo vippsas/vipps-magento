@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,7 +16,9 @@
 
 namespace Vipps\Payment\Setup;
 
-use Magento\Framework\Setup\{ModuleContextInterface, ModuleDataSetupInterface, UpgradeDataInterface};
+use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Quote\Model\ResourceModel\Quote\Collection;
 use Magento\Quote\Model\ResourceModel\Quote\CollectionFactory;
 
@@ -49,6 +51,10 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
 
         if (version_compare($context->getVersion(), '1.2.0', '<')) {
             $this->fillVippsQuotes($setup);
+        }
+
+        if (version_compare($context->getVersion(), '2.3.0', '<')) {
+            $this->fixCoreConfigData($setup);
         }
 
         $installer->endSetup();
@@ -90,5 +96,16 @@ class UpgradeData implements UpgradeDataInterface // @codingStandardsIgnoreLine
             );
 
         $connection->query($updateSql); //@codingStandardsIgnoreLine
+    }
+
+    /**
+     * @param ModuleDataSetupInterface $installer
+     */
+    private function fixCoreConfigData(ModuleDataSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $installer->getTable('core_config_data');
+
+        $connection->delete($tableName, ['path = ?' => 'payment/vipps/payment_action']);
     }
 }

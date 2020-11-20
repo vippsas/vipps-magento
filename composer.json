@@ -3,7 +3,7 @@
     "type": "magento2-module",
     "description": "Vipps Payment Method",
     "license": "proprietary",
-    "version": "1.2.11",
+    "version": "2.2.0",
     "require": {
         "magento/framework": "101.0.*",
         "magento/module-sales": "101.0.*",
@@ -24,8 +24,6 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "vendor/bin/phpcs --config-set default_standard MEQP2",
-            "vendor/bin/phpcs --config-set installed_paths \"$(pwd)/vendor/magento/marketplace-eqp\"",
             "vendor/bin/phpcs --config-set php7.0_path \"$(which php)\""
         ]
     },

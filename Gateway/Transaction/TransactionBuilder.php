@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -113,6 +113,7 @@ class TransactionBuilder
      */
     public function build()
     {
+        $orderId = $this->response['orderId'];
         $infoData = $this->response['transactionInfo'] ?? $this->response['transaction'] ?? [];
         $info = $this->infoFactory->create(['data' => $infoData]);
 
@@ -127,6 +128,7 @@ class TransactionBuilder
         $logHistory = $this->logHistoryFactory->create(['data' => ['items' => $items]]);
 
         $arguments = [
+            'orderId' => $orderId,
             'transactionInfo' => $info,
             'transactionSummary' => $summary,
             'transactionLogHistory' => $logHistory

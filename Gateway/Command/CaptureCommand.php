@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -17,22 +17,23 @@ namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Payment\Helper\Formatter;
-use Magento\Payment\Gateway\{
-    Http\ClientInterface, Http\TransferFactoryInterface,
-    Request\BuilderInterface, Response\HandlerInterface,
-    Validator\ValidatorInterface, Command\ResultInterface,
-    Http\ClientException, Http\ConverterException
-};
-use Magento\Framework\{
-    Exception\LocalizedException,
-    Json\DecoderInterface
-};
+use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Payment\Gateway\Http\TransferFactoryInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Json\DecoderInterface;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
-use Vipps\Payment\Gateway\{
-    Exception\VippsException, Request\SubjectReader, Transaction\Transaction, Transaction\TransactionBuilder,
-    Transaction\TransactionSummary, Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem,
-    Exception\ExceptionFactory
-};
+use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\Gateway\Transaction\TransactionSummary;
+use Vipps\Payment\Gateway\Transaction\TransactionLogHistory\Item as TransactionLogHistoryItem;
+use Vipps\Payment\Gateway\Exception\ExceptionFactory;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -100,11 +101,6 @@ class CaptureCommand extends GatewayCommand
     private $subjectReader;
 
     /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-
-    /**
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
@@ -120,7 +116,6 @@ class CaptureCommand extends GatewayCommand
      * @param DecoderInterface $jsonDecoder
      * @param ProfilerInterface $profiler
      * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param SubjectReader $subjectReader
      * @param OrderRepositoryInterface $orderRepository
      * @param HandlerInterface|null $handler
@@ -137,7 +132,6 @@ class CaptureCommand extends GatewayCommand
         DecoderInterface $jsonDecoder,
         ProfilerInterface $profiler,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         SubjectReader $subjectReader,
         OrderRepositoryInterface $orderRepository,
         HandlerInterface $handler = null,
@@ -164,7 +158,6 @@ class CaptureCommand extends GatewayCommand
         $this->jsonDecoder = $jsonDecoder;
         $this->profiler = $profiler;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->subjectReader = $subjectReader;
         $this->orderRepository = $orderRepository;
     }
@@ -185,8 +178,8 @@ class CaptureCommand extends GatewayCommand
         $amount = $this->subjectReader->readAmount($commandSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
 
-        $response = $this->paymentDetailsProvider->get($commandSubject);
-        $transaction = $this->transactionBuilder->setData($response)->build();
+        $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
+        $transaction = $this->paymentDetailsProvider->get($orderId);
 
         // try to capture based on payment details data
         if ($this->captureBasedOnPaymentDetails($commandSubject, $transaction)) {

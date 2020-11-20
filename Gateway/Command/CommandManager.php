@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,10 +16,10 @@
 namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Payment\Model\InfoInterface;
-use Magento\Payment\Gateway\{
-    CommandInterface, Command\CommandManagerInterface as PaymentCommandManagerInterface, Command\ResultInterface,
-    Command\CommandException
-};
+use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\Command\CommandException;
+use Magento\Payment\Gateway\Command\CommandManagerInterface as PaymentCommandManagerInterface;
 use Magento\Payment\Gateway;
 use Magento\Framework\Exception\NotFoundException;
 use Vipps\Payment\Api\CommandManagerInterface;
@@ -72,20 +72,6 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
     public function getPaymentDetails($arguments = [])
     {
         return $this->executeByCode('getPaymentDetails', null, $arguments);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param $orderId
-     *
-     * @return ResultInterface|null
-     * @throws CommandException
-     * @throws NotFoundException
-     */
-    public function getOrderStatus($orderId)
-    {
-        return $this->executeByCode('getOrderStatus', null, ['orderId' => $orderId]);
     }
 
     /**

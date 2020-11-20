@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -80,14 +80,6 @@ class TransactionDataBuilder implements InitiateBuilderInterface
 
         $amount = $this->subjectReader->readAmount($buildSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
-
-        if ($buildSubject[self::PAYMENT_TYPE_KEY] == self::PAYMENT_TYPE_EXPRESS_CHECKOUT) {
-            $shippingAddress = $quote->getShippingAddress();
-            $shippingAddress->setShippingMethod(null);
-            $quote->collectTotals();
-
-            $amount = (int)round($this->formatPrice($quote->getGrandTotal()) * 100);
-        }
 
         return [
             self::$transaction => [

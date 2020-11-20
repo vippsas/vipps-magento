@@ -3,18 +3,30 @@
 @Library('platform-jenkins-pipeline') _
 
 pipeline {
-    agent { label 'magento2' }
-
+    agent { label 'magento23' }
+    options {
+        ansiColor('xterm')
+    }
     stages {
-        stage('PHP Mess Detector') {
+        stage('Checkout Module') {
             steps {
+                git branch: '$BRANCH_NAME', url: 'git@bitbucket.org:vaimo/module-vipps-payment.git'
                 sh 'composer install --no-ansi'
-                sh './vendor/phpmd/phpmd/src/bin/phpmd . text phpmd.xml'
             }
         }
-        stage('Build Module') {
+        stage('PHP Mess Detector') {
             steps {
-                buildModule('magento2-module')
+                sh './vendor/bin/phpmd . ansi phpmd.xml'
+            }
+        }
+        stage('PHP CS') {
+            steps {
+                sh './vendor/bin/phpcs'
+            }
+        }
+        stage('PHP Unit') {
+            steps {
+                sh './vendor/bin/phpunit -c phpunit.xml'
             }
         }
     }

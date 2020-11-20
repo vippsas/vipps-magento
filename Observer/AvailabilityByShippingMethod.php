@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -15,7 +15,8 @@
  */
 namespace Vipps\Payment\Observer;
 
-use Magento\Framework\Event\{Observer, ObserverInterface};
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Model\Quote;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
@@ -41,7 +42,7 @@ class AvailabilityByShippingMethod implements ObserverInterface
 
     /**
      * @param Observer $observer
-     * @return void
+     * @return null
      *
      * 'result' => $checkResult,
      * 'method_instance' => $this,
@@ -66,6 +67,6 @@ class AvailabilityByShippingMethod implements ObserverInterface
             $result->setData('is_available', false);
         }
 
-        return;
+        return null;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2018 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -16,7 +16,8 @@
 namespace Vipps\Payment\Gateway\Request;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Payment\{Gateway\Request\BuilderInterface, Helper\Formatter};
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Payment\Helper\Formatter;
 
 /**
  * Class Transaction
