@@ -155,7 +155,7 @@ class Callback extends Action
      *
      * @return bool
      */
-    private function isValid($requestData): bool
+    private function isValid($requestData)
     {
         return array_key_exists('orderId', $requestData)
             && array_key_exists('transactionInfo', $requestData)
@@ -184,7 +184,7 @@ class Callback extends Action
      * @return bool
      * @throws NoSuchEntityException
      */
-    private function isAuthorized($requestData): bool
+    private function isAuthorized($requestData)
     {
         $vippsQuote = $this->getVippsQuote($requestData);
         if ($vippsQuote) {

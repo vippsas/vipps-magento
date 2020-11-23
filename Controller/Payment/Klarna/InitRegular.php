@@ -197,7 +197,7 @@ class InitRegular extends Action
      * @throws CouldNotSaveException
      * @throws \Exception
      */
-    private function placeOrder(CartInterface $quote): void
+    private function placeOrder(CartInterface $quote)
     {
         $quote->getPayment()
             ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
@@ -246,7 +246,7 @@ class InitRegular extends Action
      *
      * @return string
      */
-    private function enlargeMessage($e): string
+    private function enlargeMessage($e)
     {
         $quoteId = $this->checkoutSession->getQuoteId();
         $trace = $e->getTraceAsString();

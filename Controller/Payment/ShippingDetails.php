@@ -234,7 +234,7 @@ class ShippingDetails extends Action
      * @param $e \Exception
      * @return string
      */
-    private function enlargeMessage($e): string
+    private function enlargeMessage($e)
     {
         return 'Reserved Order id: ' . ($this->getReservedOrderId() ?? 'Missing') .
             ' . Exception message: ' . $e->getMessage();

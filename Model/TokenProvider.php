@@ -134,7 +134,7 @@ class TokenProvider implements TokenProviderInterface
      *
      * @return bool
      */
-    private function isValidToken(): bool
+    private function isValidToken()
     {
         if (!empty($this->jwtRecord) &&
             ($this->jwtRecord['expires_on'] > time() + self::$reservedValidTime)
@@ -279,7 +279,7 @@ class TokenProvider implements TokenProviderInterface
      *
      * @return bool
      */
-    private function isJwtValid($jwt): bool
+    private function isJwtValid($jwt)
     {
         $requiredKeys = [
             'token_type', 'expires_in', 'ext_expires_in', 'not_before', 'resource', 'access_token'

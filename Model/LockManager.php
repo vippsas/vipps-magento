@@ -77,7 +77,7 @@ class LockManager implements LockManagerInterface
      * @throws InputException
      * @throws AlreadyExistsException
      */
-    public function lock(string $name, int $timeout = -1): bool
+    public function lock(string $name, int $timeout = -1)
     {
         $name = $this->addPrefix($name);
 
@@ -114,7 +114,7 @@ class LockManager implements LockManagerInterface
      * @return bool
      * @throws InputException
      */
-    public function unlock(string $name): bool
+    public function unlock(string $name)
     {
         $name = $this->addPrefix($name);
 
@@ -137,7 +137,7 @@ class LockManager implements LockManagerInterface
      * @return bool
      * @throws InputException
      */
-    public function isLocked(string $name): bool
+    public function isLocked(string $name)
     {
         $name = $this->addPrefix($name);
 
@@ -156,7 +156,7 @@ class LockManager implements LockManagerInterface
      * @return string $name
      * @throws InputException
      */
-    private function addPrefix(string $name): string
+    private function addPrefix(string $name)
     {
         $name = $this->getPrefix() . '|' . $name;
 
@@ -172,7 +172,7 @@ class LockManager implements LockManagerInterface
      *
      * @return string lock prefix
      */
-    private function getPrefix(): string
+    private function getPrefix()
     {
         if ($this->prefix === null) {
             $this->prefix = (string)$this->deploymentConfig->get(

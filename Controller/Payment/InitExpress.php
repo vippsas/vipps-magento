@@ -191,7 +191,7 @@ class InitExpress extends Action
      *
      * @return string
      */
-    private function enlargeMessage($e): string
+    private function enlargeMessage($e)
     {
         $quoteId = $this->checkoutSession->getQuoteId();
         $trace = $e->getTraceAsString();

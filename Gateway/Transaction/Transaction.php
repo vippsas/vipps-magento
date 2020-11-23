@@ -218,7 +218,7 @@ class Transaction
     /**
      * @return bool
      */
-    public function isExpressCheckout(): bool
+    public function isExpressCheckout()
     {
         return $this->userDetails === null ? false : true;
     }
@@ -246,7 +246,7 @@ class Transaction
     /**
      * @return bool
      */
-    public function isTransactionInitiated(): bool
+    public function isTransactionInitiated()
     {
         $item = $this->getTransactionLogHistory()->getLastSuccessItem();
         if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_INITIATE) {
@@ -259,7 +259,7 @@ class Transaction
     /**
      * @return bool
      */
-    public function isTransactionReserved(): bool
+    public function isTransactionReserved()
     {
         $item = $this->transactionLogHistory->getLastSuccessItem();
         if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_RESERVE) {
@@ -272,7 +272,7 @@ class Transaction
     /**
      * @return bool
      */
-    public function isTransactionCaptured(): bool
+    public function isTransactionCaptured()
     {
         $item = $this->transactionLogHistory->getLastSuccessItem();
         if ($item && $item->getOperation() == self::TRANSACTION_OPERATION_CAPTURE) {
@@ -286,7 +286,7 @@ class Transaction
      * @return bool
      * @throws \Exception
      */
-    public function isTransactionExpired(): bool
+    public function isTransactionExpired()
     {
         if ($this->isTransactionInitiated()) {
             $item = $this->getTransactionLogHistory()->getLastSuccessItem();
@@ -316,7 +316,7 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasInitiated(): bool
+    public function transactionWasInitiated()
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_INITIATE);
@@ -332,7 +332,7 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasCancelled(): bool
+    public function transactionWasCancelled()
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_CANCEL);
@@ -348,7 +348,7 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasVoided(): bool
+    public function transactionWasVoided()
     {
         $item = $this->transactionLogHistory
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_VOID);
@@ -364,7 +364,7 @@ class Transaction
      *
      * @return bool
      */
-    public function transactionWasReserved(): bool
+    public function transactionWasReserved()
     {
         $item = $this->getTransactionLogHistory()
             ->findSuccessItemWithOperation(Transaction::TRANSACTION_OPERATION_RESERVE);
