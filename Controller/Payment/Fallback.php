@@ -38,11 +38,8 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Transaction\Transaction;
-use Vipps\Payment\Model\Exception\AcquireLockException;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
-use Vipps\Payment\Gateway\Exception\VippsException;
-
 /**
  * Class Fallback
  * @package Vipps\Payment\Controller\Payment

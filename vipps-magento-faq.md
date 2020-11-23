@@ -22,27 +22,9 @@ Failure to set it up properly means Vipps will not function as expected.
 
 ## Why are some orders missing in Magento?
 
-We are working on improved Vipps Monitoring, to solve such issues.
-Until this is released, we recommend analyzing the log files and try to find some error related to this order.
-Log files are located in the root Magento folder: `./var/log/vipps_debug.log` and `./var/log/vipps_exception.log`.
-
-It is also possible to find appropriate quote in Magento database but it is required to be familiarized with MySQL.
-Here is a MySQL query that you can execute to find missed order:
-
-```
-SELECT IF (t1.reserved_order_id is not null, 
-           t1.reserved_order_id, 
-           SUBSTRING(t2.additional_information, LOCATE('reserved_order_id', t2.additional_information) + 20, 9)) 
-           AS order_id, t2.additional_information 
-FROM quote t1
-     inner join quote_payment t2 on t1.entity_id = t2.`quote_id`
-WHERE (t1.reserved_order_id = '{insert_order_id_here}' 
-       or t2.additional_information like '%{insert_order_id_here}%')
-```
- 
-*You have to replace '{insert_order_id_here}' with your real order id.
- 
-The result output contains two columns `order_id` and `additional_information` that should be analyzed to find a reason why the order was not placed on Magento side.
+This scenario is possible for express payment flow. Unlike of regular payment, order is not created before redirecting to
+Vipps Landing page. If transaction was successfully initiated by client  - inside DB table `vipps_quote` will be created a new record
+with a quote ID and reserved order ID. This can be helpful to find a status of a transaction. 
 
 ## Quote Monitoring Tool
 
