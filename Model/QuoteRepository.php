@@ -167,11 +167,11 @@ class QuoteRepository implements QuoteRepositoryInterface
     {
         $monitoringQuote = $this->quoteFactory->create();
 
-        if (!$vippsQuote->getId()) {
-            throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
+        if (!$monitoringQuote->getId()) {
+            throw NoSuchEntityException::singleField('entity_id', $monitoringQuoteId);
         }
 
-        return $vippsQuote;
+        return $monitoringQuote;
     }
 
     /**
