@@ -388,7 +388,7 @@
         </arguments>
     </type>
 
-    <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
+    <type name="Vipps\Payment\Model\QuoteRepository">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
