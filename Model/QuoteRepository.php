@@ -139,32 +139,18 @@ class QuoteRepository implements QuoteRepositoryInterface
             throw NoSuchEntityException::singleField('reserved_order_id', $reservedOrderId);
         }
 
-        if (!$vippsQuote->getOrderId()) {
-            $order = $this->tryLocateOrder($reservedOrderId);
-            if ($order) {
-                try {
-                    $vippsQuote->setOrderId((int)$order->getEntityId());
-                    if ($vippsQuote->getStatus() == QuoteInterface::STATUS_NEW) {
-                        $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
-                    }
-                    $vippsQuote = $this->save($vippsQuote);
-                } catch (\Throwable $t) {
-                    $this->logger->error($t);
-                }
-            }
-        }
-
-        return $vippsQuote;
+        return $this->tryLocateOrder($vippsQuote);
     }
 
     /**
      * @param int $vippsQuoteId
      *
-     * @return Quote
+     * @return QuoteInterface
      * @throws NoSuchEntityException
      */
     public function load(int $vippsQuoteId)
     {
+        /** @var Quote $vippsQuote */
         $vippsQuote = $this->quoteFactory->create();
         $this->quoteResource->load($vippsQuote, $vippsQuoteId);
 
@@ -172,24 +158,42 @@ class QuoteRepository implements QuoteRepositoryInterface
             throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
         }
 
-        return $vippsQuote;
+        return $this->tryLocateOrder($vippsQuote);
     }
 
     /**
-     * @param $reservedOrderId
+     * @param QuoteInterface $vippsQuote
      *
-     * @return OrderInterface|null
+     * @return QuoteInterface
      */
-    private function tryLocateOrder($reservedOrderId): ?OrderInterface
+    private function tryLocateOrder(QuoteInterface $vippsQuote): ?QuoteInterface
     {
+        if ($vippsQuote->getOrderId()) {
+            return $vippsQuote;
+        }
+
+        $reservedOrderId = $vippsQuote->getReservedOrderId();
         $this->searchCriteriaBuilder->addFilter(OrderInterface::INCREMENT_ID, $reservedOrderId);
         $criteria = $this->searchCriteriaBuilder->create();
         $orders = $this->orderRepository->getList($criteria)->getItems();
 
         if (empty($orders)) {
-            return null;
+            return $vippsQuote;
         }
 
-        return current($orders);
+        $order = current($orders);
+        if ($order) {
+            try {
+                $vippsQuote->setOrderId((int)$order->getEntityId());
+                if ($vippsQuote->getStatus() == QuoteInterface::STATUS_NEW) {
+                    $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
+                }
+                $vippsQuote = $this->save($vippsQuote);
+            } catch (\Throwable $t) {
+                $this->logger->error($t);
+            }
+        }
+
+        return $vippsQuote;
     }
 }
