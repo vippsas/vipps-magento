@@ -23,7 +23,4 @@
     <event name="sales_order_payment_place_end">
         <observer name="vipps_payment_place_after" instance="Vipps\Payment\Observer\OrderPaymentAfter"/>
     </event>
-    <event name="sales_order_payment_place_end">
-        <observer name="vipps_payment_place_after" instance="Vipps\Payment\Observer\OrderPaymentAfter"/>
-    </event>
 </config>
