@@ -31,7 +31,7 @@ interface LockManagerInterface
      * @return bool
      * @api
      */
-    public function lock(string $name, int $timeout = -1): bool;
+    public function lock(string $name, int $timeout = -1);
 
     /**
      * Releases a lock
@@ -40,7 +40,7 @@ interface LockManagerInterface
      * @return bool
      * @api
      */
-    public function unlock(string $name): bool;
+    public function unlock(string $name);
 
     /**
      * Tests if lock is set
@@ -49,5 +49,5 @@ interface LockManagerInterface
      * @return bool
      * @api
      */
-    public function isLocked(string $name): bool;
+    public function isLocked(string $name);
 }

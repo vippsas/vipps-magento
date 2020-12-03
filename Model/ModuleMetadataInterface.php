@@ -37,5 +37,5 @@ interface ModuleMetadataInterface
      *
      * @return array
      */
-    public function addOptionalHeaders(array $headers): array;
+    public function addOptionalHeaders(array $headers);
 }

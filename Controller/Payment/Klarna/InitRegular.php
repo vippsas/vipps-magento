@@ -31,7 +31,7 @@ use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
-use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
+use Magento\Quote\Model\QuoteIdMaskFactory;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
@@ -92,9 +92,9 @@ class InitRegular extends Action
     private $paymentInformationManagement;
 
     /**
-     * @var QuoteIdToMaskedQuoteIdInterface
+     * @var QuoteIdMaskFactory
      */
-    private $quoteIdToMaskedQuoteId;
+    private $quoteIdMaskFactory;
 
     /**
      * InitRegular constructor.
@@ -109,7 +109,7 @@ class InitRegular extends Action
      * @param CartManagementInterface $cartManagement
      * @param GuestPaymentInformationManagementInterface $guestPaymentInformationManagement
      * @param PaymentInformationManagementInterface $paymentInformationManagement
-     * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
+     * @param QuoteIdMaskFactory $quoteIdMaskFactory
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -124,7 +124,7 @@ class InitRegular extends Action
         CartManagementInterface $cartManagement,
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
         PaymentInformationManagementInterface $paymentInformationManagement,
-        QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
+        QuoteIdMaskFactory $quoteIdMaskFactory
     ) {
         parent::__construct($context);
         $this->commandManager = $commandManager;
@@ -136,7 +136,7 @@ class InitRegular extends Action
         $this->cartManagement = $cartManagement;
         $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
         $this->paymentInformationManagement = $paymentInformationManagement;
-        $this->quoteIdToMaskedQuoteId = $quoteIdToMaskedQuoteId;
+        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
     }
 
     /**
@@ -204,17 +204,17 @@ class InitRegular extends Action
 
         $this->setCheckoutMethod($quote);
 
-        $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute($quote->getId());
+        $quoteIdMask = $this->quoteIdMaskFactory->create()->load($quote->getId(), 'quote_id');
         switch ($quote->getCheckoutMethod()) {
             case Onepage::METHOD_CUSTOMER:
                 $this->paymentInformationManagement->savePaymentInformationAndPlaceOrder(
-                    $maskedQuoteId,
+                    $quoteIdMask->getMaskedId(),
                     $quote->getPayment()
                 );
                 break;
             case Onepage::METHOD_GUEST:
                 $this->guestPaymentInformationManagement->savePaymentInformationAndPlaceOrder(
-                    $maskedQuoteId,
+                    $quoteIdMask->getMaskedId(),
                     $quote->getCustomerEmail(),
                     $quote->getPayment()
                 );
