@@ -22,9 +22,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
-use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Order\Cancellation\Config;
 use Vipps\Payment\Model\TransactionProcessor;
 use Vipps\Payment\Model\Quote as VippsQuote;
@@ -43,7 +40,7 @@ class FetchOrderFromVipps
     /**
      * Order collection page size
      */
-    const COLLECTION_PAGE_SIZE = 100;
+    const COLLECTION_PAGE_SIZE = 250;
 
     /**
      * @var TransactionProcessor
@@ -175,7 +172,6 @@ class FetchOrderFromVipps
     {
         // set quote store as current store
         $this->scopeCodeResolver->clean();
-
         $this->storeManager->setCurrentStore($quote->getStoreId());
     }
 
