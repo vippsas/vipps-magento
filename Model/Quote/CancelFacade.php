@@ -16,17 +16,18 @@
 
 namespace Vipps\Payment\Model\Quote;
 
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Model\Order;
+use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;
 use Vipps\Payment\Model\Quote;
 use Vipps\Payment\Model\QuoteRepository;
-use Magento\Framework\Exception\CouldNotSaveException;
 
 /**
  * Quote Cancellation Facade.
@@ -65,6 +66,11 @@ class CancelFacade implements CancelFacadeInterface
     private $orderRepository;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * CancelFacade constructor.
      *
      * @param CommandManagerInterface $commandManager
@@ -80,7 +86,8 @@ class CancelFacade implements CancelFacadeInterface
         QuoteRepository $quoteRepository,
         AttemptManagement $attemptManagement,
         CartRepositoryInterface $cartRepository,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        LoggerInterface $logger
     ) {
         $this->commandManager = $commandManager;
         $this->orderManagement = $orderManagement;
@@ -88,6 +95,7 @@ class CancelFacade implements CancelFacadeInterface
         $this->attemptManagement = $attemptManagement;
         $this->cartRepository = $cartRepository;
         $this->orderRepository = $orderRepository;
+        $this->logger = $logger;
     }
 
     /**
@@ -112,6 +120,7 @@ class CancelFacade implements CancelFacadeInterface
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERTED);
             $this->quoteRepository->save($vippsQuote);
         } catch (\Throwable $t) {
+            $this->logger->critical($t);
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERT_FAILED);
             $this->quoteRepository->save($vippsQuote);
 
