@@ -411,7 +411,6 @@
     </type>
     <type name="Vipps\Payment\Model\ModuleMetadata">
         <arguments>
-            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
