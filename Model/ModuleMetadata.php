@@ -156,7 +156,8 @@ class ModuleMetadata implements ModuleMetadataInterface
         if ($this->version) {
             return (string) $this->version;
         }
-
+        
+        $this->version = (string) $this->cache->load(self::VERSION_CACHE_KEY);
         if ($this->version) {
             return $this->version;
         }
