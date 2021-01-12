@@ -44,7 +44,7 @@ class FetchOrderFromVipps
     /**
      * Order collection page size
      */
-    const COLLECTION_PAGE_SIZE = 100;
+    const COLLECTION_PAGE_SIZE = 250;
 
     /**
      * @var TransactionProcessor
