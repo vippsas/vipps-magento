@@ -17,11 +17,14 @@ declare(strict_types=1);
 
 namespace Vipps\Payment\Model;
 
-use Vipps\Payment\Model\ModuleMetadataInterface;
-use \Magento\Framework\App\Config;
-use \Magento\Framework\Module\ResourceInterface;
-use \Magento\Framework\App\CacheInterface;
-use \Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\App\CacheInterface;
+use Magento\Framework\App\Config;
+use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Filesystem\Directory\ReadFactory;
+use Magento\Framework\Serialize\SerializerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class Metadata
@@ -42,9 +45,14 @@ class ModuleMetadata implements ModuleMetadataInterface
     private $version;
 
     /**
-     * ResourceInterface
+     * ComponentRegistrarInterface
      */
-    private $resource;
+    private $componentRegistrar;
+
+    /**
+     * @var ReadFactory
+     */
+    private $readFactory;
 
     /**
      * ProductMetadataInterface
@@ -57,20 +65,39 @@ class ModuleMetadata implements ModuleMetadataInterface
     private $cache;
 
     /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Metadata constructor.
      *
-     * @param ResourceInterface $resource
+     * @param ComponentRegistrarInterface $componentRegistrar
+     * @param ReadFactory $readFactory
+     * @param SerializerInterface $serializer
      * @param ProductMetadataInterface $systemMetadata
      * @param CacheInterface $cache
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        ResourceInterface $resource,
+        ComponentRegistrarInterface $componentRegistrar,
+        ReadFactory $readFactory,
+        SerializerInterface $serializer,
         ProductMetadataInterface $systemMetadata,
-        CacheInterface $cache
+        CacheInterface $cache,
+        LoggerInterface $logger
     ) {
-        $this->resource = $resource;
+        $this->componentRegistrar = $componentRegistrar;
+        $this->readFactory = $readFactory;
         $this->systemMetadata = $systemMetadata;
         $this->cache = $cache;
+        $this->serializer = $serializer;
+        $this->logger = $logger;
     }
 
     /**
@@ -84,6 +111,7 @@ class ModuleMetadata implements ModuleMetadataInterface
             'Vipps-System-Plugin-Name' => $this->getModuleName(),
             'Vipps-System-Plugin-Version' => $this->getModuleVersion(),
         ];
+
         return array_merge($headers, $additionalHeaders);
     }
 
@@ -94,13 +122,11 @@ class ModuleMetadata implements ModuleMetadataInterface
      */
     private function getSystemName(): string
     {
-        $systemName = sprintf(
+        return sprintf(
             '%s 2 %s',
             $this->systemMetadata->getName(),
             $this->systemMetadata->getEdition()
         );
-
-        return $systemName;
     }
 
     /**
@@ -133,12 +159,28 @@ class ModuleMetadata implements ModuleMetadataInterface
         if ($this->version) {
             return (string) $this->version;
         }
+
         $this->version = (string) $this->cache->load(self::VERSION_CACHE_KEY);
         if ($this->version) {
             return $this->version;
         }
-        $this->version = (string) $this->resource->getDbVersion('Vipps_Payment') ?: 'UNKNOWN';
+
+        $path = $this->componentRegistrar->getPath(
+            ComponentRegistrar::MODULE,
+            'Vipps_Payment'
+        );
+
+        try {
+            $directoryRead = $this->readFactory->create($path);
+            $composerJsonData = $directoryRead->readFile('composer.json');
+            $data = $this->serializer->unserialize($composerJsonData);
+            $this->version = $data['version'] ?? 'UNKNOWN';
+        } catch (\Throwable $t) {
+            $this->logger->error($t);
+            $this->version =  'UNKNOWN';
+        }
         $this->cache->save($this->version, self::VERSION_CACHE_KEY, [Config::CACHE_TAG]);
+
         return $this->version;
     }
 }
