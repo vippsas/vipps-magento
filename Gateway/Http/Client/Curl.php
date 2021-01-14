@@ -137,13 +137,12 @@ class Curl implements ClientInterface
             }
             $adapter->setOptions($options);
             $headers = $this->getHeaders($transfer->getHeaders());
-            $requestHeaders = $this->productMetadata->addOptionalHeaders($headers);
             // send request
             $adapter->write(
                 $transfer->getMethod(),
                 $transfer->getUri(),
                 '1.1',
-                $requestHeaders,
+                $headers,
                 $this->jsonEncoder->encode($transfer->getBody())
             );
             $responseSting = $adapter->read();
@@ -174,7 +173,9 @@ class Curl implements ClientInterface
             ],
             $headers
         );
-
+        
+        $headers = $this->productMetadata->addOptionalHeaders($headers);
+        
         $result = [];
         foreach ($headers as $key => $value) {
             $result[] = sprintf('%s: %s', $key, $value);
