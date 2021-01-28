@@ -204,7 +204,7 @@ class InitRegular extends Action
 
         $this->setCheckoutMethod($quote);
 
-        $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute($quote->getId());
+        $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute((int)$quote->getId());
         switch ($quote->getCheckoutMethod()) {
             case Onepage::METHOD_CUSTOMER:
                 $this->paymentInformationManagement->savePaymentInformationAndPlaceOrder(
