@@ -163,15 +163,16 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @return Quote
      * @throws NoSuchEntityException
      */
-    public function load(int $monitoringQuoteId)
+    public function load(int $vippsQuoteId)
     {
-        $monitoringQuote = $this->quoteFactory->create();
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->load($vippsQuote, $vippsQuoteId);
 
-        if (!$monitoringQuote->getId()) {
-            throw NoSuchEntityException::singleField('entity_id', $monitoringQuoteId);
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
         }
 
-        return $monitoringQuote;
+        return $vippsQuote;
     }
 
     /**

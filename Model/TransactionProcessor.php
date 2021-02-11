@@ -289,15 +289,14 @@ class TransactionProcessor
     {
         $lockName = 'vipps_place_order_' . $reservedOrderId;
         $retries = 0;
-        do {
+        $canLock = $this->lockManager->lock($lockName, 10);
+
+        while (!$canLock && ($retries < 10)) {
+            usleep(200000);
+            //wait for 0.2 seconds
+            $retries++;
             $canLock = $this->lockManager->lock($lockName, 10);
-            //If we could acquire a lock retry in 0.2 sec
-            if (!$canLock) {
-                usleep(200000);
-                $retries++;
-            }
-            //try to acquire lock for 10 times ~ 2 sec
-        } while (!$canLock && ($retries < 10));
+        }
 
         if (!$canLock) {
             throw new AcquireLockException(
