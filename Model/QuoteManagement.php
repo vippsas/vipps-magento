@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2020 Vipps
+ * Copyright 2021 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -33,7 +33,7 @@ class QuoteManagement implements QuoteManagementInterface
     private $quoteFactory;
 
     /**
-     * @var \Vipps\Payment\Model\QuoteRepository
+     * @var QuoteRepository
      */
     private $quoteRepository;
 
@@ -53,19 +53,19 @@ class QuoteManagement implements QuoteManagementInterface
     /**
      * @param CartInterface $cart
      * @return QuoteInterface
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws CouldNotSaveException
      */
     public function create(CartInterface $cart)
     {
-        /** @var Quote $monitoringQuote */
-        $monitoringQuote = $this->quoteFactory->create();
+        /** @var Quote $vippsQuote */
+        $vippsQuote = $this->quoteFactory->create();
 
-        $monitoringQuote
+        $vippsQuote
             ->setQuoteId($cart->getId())
             ->setStoreId($cart->getStoreId())
             ->setReservedOrderId($cart->getReservedOrderId());
 
-        return $this->quoteRepository->save($monitoringQuote);
+        return $this->quoteRepository->save($vippsQuote);
     }
 
     /**
