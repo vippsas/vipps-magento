@@ -71,7 +71,5 @@ class OrderPaymentAfter implements ObserverInterface
             $order->setState(Order::STATE_PAYMENT_REVIEW);
             $order->setStatus(Order::STATE_PAYMENT_REVIEW);
         }
-
-        return;
     }
 }

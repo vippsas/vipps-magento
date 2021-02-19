@@ -79,4 +79,9 @@
         </arguments>
     </type>
 
+    <type name="Vipps\Payment\Controller\Payment\Fallback">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+        </arguments>
+    </type>
 </config>

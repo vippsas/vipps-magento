@@ -30,6 +30,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -93,6 +94,11 @@ class Fallback extends Action implements CsrfAwareActionInterface
     private $vippsQuote;
 
     /**
+     * @var ConfigInterface
+     */
+    private $config;
+
+    /**
      * Fallback constructor.
      *
      * @param Context $context
@@ -104,6 +110,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @param OrderManagementInterface $orderManagement
      * @param Compliance $compliance
      * @param LoggerInterface $logger
+     * @param ConfigInterface $config
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -116,7 +123,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
         QuoteRepositoryInterface $vippsQuoteRepository,
         OrderManagementInterface $orderManagement,
         Compliance $compliance,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ConfigInterface $config
     ) {
         parent::__construct($context);
         $this->paymentDetailsProvider = $paymentDetailsProvider;
@@ -127,6 +135,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         $this->gdprCompliance = $compliance;
         $this->orderManagement = $orderManagement;
         $this->logger = $logger;
+        $this->config = $config;
     }
 
     /**
@@ -135,6 +144,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     public function execute()
     {
+        $transaction = null;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
@@ -154,7 +164,20 @@ class Fallback extends Action implements CsrfAwareActionInterface
                     . ' Please contact to store administrator.')
             );
         } finally {
-            $this->storeLastOrderOrRestoreQuote();
+            $vippsQuote = $this->getVippsQuote(true);
+            $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
+            $transactionWasCancelled = $transaction && $transaction->transactionWasCancelled();
+
+            if ($vippsQuote->getOrderId()) {
+                if ($transactionWasCancelled && $cartPersistence) {
+                    $this->restoreQuote($vippsQuote);
+                } else {
+                    $this->storeLastOrder($vippsQuote);
+                }
+            } else {
+                $this->restoreQuote($vippsQuote);
+            }
+
             if (isset($e)) {
                 if ($this->getVippsQuote()->getOrderId()) {
                     $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
@@ -208,9 +231,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * Method to update Checkout session with Last Placed Order
      * Or restore quote if order was not placed (ex. Express Checkout)
      */
-    private function storeLastOrderOrRestoreQuote()
+    private function storeLastOrder(QuoteInterface $vippsQuote)
     {
-        $vippsQuote = $this->getVippsQuote(true);
         if ($vippsQuote->getOrderId()) {
             $this->checkoutSession
                 ->clearStorage()
@@ -221,16 +243,24 @@ class Fallback extends Action implements CsrfAwareActionInterface
                 ->setLastOrderStatus(
                     $this->orderManagement->getStatus($vippsQuote->getOrderId())
                 );
-        } else {
-            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-
-            /** @var Quote $quote */
-            $quote->setIsActive(true);
-            $quote->setReservedOrderId(null);
-
-            $this->cartRepository->save($quote);
-            $this->checkoutSession->replaceQuote($quote);
         }
+    }
+
+    /**
+     * @param QuoteInterface $vippsQuote
+     *
+     * @throws NoSuchEntityException
+     */
+    private function restoreQuote(QuoteInterface $vippsQuote)
+    {
+        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+
+        /** @var Quote $quote */
+        $quote->setIsActive(true);
+        $quote->setReservedOrderId(null);
+
+        $this->cartRepository->save($quote);
+        $this->checkoutSession->replaceQuote($quote);
     }
 
     /**
