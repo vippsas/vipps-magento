@@ -83,4 +83,9 @@
     <type name="Magento\Sales\Api\OrderManagementInterface">
         <plugin name="disable_send_email" type="Vipps\Payment\Plugin\Sales\OrderManagement\AfterPlaceOrder"/>
     </type>
+    <type name="Vipps\Payment\Controller\Payment\Fallback">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+        </arguments>
+    </type>
 </config>
