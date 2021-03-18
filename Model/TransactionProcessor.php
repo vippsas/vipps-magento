@@ -302,7 +302,6 @@ class TransactionProcessor
             throw new AcquireLockException(
                 __('Can not acquire lock for order "%1"', $reservedOrderId)
             );
-
         }
 
         return $lockName;
