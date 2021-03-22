@@ -227,7 +227,7 @@ class TransactionProcessor
         if ($vippsQuote->getOrderId()) {
             $order = $this->orderRepository->get($vippsQuote->getOrderId());
         } else {
-            $order = $this->placeOrder($transaction);
+            $order = $this->placeOrder($vippsQuote, $transaction);
         }
 
         $paymentAction = $this->config->getValue('vipps_payment_action');
@@ -319,14 +319,20 @@ class TransactionProcessor
      * @throws WrongAmountException
      * @throws \Exception
      */
-    private function placeOrder(Transaction $transaction)
+    private function placeOrder(QuoteInterface $vippsQuote, Transaction $transaction)
     {
-        $quote = $this->quoteLocator->get($transaction->getOrderId());
+        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         if (!$quote) {
             throw new \Exception( //@codingStandardsIgnoreLine
                 __('Could not place order. Could not find quote with such reserved order id.')
             );
         }
+
+        if ($quote->getReservedOrderId() !== $vippsQuote->getReservedOrderId()) {
+            $quote->setReservedOrderId($vippsQuote->getReservedOrderId());
+            $this->cartRepository->save($quote);
+        }
+
         if (!$quote->getReservedOrderId() || $quote->getReservedOrderId() !== $transaction->getOrderId()) {
             throw new \Exception( //@codingStandardsIgnoreLine
                 __('Quote reserved order id does not match Vipps transaction order id.')
