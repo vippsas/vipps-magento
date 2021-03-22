@@ -324,11 +324,13 @@ class TransactionProcessor
         $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         if (!$quote) {
             throw new \Exception( //@codingStandardsIgnoreLine
-                __('Could not place order. Could not find quote with such reserved order id.')
+                __('Could not place order. Could not find quote.')
             );
         }
 
-        if ($quote->getReservedOrderId() !== $vippsQuote->getReservedOrderId()) {
+        if ($vippsQuote->getReservedOrderId()
+            && $quote->getReservedOrderId() !== $vippsQuote->getReservedOrderId()
+        ) {
             $quote->setReservedOrderId($vippsQuote->getReservedOrderId());
             $this->cartRepository->save($quote);
         }
