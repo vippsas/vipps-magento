@@ -180,14 +180,10 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
             $transactionWasCancelled = $transaction && $transaction->transactionWasCancelled();
 
-            if ($vippsQuote->getOrderId()) {
-                if ($transactionWasCancelled && $cartPersistence) {
-                    $this->restoreQuote($vippsQuote);
-                } else {
-                    $this->storeLastOrder($vippsQuote);
-                }
-            } else {
+            if ($transactionWasCancelled && $cartPersistence) {
                 $this->restoreQuote($vippsQuote);
+            } elseif ($vippsQuote->getOrderId()) {
+                $this->storeLastOrder($vippsQuote);
             }
 
             if (isset($e)) {
