@@ -418,4 +418,15 @@
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>
+
+    <type name="Vipps\Payment\Observer\CheckoutSubmitBefore">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
 </config>
