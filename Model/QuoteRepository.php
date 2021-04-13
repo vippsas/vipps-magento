@@ -139,21 +139,6 @@ class QuoteRepository implements QuoteRepositoryInterface
             throw NoSuchEntityException::singleField('reserved_order_id', $reservedOrderId);
         }
 
-        if (!$vippsQuote->getOrderId()) {
-            $order = $this->tryLocateOrder($reservedOrderId);
-            if ($order) {
-                try {
-                    $vippsQuote->setOrderId((int)$order->getEntityId());
-                    if ($vippsQuote->getStatus() == QuoteInterface::STATUS_NEW) {
-                        $vippsQuote->setStatus(QuoteInterface::STATUS_PENDING);
-                    }
-                    $vippsQuote = $this->save($vippsQuote);
-                } catch (\Throwable $t) {
-                    $this->logger->error($t);
-                }
-            }
-        }
-
         return $vippsQuote;
     }
 
