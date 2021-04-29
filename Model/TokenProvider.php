@@ -192,7 +192,7 @@ class TokenProvider implements TokenProviderInterface
             $this->logger->debug('Token fetched from Vipps');
         } catch (\Exception $e) {    //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage());
-            throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'));
+            throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'), $e);
         }
 
         return $jwt;
