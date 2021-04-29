@@ -97,6 +97,14 @@
                             <config_path>payment/vipps/subscription_key1</config_path>
                             <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         </field>
+                        <field id="test_credentials_wizard" translate="button_label" sortOrder="95" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label/>
+                            <button_label>Test Credentials</button_label>
+                            <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\TestCredentials</frontend_model>
+                            <requires>
+                                <group id="vipps_required"/>
+                            </requires>
+                        </field>
                     </group>
                     <include path="Vipps_Payment::system/checkout.xml"/>
                     <include path="Vipps_Payment::system/express_checkout.xml"/>
