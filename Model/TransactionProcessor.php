@@ -21,6 +21,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Helper\Formatter;
 use Magento\Quote\Api\CartManagementInterface;
@@ -113,6 +114,11 @@ class TransactionProcessor
     private $logger;
 
     /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
+    /**
      * TransactionProcessor constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -127,6 +133,7 @@ class TransactionProcessor
      * @param OrderManagementInterface $orderManagement
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param LoggerInterface $logger
+     * @param ResourceConnection $resourceConnection
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -140,7 +147,8 @@ class TransactionProcessor
         QuoteManagement $quoteManagement,
         OrderManagementInterface $orderManagement,
         PaymentDetailsProvider $paymentDetailsProvider,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ResourceConnection $resourceConnection
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -154,6 +162,7 @@ class TransactionProcessor
         $this->orderManagement = $orderManagement;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->logger = $logger;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -199,12 +208,13 @@ class TransactionProcessor
      * @param QuoteInterface $vippsQuote
      *
      * @throws CouldNotSaveException
+     * @throws \Exception
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function processCancelledTransaction(QuoteInterface $vippsQuote)
     {
         if ($vippsQuote->getOrderId()) {
-            $this->orderManagement->cancel($vippsQuote->getOrderId());
+            $this->cancelOrder($vippsQuote->getOrderId());
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
@@ -481,6 +491,33 @@ class TransactionProcessor
     {
         if (!$order->getEmailSent()) {
             $this->orderManagement->notify($order->getEntityId());
+        }
+    }
+
+    /**
+     * @param int $orderId
+     *
+     * @throws \Exception
+     */
+    private function cancelOrder($orderId): void
+    {
+        $order = $this->orderRepository->get($orderId);
+        if ($order->getState() === Order::STATE_NEW) {
+            $this->orderManagement->cancel($orderId);
+        } else {
+            $connection = $this->resourceConnection->getConnection();
+            try {
+                $connection->beginTransaction();
+
+                $order->setState(Order::STATE_NEW);
+                $this->orderRepository->save($order);
+                $this->orderManagement->cancel($orderId);
+
+                $connection->commit();
+            } catch (\Exception $e) {
+                $connection->rollBack();
+                throw $e;
+            }
         }
     }
 }
