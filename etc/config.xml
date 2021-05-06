@@ -39,6 +39,7 @@
                 <subscription_key1 backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <client_id backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <merchant_serial_number backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <cancellation_cart_persistence>1</cancellation_cart_persistence>
                 <cancellation_type>auto</cancellation_type>
                 <cancellation_attempts_count>3</cancellation_attempts_count>
                 <cancellation_customer_inactivity_time>10</cancellation_customer_inactivity_time>

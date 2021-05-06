@@ -114,9 +114,6 @@
     <virtualType name="VippsCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <!--
-                                <item name="initialize" xsi:type="string">VippsInitiateCommand</item>
-                -->
                 <item name="initiate" xsi:type="string">VippsInitiateCommand</item>
                 <item name="capture" xsi:type="string">VippsCaptureCommand</item>
                 <item name="refund" xsi:type="string">VippsRefundCommand</item>
@@ -401,6 +398,17 @@
     <type name="Vipps\Payment\Observer\OrderPaymentAfter">
         <arguments>
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Observer\CheckoutSubmitBefore">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
+        <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
     </type>

@@ -18,6 +18,16 @@
     <group id="cancellation" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1"
            sortOrder="200">
         <label>Cancellation</label>
+        <field id="cart_persistence" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1"
+               sortOrder="0">
+            <label>Cart Persistence</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[Cart persistence in case when transaction was cancelled in Vipps.]]>
+            </comment>
+            <config_path>payment/vipps/cancellation_cart_persistence</config_path>
+        </field>
+
         <field id="attempts_count" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1"
                sortOrder="10">
             <label>Number of Attempts</label>

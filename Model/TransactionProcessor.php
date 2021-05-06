@@ -16,11 +16,12 @@
 
 namespace Vipps\Payment\Model;
 
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\InputException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Helper\Formatter;
 use Magento\Quote\Api\CartManagementInterface;
@@ -39,8 +40,8 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
+use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 use Vipps\Payment\Model\Exception\AcquireLockException;
 
@@ -113,6 +114,11 @@ class TransactionProcessor
     private $logger;
 
     /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
+    /**
      * TransactionProcessor constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -127,6 +133,7 @@ class TransactionProcessor
      * @param OrderManagementInterface $orderManagement
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param LoggerInterface $logger
+     * @param ResourceConnection $resourceConnection
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -142,7 +149,8 @@ class TransactionProcessor
         QuoteManagement $quoteManagement,
         OrderManagementInterface $orderManagement,
         PaymentDetailsProvider $paymentDetailsProvider,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ResourceConnection $resourceConnection
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -156,6 +164,7 @@ class TransactionProcessor
         $this->orderManagement = $orderManagement;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->logger = $logger;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -202,12 +211,13 @@ class TransactionProcessor
      * @param Transaction $transaction
      *
      * @throws CouldNotSaveException
+     * @throw \Exception
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function processCancelledTransaction(QuoteInterface $vippsQuote, Transaction $transaction) //@codingStandardsIgnoreLine
     {
         if ($vippsQuote->getOrderId()) {
-            $this->orderManagement->cancel($vippsQuote->getOrderId());
+            $this->cancelOrder($vippsQuote->getOrderId());
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
@@ -230,7 +240,7 @@ class TransactionProcessor
         if ($vippsQuote->getOrderId()) {
             $order = $this->orderRepository->get($vippsQuote->getOrderId());
         } else {
-            $order = $this->placeOrder($transaction);
+            $order = $this->placeOrder($vippsQuote, $transaction);
         }
 
         $paymentAction = $this->config->getValue('vipps_payment_action');
@@ -307,7 +317,6 @@ class TransactionProcessor
             throw new AcquireLockException(
                 __('Can not acquire lock for order "%1"', $reservedOrderId)
             );
-
         }
 
         return $lockName;
@@ -325,14 +334,22 @@ class TransactionProcessor
      * @throws WrongAmountException
      * @throws \Exception
      */
-    private function placeOrder(Transaction $transaction)
+    private function placeOrder(QuoteInterface $vippsQuote, Transaction $transaction)
     {
-        $quote = $this->quoteLocator->get($transaction->getOrderId());
+        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         if (!$quote) {
             throw new \Exception( //@codingStandardsIgnoreLine
-                __('Could not place order. Could not find quote with such reserved order id.')
+                __('Could not place order. Could not find quote.')
             );
         }
+
+        if ($vippsQuote->getReservedOrderId()
+            && $quote->getReservedOrderId() !== $vippsQuote->getReservedOrderId()
+        ) {
+            $quote->setReservedOrderId($vippsQuote->getReservedOrderId());
+            $this->cartRepository->save($quote);
+        }
+
         if (!$quote->getReservedOrderId() || $quote->getReservedOrderId() !== $transaction->getOrderId()) {
             throw new \Exception( //@codingStandardsIgnoreLine
                 __('Quote reserved order id does not match Vipps transaction order id.')
@@ -480,6 +497,33 @@ class TransactionProcessor
     {
         if (!$order->getEmailSent()) {
             $this->orderManagement->notify($order->getEntityId());
+        }
+    }
+
+    /**
+     * @param int $orderId
+     *
+     * @throws \Exception
+     */
+    private function cancelOrder($orderId): void
+    {
+        $order = $this->orderRepository->get($orderId);
+        if ($order->getState() === Order::STATE_NEW) {
+            $this->orderManagement->cancel($orderId);
+        } else {
+            $connection = $this->resourceConnection->getConnection();
+            try {
+                $connection->beginTransaction();
+
+                $order->setState(Order::STATE_NEW);
+                $this->orderRepository->save($order);
+                $this->orderManagement->cancel($orderId);
+
+                $connection->commit();
+            } catch (\Exception $e) {
+                $connection->rollBack();
+                throw $e;
+            }
         }
     }
 }
