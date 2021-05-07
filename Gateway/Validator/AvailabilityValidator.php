@@ -53,6 +53,8 @@ class AvailabilityValidator extends AbstractValidator
      *
      * @return ResultInterface
      * @throws NoSuchEntityException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function validate(array $validationSubject)
     {

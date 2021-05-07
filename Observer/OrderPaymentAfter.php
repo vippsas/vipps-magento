@@ -63,15 +63,13 @@ class OrderPaymentAfter implements ObserverInterface
         if (!$payment || $payment->getMethod() != 'vipps') {
             return;
         }
-        
+
         $order = $payment->getOrder();
-        
+
         $status = $this->config->getValue('order_status');
         if ($status == OrderStatus::STATUS_PAYMENT_REVIEW) {
             $order->setState(Order::STATE_PAYMENT_REVIEW);
             $order->setStatus(Order::STATE_PAYMENT_REVIEW);
         }
-
-        return;
     }
 }

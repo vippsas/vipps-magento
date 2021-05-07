@@ -19,16 +19,17 @@ namespace Vipps\Payment\Controller\Payment;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -36,11 +37,11 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Exception\AcquireLockException;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
-use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
  * Class Fallback
@@ -95,6 +96,11 @@ class Fallback extends Action
     private $vippsQuote;
 
     /**
+     * @var ConfigInterface
+     */
+    private $config;
+
+    /**
      * Fallback constructor.
      *
      * @param Context $context
@@ -106,6 +112,7 @@ class Fallback extends Action
      * @param OrderManagementInterface $orderManagement
      * @param Compliance $compliance
      * @param LoggerInterface $logger
+     * @param ConfigInterface $config
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -118,7 +125,8 @@ class Fallback extends Action
         QuoteRepositoryInterface $vippsQuoteRepository,
         OrderManagementInterface $orderManagement,
         Compliance $compliance,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ConfigInterface $config
     ) {
         parent::__construct($context);
         $this->paymentDetailsProvider = $paymentDetailsProvider;
@@ -129,6 +137,7 @@ class Fallback extends Action
         $this->gdprCompliance = $compliance;
         $this->orderManagement = $orderManagement;
         $this->logger = $logger;
+        $this->config = $config;
     }
 
     /**
@@ -137,6 +146,7 @@ class Fallback extends Action
      */
     public function execute()
     {
+        $transaction = null;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
@@ -156,9 +166,17 @@ class Fallback extends Action
                     . ' Please contact to store administrator.')
             );
         } finally {
-            $this->storeLastOrderOrRestoreQuote();
+            $vippsQuote = $this->getVippsQuote(true);
+            $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
+            $transactionWasCancelled = $transaction && $transaction->transactionWasCancelled();
+
+            if ($transactionWasCancelled && $cartPersistence) {
+                $this->restoreQuote($vippsQuote);
+            } elseif ($vippsQuote->getOrderId()) {
+                $this->storeLastOrder($vippsQuote);
+            }
             if (isset($e)) {
-                if ($this->getVippsQuote()->getOrderId()) {
+                if (!$cartPersistence && $this->getVippsQuote()->getOrderId()) {
                     $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
                 } else {
                     $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
@@ -210,9 +228,8 @@ class Fallback extends Action
      * Method to update Checkout session with Last Placed Order
      * Or restore quote if order was not placed (ex. Express Checkout)
      */
-    private function storeLastOrderOrRestoreQuote()
+    private function storeLastOrder(QuoteInterface $vippsQuote)
     {
-        $vippsQuote = $this->getVippsQuote(true);
         if ($vippsQuote->getOrderId()) {
             $this->checkoutSession
                 ->clearStorage()
@@ -223,16 +240,24 @@ class Fallback extends Action
                 ->setLastOrderStatus(
                     $this->orderManagement->getStatus($vippsQuote->getOrderId())
                 );
-        } else {
-            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-
-            /** @var Quote $quote */
-            $quote->setIsActive(true);
-            $quote->setReservedOrderId(null);
-
-            $this->cartRepository->save($quote);
-            $this->checkoutSession->replaceQuote($quote);
         }
+    }
+
+    /**
+     * @param QuoteInterface $vippsQuote
+     *
+     * @throws NoSuchEntityException
+     */
+    private function restoreQuote(QuoteInterface $vippsQuote)
+    {
+        $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+
+        /** @var Quote $quote */
+        $quote->setIsActive(true);
+        $quote->setReservedOrderId(null);
+
+        $this->cartRepository->save($quote);
+        $this->checkoutSession->replaceQuote($quote);
     }
 
     /**
@@ -244,25 +269,8 @@ class Fallback extends Action
      */
     private function prepareResponse(Redirect $resultRedirect, Transaction $transaction)
     {
-        if ($transaction->transactionWasCancelled()) {
-            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
-        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
-            return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
-        } elseif ($transaction->isTransactionExpired()) {
-            $this->messageManager->addErrorMessage(
-                __('Transaction was expired. Please, place your order again')
-            );
-        } else {
-            $this->messageManager->addWarningMessage(
-                __('We have not received a confirmation that order was reserved. It will be checked later again.')
-            );
-        }
-
-        if ($this->getVippsQuote()->getOrderId()) {
-            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
-        } else {
-            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
-        }
+        $this->defineMessage($transaction);
+        $this->defineRedirectPath($resultRedirect, $transaction);
 
         return $resultRedirect;
     }
@@ -279,5 +287,50 @@ class Fallback extends Action
         $message = $e->getMessage();
 
         return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
+    }
+
+    /**
+     * @return mixed
+     */
+    private function isCartPersistent()
+    {
+        return $this->config->getValue('cancellation_cart_persistence');
+    }
+
+    private function defineMessage(Transaction $transaction): void
+    {
+        if ($transaction->transactionWasCancelled()) {
+            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
+        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
+            //$this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
+        } elseif ($transaction->isTransactionExpired()) {
+            $this->messageManager->addErrorMessage(
+                __('Transaction was expired. Please, place your order again')
+            );
+        } else {
+            $this->messageManager->addWarningMessage(
+                __('We have not received a confirmation that order was reserved. It will be checked later again.')
+            );
+        }
+    }
+
+    /**
+     * @param Redirect $resultRedirect
+     * @param Transaction $transaction
+     *
+     * @throws NoSuchEntityException
+     */
+    private function defineRedirectPath(Redirect $resultRedirect, Transaction $transaction): void
+    {
+        if ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+        } else {
+            $orderId = $this->getVippsQuote() ? $this->getVippsQuote()->getOrderId() : null;
+            if (!$this->isCartPersistent() && $orderId) {
+                $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+            } else {
+                $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+            }
+        }
     }
 }

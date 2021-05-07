@@ -16,8 +16,10 @@
 
 namespace Vipps\Payment\Setup;
 
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
 
@@ -77,6 +79,10 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                         'comment'  => 'Auth Token'
                     ]
                 );
+        }
+
+        if (version_compare($context->getVersion(), '2.3.1', '<')) {
+            $this->addVippsQuoteIndex($installer);
         }
 
         $installer->endSetup();
@@ -260,6 +266,30 @@ class UpgradeSchema implements UpgradeSchemaInterface // @codingStandardsIgnoreL
                     'after'    => 'quote_id',
                     'default'  => '0'
                 ]
+            );
+    }
+
+    /**
+     * @param SchemaSetupInterface $installer
+     */
+    private function addVippsQuoteIndex(SchemaSetupInterface $installer)
+    {
+        $connection = $installer->getConnection();
+        $tableName = $installer->getTable('vipps_quote');
+
+        $connection
+            ->addIndex(
+                $tableName,
+                $connection->getIndexName($tableName, 'reserved_order_id'),
+                'reserved_order_id',
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            );
+        $connection
+            ->addIndex(
+                $tableName,
+                $connection->getIndexName($tableName, 'order_id'),
+                'order_id',
+                AdapterInterface::INDEX_TYPE_UNIQUE
             );
     }
 }

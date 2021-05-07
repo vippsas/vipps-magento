@@ -16,7 +16,10 @@
 
 namespace Vipps\Payment\Model\ResourceModel;
 
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+use Vipps\Payment\Api\Data\QuoteInterface;
 
 /**
  * Class Quote
@@ -41,5 +44,44 @@ class Quote extends AbstractDb
     protected function _construct() //@codingStandardsIgnoreLine
     {
         $this->_init(self::TABLE_NAME, self::INDEX_FIELD);
+    }
+
+    /**
+     * @param AbstractModel $object
+     * @param $value
+     * @param null $field
+     *
+     * @return $this
+     * @throws LocalizedException
+     */
+    public function loadNewByQuote(AbstractModel $object, $value, $field = null)
+    {
+        $object->beforeLoad($value, $field);
+        if ($field === null) {
+            $field = $this->getIdFieldName();
+        }
+
+        $connection = $this->getConnection();
+        if ($connection && $value !== null) {
+            $connection = $this->getConnection();
+            $select = $connection->select()
+                ->from($this->getMainTable())
+                ->where("$field = ?", $value)
+                ->where('status = ?', QuoteInterface::STATUS_NEW)
+                ->limit(1);
+            $data = $connection->fetchRow($select);
+
+            if ($data) {
+                $object->setData($data);
+            }
+        }
+
+        $this->unserializeFields($object);
+        $this->_afterLoad($object);
+        $object->afterLoad();
+        $object->setOrigData();
+        $object->setHasDataChanges(false);
+
+        return $this;
     }
 }
