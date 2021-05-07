@@ -168,18 +168,14 @@ class Fallback extends Action implements CsrfAwareActionInterface
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
             $transactionWasCancelled = $transaction && $transaction->transactionWasCancelled();
 
-            if ($vippsQuote->getOrderId()) {
-                if ($transactionWasCancelled && $cartPersistence) {
-                    $this->restoreQuote($vippsQuote);
-                } else {
-                    $this->storeLastOrder($vippsQuote);
-                }
-            } else {
+            if ($transactionWasCancelled && $cartPersistence) {
                 $this->restoreQuote($vippsQuote);
+            } elseif ($vippsQuote->getOrderId()) {
+                $this->storeLastOrder($vippsQuote);
             }
 
             if (isset($e)) {
-                if ($this->getVippsQuote()->getOrderId()) {
+                if (!$cartPersistence && $this->getVippsQuote()->getOrderId()) {
                     $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
                 } else {
                     $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
@@ -272,25 +268,8 @@ class Fallback extends Action implements CsrfAwareActionInterface
      */
     private function prepareResponse(Redirect $resultRedirect, Transaction $transaction)
     {
-        if ($transaction->transactionWasCancelled()) {
-            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
-        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
-            return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
-        } elseif ($transaction->isTransactionExpired()) {
-            $this->messageManager->addErrorMessage(
-                __('Transaction was expired. Please, place your order again')
-            );
-        } else {
-            $this->messageManager->addWarningMessage(
-                __('We have not received a confirmation that order was reserved. It will be checked later again.')
-            );
-        }
-
-        if ($this->getVippsQuote()->getOrderId()) {
-            $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
-        } else {
-            $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
-        }
+        $this->defineMessage($transaction);
+        $this->defineRedirectPath($resultRedirect, $transaction);
 
         return $resultRedirect;
     }
@@ -331,5 +310,50 @@ class Fallback extends Action implements CsrfAwareActionInterface
         $message = $e->getMessage();
 
         return "QuoteID: $quoteId. Exception message: $message. Stack Trace $trace";
+    }
+
+    /**
+     * @return mixed
+     */
+    private function isCartPersistent()
+    {
+        return $this->config->getValue('cancellation_cart_persistence');
+    }
+
+    private function defineMessage(Transaction $transaction): void
+    {
+        if ($transaction->transactionWasCancelled()) {
+            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
+        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
+            //$this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
+        } elseif ($transaction->isTransactionExpired()) {
+            $this->messageManager->addErrorMessage(
+                __('Transaction was expired. Please, place your order again')
+            );
+        } else {
+            $this->messageManager->addWarningMessage(
+                __('We have not received a confirmation that order was reserved. It will be checked later again.')
+            );
+        }
+    }
+
+    /**
+     * @param Redirect $resultRedirect
+     * @param Transaction $transaction
+     *
+     * @throws NoSuchEntityException
+     */
+    private function defineRedirectPath(Redirect $resultRedirect, Transaction $transaction): void
+    {
+        if ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+        } else {
+            $orderId = $this->getVippsQuote() ? $this->getVippsQuote()->getOrderId() : null;
+            if (!$this->isCartPersistent() && $orderId) {
+                $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+            } else {
+                $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+            }
+        }
     }
 }

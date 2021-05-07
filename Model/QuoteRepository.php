@@ -125,6 +125,26 @@ class QuoteRepository implements QuoteRepositoryInterface
     }
 
     /**
+     * Load monitoring quote by quote.
+     *
+     * @param $quoteId
+     *
+     * @return Quote
+     * @throws NoSuchEntityException
+     */
+    public function loadNewByQuote($quoteId): QuoteInterface
+    {
+        $vippsQuote = $this->quoteFactory->create();
+        $this->quoteResource->loadNewByQuote($vippsQuote, $quoteId, 'quote_id');
+
+        if (!$vippsQuote->getId()) {
+            throw NoSuchEntityException::singleField('quote_id', $quoteId);
+        }
+
+        return $vippsQuote;
+    }
+
+    /**
      * @param string $reservedOrderId
      *
      * @return QuoteInterface
@@ -139,7 +159,7 @@ class QuoteRepository implements QuoteRepositoryInterface
             throw NoSuchEntityException::singleField('reserved_order_id', $reservedOrderId);
         }
 
-        return $this->tryLocateOrder($vippsQuote);
+        return $vippsQuote;
     }
 
     /**
@@ -158,7 +178,7 @@ class QuoteRepository implements QuoteRepositoryInterface
             throw NoSuchEntityException::singleField('entity_id', $vippsQuoteId);
         }
 
-        return $this->tryLocateOrder($vippsQuote);
+        return $vippsQuote;
     }
 
     /**
