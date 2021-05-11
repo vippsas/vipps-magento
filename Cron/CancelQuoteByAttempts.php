@@ -37,7 +37,7 @@ class CancelQuoteByAttempts
     /**
      * Order collection page size
      */
-    const COLLECTION_PAGE_SIZE = 100;
+    const COLLECTION_PAGE_SIZE = 250;
 
     /**
      * @var LoggerInterface
@@ -147,8 +147,7 @@ class CancelQuoteByAttempts
             ['in' => [
                 QuoteStatusInterface::STATUS_NEW,
                 QuoteStatusInterface::STATUS_PENDING,
-                QuoteStatusInterface::STATUS_RESERVE_FAILED,
-                QuoteStatusInterface::STATUS_REVERT_FAILED
+                QuoteStatusInterface::STATUS_RESERVE_FAILED
             ]]
         );
 
