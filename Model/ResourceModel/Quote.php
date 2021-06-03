@@ -50,12 +50,17 @@ class Quote extends AbstractDb
      * @param AbstractModel $object
      * @param $value
      * @param null $field
+     * @param string $status
      *
      * @return $this
      * @throws LocalizedException
      */
-    public function loadNewByQuote(AbstractModel $object, $value, $field = null)
-    {
+    public function loadNewByQuote(
+        AbstractModel $object,
+        $value,
+        $field = null,
+        $status = QuoteInterface::STATUS_NEW
+    ) {
         $object->beforeLoad($value, $field);
         if ($field === null) {
             $field = $this->getIdFieldName();
@@ -67,7 +72,8 @@ class Quote extends AbstractDb
             $select = $connection->select()
                 ->from($this->getMainTable())
                 ->where("$field = ?", $value)
-                ->where('status = ?', QuoteInterface::STATUS_NEW)
+                ->where('status = ?', $status)
+                ->order($this->getIdFieldName() . ' DESC')
                 ->limit(1);
             $data = $connection->fetchRow($select);
 

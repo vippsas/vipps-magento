@@ -20,12 +20,12 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
-use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -33,6 +33,7 @@ use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
@@ -40,6 +41,7 @@ use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\OrderLocator;
 use Vipps\Payment\Model\TransactionProcessor;
 /**
  * Class Fallback
@@ -99,6 +101,16 @@ class Fallback extends Action implements CsrfAwareActionInterface
     private $config;
 
     /**
+     * @var OrderLocator
+     */
+    private $orderLocator;
+
+    /**
+     * @var OrderInterface|null
+     */
+    private $order;
+
+    /**
      * Fallback constructor.
      *
      * @param Context $context
@@ -108,6 +120,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
      * @param CartRepositoryInterface $cartRepository
      * @param QuoteRepositoryInterface $vippsQuoteRepository
      * @param OrderManagementInterface $orderManagement
+     * @param OrderLocator $orderLocator
      * @param Compliance $compliance
      * @param LoggerInterface $logger
      * @param ConfigInterface $config
@@ -122,6 +135,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         CartRepositoryInterface $cartRepository,
         QuoteRepositoryInterface $vippsQuoteRepository,
         OrderManagementInterface $orderManagement,
+        OrderLocator $orderLocator,
         Compliance $compliance,
         LoggerInterface $logger,
         ConfigInterface $config
@@ -134,6 +148,7 @@ class Fallback extends Action implements CsrfAwareActionInterface
         $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->gdprCompliance = $compliance;
         $this->orderManagement = $orderManagement;
+        $this->orderLocator = $orderLocator;
         $this->logger = $logger;
         $this->config = $config;
     }
@@ -166,16 +181,18 @@ class Fallback extends Action implements CsrfAwareActionInterface
         } finally {
             $vippsQuote = $this->getVippsQuote(true);
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
-            $transactionWasCancelled = $transaction && $transaction->transactionWasCancelled();
+            $quoteCouldBeRestored = $transaction
+                && ($transaction->transactionWasCancelled() || $transaction->isTransactionExpired());
+            $order = $this->getOrder();
 
-            if ($transactionWasCancelled && $cartPersistence) {
+            if ($quoteCouldBeRestored && $cartPersistence) {
                 $this->restoreQuote($vippsQuote);
-            } elseif ($vippsQuote->getOrderId()) {
-                $this->storeLastOrder($vippsQuote);
+            } elseif ($order) {
+                $this->storeLastOrder($order);
             }
 
             if (isset($e)) {
-                if (!$cartPersistence && $this->getVippsQuote()->getOrderId()) {
+                if (!$cartPersistence && $order) {
                     $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
                 } else {
                     $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
@@ -224,22 +241,17 @@ class Fallback extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * Method to update Checkout session with Last Placed Order
-     * Or restore quote if order was not placed (ex. Express Checkout)
+     * Method store order info to checkout session
      */
-    private function storeLastOrder(QuoteInterface $vippsQuote)
+    private function storeLastOrder(OrderInterface $order)
     {
-        if ($vippsQuote->getOrderId()) {
-            $this->checkoutSession
-                ->clearStorage()
-                ->setLastQuoteId($vippsQuote->getQuoteId())
-                ->setLastSuccessQuoteId($vippsQuote->getQuoteId())
-                ->setLastOrderId($vippsQuote->getOrderId())
-                ->setLastRealOrderId($vippsQuote->getReservedOrderId())
-                ->setLastOrderStatus(
-                    $this->orderManagement->getStatus($vippsQuote->getOrderId())
-                );
-        }
+        $this->checkoutSession
+            ->clearStorage()
+            ->setLastQuoteId($order->getQuoteId())
+            ->setLastSuccessQuoteId($order->getQuoteId())
+            ->setLastOrderId($order->getEntityId())
+            ->setLastRealOrderId($order->getIncrementId())
+            ->setLastOrderStatus($order->getStatus());
     }
 
     /**
@@ -348,12 +360,28 @@ class Fallback extends Action implements CsrfAwareActionInterface
         if ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } else {
-            $orderId = $this->getVippsQuote() ? $this->getVippsQuote()->getOrderId() : null;
+            $orderId = $this->getOrder() ? $this->getOrder()->getEntityId() : null;
             if (!$this->isCartPersistent() && $orderId) {
                 $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
             } else {
                 $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
             }
         }
+    }
+
+    /**
+     * @param false $forceReload
+     *
+     * @return OrderInterface|null
+     * @throws NoSuchEntityException
+     */
+    private function getOrder($forceReload = false)
+    {
+        if (null === $this->order || $forceReload) {
+            $vippsQuote = $this->getVippsQuote($forceReload);
+            $this->order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+        }
+
+        return $this->order;
     }
 }
