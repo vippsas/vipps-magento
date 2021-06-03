@@ -219,7 +219,7 @@ class TransactionProcessor
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if ($order) {
-            $this->cancelOrder($order->getEntityId());
+            $this->cancelOrder($order);
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
@@ -266,7 +266,7 @@ class TransactionProcessor
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if ($order) {
-            $this->orderManagement->cancel($order->getEntityId());
+            $this->cancelOrder($order);
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_EXPIRED);
@@ -500,15 +500,14 @@ class TransactionProcessor
     }
 
     /**
-     * @param int $orderId
+     * @param $order
      *
      * @throws \Exception
      */
-    private function cancelOrder($orderId): void
+    private function cancelOrder($order): void
     {
-        $order = $this->orderRepository->get($orderId);
         if ($order->getState() === Order::STATE_NEW) {
-            $this->orderManagement->cancel($orderId);
+            $this->orderManagement->cancel($order->getEntityId());
         } else {
             $connection = $this->resourceConnection->getConnection();
             try {
@@ -516,7 +515,7 @@ class TransactionProcessor
 
                 $order->setState(Order::STATE_NEW);
                 $this->orderRepository->save($order);
-                $this->orderManagement->cancel($orderId);
+                $this->orderManagement->cancel($order->getEntityId());
 
                 $connection->commit();
             } catch (\Exception $e) {
