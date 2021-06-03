@@ -26,6 +26,7 @@ use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;
+use Vipps\Payment\Model\OrderLocator;
 use Vipps\Payment\Model\Quote;
 use Vipps\Payment\Model\QuoteRepository;
 
@@ -66,6 +67,11 @@ class CancelFacade implements CancelFacadeInterface
     private $orderRepository;
 
     /**
+     * @var OrderLocator
+     */
+    private $orderLocator;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -79,6 +85,8 @@ class CancelFacade implements CancelFacadeInterface
      * @param AttemptManagement $attemptManagement
      * @param CartRepositoryInterface $cartRepository
      * @param OrderRepositoryInterface $orderRepository
+     * @param OrderLocator $orderLocator
+     * @param LoggerInterface $logger
      */
     public function __construct(
         CommandManagerInterface $commandManager,
@@ -87,6 +95,7 @@ class CancelFacade implements CancelFacadeInterface
         AttemptManagement $attemptManagement,
         CartRepositoryInterface $cartRepository,
         OrderRepositoryInterface $orderRepository,
+        OrderLocator $orderLocator,
         LoggerInterface $logger
     ) {
         $this->commandManager = $commandManager;
@@ -95,6 +104,7 @@ class CancelFacade implements CancelFacadeInterface
         $this->attemptManagement = $attemptManagement;
         $this->cartRepository = $cartRepository;
         $this->orderRepository = $orderRepository;
+        $this->orderLocator = $orderLocator;
         $this->logger = $logger;
     }
 
@@ -106,10 +116,9 @@ class CancelFacade implements CancelFacadeInterface
     public function cancel(QuoteInterface $vippsQuote)
     {
         try {
-            if ($vippsQuote->getOrderId()) {
-                /** @var Order $order */
-                $order = $this->orderRepository->get($vippsQuote->getOrderId());
-                $this->orderManagement->cancel($vippsQuote->getOrderId());
+            $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+            if ($order) {
+                $this->orderManagement->cancel($order->getEntityId());
                 $this->commandManager->cancel($order->getPayment());
             } else {
                 /** @var \Magento\Quote\Model\Quote $quote */

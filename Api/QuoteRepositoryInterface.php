@@ -39,5 +39,5 @@ interface QuoteRepositoryInterface
      * @return QuoteInterface
      * @throws NoSuchEntityException
      */
-    public function loadByOrderId($orderId): ?QuoteInterface;
+    public function loadByOrderId($orderId): QuoteInterface;
 }
