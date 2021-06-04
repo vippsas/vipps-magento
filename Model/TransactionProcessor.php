@@ -74,6 +74,11 @@ class TransactionProcessor
     private $quoteLocator;
 
     /**
+     * @var OrderLocator
+     */
+    private $orderLocator;
+
+    /**
      * @var Processor
      */
     private $processor;
@@ -140,6 +145,7 @@ class TransactionProcessor
         CartRepositoryInterface $cartRepository,
         CartManagementInterface $cartManagement,
         QuoteLocator $quoteLocator,
+        OrderLocator $orderLocator,
         Processor $processor,
         QuoteUpdater $quoteUpdater,
         LockManager $lockManager,
@@ -154,6 +160,7 @@ class TransactionProcessor
         $this->cartRepository = $cartRepository;
         $this->cartManagement = $cartManagement;
         $this->quoteLocator = $quoteLocator;
+        $this->orderLocator = $orderLocator;
         $this->processor = $processor;
         $this->quoteUpdater = $quoteUpdater;
         $this->lockManager = $lockManager;
@@ -187,9 +194,6 @@ class TransactionProcessor
                 $vippsQuote->getReservedOrderId()
             );
 
-            // reload quote because it could be changed by another process
-            $vippsQuote = $this->quoteManagement->reload($vippsQuote);
-
             if ($transaction->transactionWasCancelled() || $transaction->transactionWasVoided()) {
                 $this->processCancelledTransaction($vippsQuote);
             } elseif ($transaction->isTransactionReserved()) {
@@ -213,8 +217,9 @@ class TransactionProcessor
      */
     private function processCancelledTransaction(QuoteInterface $vippsQuote)
     {
-        if ($vippsQuote->getOrderId()) {
-            $this->cancelOrder($vippsQuote->getOrderId());
+        $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+        if ($order) {
+            $this->cancelOrder($order);
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
@@ -234,9 +239,8 @@ class TransactionProcessor
      */
     private function processReservedTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
     {
-        if ($vippsQuote->getOrderId()) {
-            $order = $this->orderRepository->get($vippsQuote->getOrderId());
-        } else {
+        $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+        if (!$order) {
             $order = $this->placeOrder($vippsQuote, $transaction);
         }
 
@@ -260,8 +264,9 @@ class TransactionProcessor
      */
     private function processExpiredTransaction(QuoteInterface $vippsQuote)
     {
-        if ($vippsQuote->getOrderId()) {
-            $this->orderManagement->cancel($vippsQuote->getOrderId());
+        $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
+        if ($order) {
+            $this->cancelOrder($order);
         }
 
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_EXPIRED);
@@ -495,15 +500,14 @@ class TransactionProcessor
     }
 
     /**
-     * @param int $orderId
+     * @param $order
      *
      * @throws \Exception
      */
-    private function cancelOrder($orderId): void
+    private function cancelOrder($order): void
     {
-        $order = $this->orderRepository->get($orderId);
         if ($order->getState() === Order::STATE_NEW) {
-            $this->orderManagement->cancel($orderId);
+            $this->orderManagement->cancel($order->getEntityId());
         } else {
             $connection = $this->resourceConnection->getConnection();
             try {
@@ -511,7 +515,7 @@ class TransactionProcessor
 
                 $order->setState(Order::STATE_NEW);
                 $this->orderRepository->save($order);
-                $this->orderManagement->cancel($orderId);
+                $this->orderManagement->cancel($order->getEntityId());
 
                 $connection->commit();
             } catch (\Exception $e) {
