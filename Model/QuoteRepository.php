@@ -18,6 +18,7 @@ namespace Vipps\Payment\Model;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -126,18 +127,20 @@ class QuoteRepository implements QuoteRepositoryInterface
     /**
      * Load monitoring quote by quote.
      *
-     * @param $quoteId
+     * @param int $quoteId
+     * @param string $status
      *
-     * @return Quote
+     * @return QuoteInterface
      * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function loadNewByQuote($quoteId): QuoteInterface
+    public function loadNewByQuote($quoteId, $status = QuoteInterface::STATUS_NEW): QuoteInterface
     {
         $vippsQuote = $this->quoteFactory->create();
-        $this->quoteResource->loadNewByQuote($vippsQuote, $quoteId, 'quote_id');
+        $this->quoteResource->loadNewByQuote($vippsQuote, $quoteId, 'quote_id', $status);
 
         if (!$vippsQuote->getId()) {
-            throw NoSuchEntityException::singleField('quote_id', $quoteId);
+            throw NoSuchEntityException::doubleField('quote_id', $quoteId, 'status', $status);
         }
 
         return $vippsQuote;
