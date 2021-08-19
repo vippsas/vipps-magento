@@ -187,6 +187,7 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @param $reservedOrderId
      *
      * @return OrderInterface|null
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function tryLocateOrder($reservedOrderId): ?OrderInterface
     {

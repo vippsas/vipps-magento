@@ -72,7 +72,7 @@ class TransactionHandlerTest extends TestCase
      */
     private $transactionBuilder;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->objectManagerHelper = new ObjectManager($this);
 

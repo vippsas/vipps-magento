@@ -14,16 +14,6 @@ pipeline {
                 sh 'composer install --no-ansi'
             }
         }
-        stage('PHP Mess Detector') {
-            steps {
-                sh './vendor/bin/phpmd . ansi phpmd.xml'
-            }
-        }
-        stage('PHP CS') {
-            steps {
-                sh './vendor/bin/phpcs'
-            }
-        }
         stage('PHP Unit') {
             steps {
                 sh './vendor/bin/phpunit -c phpunit.xml'

@@ -125,6 +125,8 @@ class InitRegular implements ActionInterface
      * @param PaymentInformationManagementInterface $paymentInformationManagement
      * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
      * @param ManagerInterface $messageManager
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         ResultFactory $resultFactory,
