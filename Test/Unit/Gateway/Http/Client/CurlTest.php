@@ -80,7 +80,7 @@ class CurlTest extends TestCase
      */
     private $moduleMetadata;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->config = $this->getMockBuilder(ConfigInterface::class)
             ->disableOriginalConstructor()

@@ -139,6 +139,8 @@ class TransactionProcessor
      * @param PaymentDetailsProvider $paymentDetailsProvider
      * @param LoggerInterface $logger
      * @param ResourceConnection $resourceConnection
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -204,7 +206,9 @@ class TransactionProcessor
 
             return $transaction;
         } finally {
-            $this->releaseLock($lockName);
+            if (isset($lockName)) {
+                $this->releaseLock($lockName);
+            }
         }
     }
 
@@ -221,7 +225,6 @@ class TransactionProcessor
         if ($order) {
             $this->cancelOrder($order);
         }
-
         $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
         $this->quoteManagement->save($vippsQuote);
     }

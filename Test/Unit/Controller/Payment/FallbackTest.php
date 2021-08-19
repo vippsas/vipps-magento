@@ -16,14 +16,15 @@
 
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
+use Magento\Checkout\Model\Session;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Magento\Framework\App\Action\Context;
-use Magento\Checkout\Model\Session;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
@@ -32,14 +33,14 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
+use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Controller\Payment\Fallback;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 use Vipps\Payment\Gateway\Transaction\TransactionInfo;
@@ -48,12 +49,11 @@ use Vipps\Payment\Gateway\Transaction\TransactionSummary;
 use Vipps\Payment\Gateway\Transaction\UserDetails;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\LockManager;
+use Vipps\Payment\Model\OrderLocator;
 use Vipps\Payment\Model\QuoteLocator;
 use Vipps\Payment\Model\QuoteManagement;
 use Vipps\Payment\Model\QuoteUpdater;
 use Vipps\Payment\Model\TransactionProcessor;
-use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Payment\Gateway\ConfigInterface;
 
 /**
  * Class FallbackTestTest
@@ -61,83 +61,64 @@ use Magento\Payment\Gateway\ConfigInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyFields)
  */
-class FallbackTestTest extends TestCase
+class FallbackTest extends TestCase
 {
     /**
      * @var Fallback
      */
     private $action;
-
-    /**
-     * @var TransactionProcessor|MockObject
-     */
-    private $orderManagement;
-
     /**
      * @var Session|MockObject
      */
     private $checkoutSession;
-
     /**
      * @var ResultFactory|MockObject
      */
     private $resultFactory;
-
     /**
      * @var ResultInterface|MockObject
      */
     private $resultRedirect;
-
     /**
      * @var Quote|MockObject
      */
     private $quote;
-
     /**
      * @var Order|MockObject
      */
     private $order;
-
     /**
      * @var LoggerInterface|MockObject
      */
     private $logger;
-
     /**
      * @var RequestInterface|MockObject
      */
     private $request;
-
     /**
      * @var PaymentDetailsProvider|MockObject
      */
     private $paymentDetailsProvider;
-
     /**
      * @var ManagerInterface|MockObject
      */
     private $messageManagerMock;
-
     /**
      * @var ObjectManager
      */
     private $objectManagerHelper;
-
     /**
      * @var CartRepositoryInterface|MockObject
      */
     private $cartRepository;
-
     /**
      * @var MockObject
      */
     private $transactionProcessor;
-
     /**
      * @var MockObject
      */
     private $vippsQuoteRepository;
-
     /**
      * @var MockObject
      */
@@ -147,53 +128,52 @@ class FallbackTestTest extends TestCase
      * @var MockObject
      */
     private $vippsQuote;
-
     /**
      * @var TransactionBuilder
      */
     private $transactionBuilder;
-
     /**
      * @var MockObject
      */
     private $orderRepository;
-
     /**
      * @var MockObject
      */
     private $cartManagement;
-
     /**
      * @var MockObject
      */
     private $quoteLocator;
-
     /**
      * @var MockObject
      */
     private $processor;
-
     /**
      * @var MockObject
      */
     private $quoteUpdater;
-
     /**
      * @var MockObject
      */
     private $lockManager;
-
     /**
      * @var MockObject
      */
     private $config;
-
+    /**
+     * @var MockObject
+     */
+    private $configMock;
     /**
      * @var MockObject
      */
     private $quoteManagement;
+    /**
+     * @var
+     */
+    private $orderLocator;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->action = $this->createActionInstance();
     }
@@ -227,10 +207,15 @@ class FallbackTestTest extends TestCase
             ->method('getAuthToken')
             ->willReturn($token . ' make it invalid');
 
+        $this->configMock
+            ->expects($this->once())
+            ->method('getValue')
+            ->willReturn(true);
+
         $this->messageManagerMock->expects(self::once())
             ->method('addErrorMessage');
         $this->resultRedirect->expects(self::once())
-            ->method('setPath')->with('checkout/onepage/failure');
+            ->method('setPath')->with('checkout/cart');
 
         $this->action->execute();
     }
@@ -276,10 +261,11 @@ class FallbackTestTest extends TestCase
         $this->vippsQuote->method('getReservedOrderId')->willReturn('000000001');
         $this->vippsQuote->method('getOrderId')->willReturn('000000001');
 
-        $this->orderManagement
+        $this->quoteManagement
             ->expects($this->once())
-            ->method('cancel')
-            ->with('000000001');
+            ->method('save');
+
+        $this->order->expects($this->once())->method('getState')->willReturn('new');
 
         $this->lockManager->method('lock')->willReturn(true);
 
@@ -287,6 +273,11 @@ class FallbackTestTest extends TestCase
             ->expects($this->once())
             ->method('setStatus')
             ->with(QuoteInterface::STATUS_CANCELED);
+
+        $this->configMock
+            ->expects($this->any())
+            ->method('getValue')
+            ->willReturn(true);
 
         $this->expectRestoreQuote();
 
@@ -304,7 +295,6 @@ class FallbackTestTest extends TestCase
         $this->quote->expects($this->once())->method('setReservedOrderId')->with(null);
         $this->cartRepository->expects($this->once())->method('save');
 
-        $this->checkoutSession->expects($this->once())->method('setLastQuoteId');
         $this->checkoutSession->expects($this->once())->method('replaceQuote');
     }
 
@@ -406,38 +396,6 @@ class FallbackTestTest extends TestCase
     {
         $this->objectManagerHelper = new ObjectManager($this);
 
-        $context = $this->createContext();
-        $this->paymentDetailsProvider = $this->createPaymentDetailsProvider();
-        $this->checkoutSession = $this->createCheckoutSession();
-        $this->cartRepository = $this->createCartRepository();
-        $this->vippsQuoteRepository = $this->createVippsQuoteRepository();
-        $this->compliance = $this->getMockBuilder(Compliance::class)
-            ->setMethods(['process'])->disableOriginalConstructor()->getMock();
-        $this->orderManagement = $this->createOrderManagement();
-        $this->logger = $this->getMockBuilder(LoggerInterface::class)->getMockForAbstractClass();
-
-        $this->transactionProcessor = $this->createTransactionProcessor();
-
-        $this->action = $this->objectManagerHelper->getObject(Fallback::class, [
-            'context' => $context,
-            'paymentDetailsProvider' => $this->paymentDetailsProvider,
-            'checkoutSession' => $this->checkoutSession,
-            'transactionProcessor' => $this->transactionProcessor,
-            'cartRepository' => $this->cartRepository,
-            'vippsQuoteRepository' => $this->vippsQuoteRepository,
-            'compliance' => $this->compliance,
-            'orderManagement' => $this->orderManagement,
-            'logger' => $this->logger
-        ]);
-
-        return $this->action;
-    }
-
-    /**
-     * @return MockObject
-     */
-    private function createContext()
-    {
         $this->resultRedirect = $this->getMockBuilder(Redirect::class)
             ->setMethods(['setPath'])
             ->disableOriginalConstructor()
@@ -450,35 +408,47 @@ class FallbackTestTest extends TestCase
             ->method('create')
             ->with(ResultFactory::TYPE_REDIRECT)
             ->willReturn($this->resultRedirect);
-
         $this->request = $this->getMockBuilder(RequestInterface::class)
             ->setMethods(['getResultFactory', 'getRequest', 'getResponse', 'getParam', 'getRequestString'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
-
         $this->messageManagerMock = $this->getMockBuilder(ManagerInterface::class)
             ->setMethods(['addErrorMessage', 'addWarningMessage'])
             ->getMockForAbstractClass();
-        $context = $this->getMockBuilder(Context::class)
-            ->setMethods([
-                'getMessageManager',
-                'getRequest',
-                'getResponse',
-                'getResultFactory'
-            ])
-            ->disableOriginalConstructor()
-            ->getMock();
-        $context->expects(self::once())
-            ->method('getResultFactory')
-            ->willReturn($this->resultFactory);
-        $context->expects(self::once())
-            ->method('getRequest')
-            ->willReturn($this->request);
-        $context->expects(self::once())
-            ->method('getMessageManager')
-            ->willReturn($this->messageManagerMock);
 
-        return $context;
+        $this->paymentDetailsProvider = $this->createPaymentDetailsProvider();
+        $this->checkoutSession = $this->createCheckoutSession();
+        $this->cartRepository = $this->createCartRepository();
+        $this->vippsQuoteRepository = $this->createVippsQuoteRepository();
+
+        $this->compliance = $this->getMockBuilder(Compliance::class)
+            ->setMethods(['process'])->disableOriginalConstructor()->getMock();
+
+        $this->logger = $this->getMockBuilder(LoggerInterface::class)->getMockForAbstractClass();
+
+        $this->transactionProcessor = $this->createTransactionProcessor();
+
+        $this->configMock = $this->getMockBuilder(ConfigInterface::class)
+            ->setMethods(['getValue'])
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
+
+        $this->action = $this->objectManagerHelper->getObject(Fallback::class, [
+            'resultFactory' => $this->resultFactory,
+            'request' => $this->request,
+            'checkoutSession' => $this->checkoutSession,
+            'transactionProcessor' => $this->transactionProcessor,
+            'cartRepository' => $this->cartRepository,
+            'messageManager' => $this->messageManagerMock,
+            'vippsQuoteRepository' => $this->vippsQuoteRepository,
+            'orderLocator' => $this->orderLocator,
+            'compliance' => $this->compliance,
+            'orderManagement' => $this->createOrderManagement(),
+            'logger' => $this->logger,
+            'config' => $this->configMock
+        ]);
+
+        return $this->action;
     }
 
     /**
@@ -508,7 +478,8 @@ class FallbackTestTest extends TestCase
                 'setLastRealOrderId',
                 'setLastOrderStatus',
                 'replaceQuote',
-                'clearStorage'
+                'clearStorage',
+                'getQuoteId'
             ])
             ->getMock();
 
@@ -572,6 +543,10 @@ class FallbackTestTest extends TestCase
         $this->quoteLocator = $this->getMockBuilder(QuoteLocator::class)
             ->setMethods(['save'])->disableOriginalConstructor()->getMock();
 
+        $this->orderLocator = $this->getMockBuilder(OrderLocator::class)
+            ->setMethods(['get'])->disableOriginalConstructor()->getMock();
+        $this->orderLocator->method('get')->willReturn($this->order);
+
         $this->processor = $this->getMockBuilder(Order\Payment\Processor::class)
             ->setMethods(['save'])->disableOriginalConstructor()->getMock();
 
@@ -582,7 +557,7 @@ class FallbackTestTest extends TestCase
             ->setMethods(['lock', 'unlock'])->disableOriginalConstructor()->getMock();
 
         $this->config = $this->getMockBuilder(ConfigInterface::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMockForAbstractClass();
+            ->setMethods(['save', 'getValue'])->disableOriginalConstructor()->getMockForAbstractClass();
 
         $this->quoteManagement = $this->getMockBuilder(QuoteManagement::class)
             ->setMethods(['save', 'reload'])->disableOriginalConstructor()->getMockForAbstractClass();
@@ -600,8 +575,10 @@ class FallbackTestTest extends TestCase
                 'lockManager' => $this->lockManager,
                 'config' => $this->config,
                 'quoteManagement' => $this->quoteManagement,
-                'orderManagement' => $this->orderManagement,
-                'logger' => $this->logger
+                'orderManagement' => $this->createOrderManagement(),
+                'orderLocator' => $this->orderLocator,
+                'logger' => $this->logger,
+                'paymentDetailsProvider' => $this->paymentDetailsProvider
             ]
         );
 

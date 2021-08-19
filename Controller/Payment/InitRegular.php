@@ -38,6 +38,7 @@ use Vipps\Payment\Model\Method\Vipps;
 /**
  * Class InitRegular
  * @package Vipps\Payment\Controller\Payment
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class InitRegular implements ActionInterface
 {

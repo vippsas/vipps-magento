@@ -43,6 +43,7 @@ use Vipps\Payment\Model\QuoteLocator;
 /**
  * Class ShippingDetails
  * @package Vipps\Payment\Controller\Payment
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
 {
@@ -115,6 +116,8 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
      * @param ShippingMethodValidator $shippingMethodValidator
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         ResultFactory $resultFactory,

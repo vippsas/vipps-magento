@@ -105,7 +105,7 @@ class TokenProviderTest extends TestCase
      */
     private $scopeResolver;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->resourceConnection = $this->getMockBuilder(ResourceConnection::class)
             ->disableOriginalConstructor()

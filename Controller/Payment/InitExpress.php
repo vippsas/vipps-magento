@@ -39,6 +39,7 @@ use Vipps\Payment\Model\Method\Vipps;
 /**
  * Class InitExpress
  * @package Vipps\Payment\Controller\Payment
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class InitExpress implements ActionInterface
 {
@@ -93,7 +94,7 @@ class InitExpress implements ActionInterface
     private $logger;
 
     /**
-     * InitExpress1 constructor.
+     * InitExpress constructor.
      *
      * @param ResultFactory $resultFactory
      * @param SessionManagerInterface $checkoutSession
@@ -105,6 +106,8 @@ class InitExpress implements ActionInterface
      * @param ManagerInterface $messageManager
      * @param CheckoutHelper $checkoutHelper
      * @param LoggerInterface $logger
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         ResultFactory $resultFactory,

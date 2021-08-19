@@ -37,6 +37,7 @@ use Laminas\Http\Response as Response;
 /**
  * Class Callback
  * @package Vipps\Payment\Controller\Payment
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Callback implements ActionInterface, CsrfAwareActionInterface
 {

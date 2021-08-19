@@ -168,6 +168,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
     /**
      * @return ResponseInterface|Redirect|ResultInterface
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function execute()
     {
@@ -193,6 +194,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         } finally {
             $vippsQuote = $this->getVippsQuote(true);
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
+
             $quoteCouldBeRestored = $transaction
                 && ($transaction->transactionWasCancelled() || $transaction->isTransactionExpired());
             $order = $this->getOrder();
@@ -309,13 +311,12 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      */
     private function storeLastOrder(OrderInterface $order)
     {
-        $this->checkoutSession
-            ->clearStorage()
-            ->setLastQuoteId($order->getQuoteId())
-            ->setLastSuccessQuoteId($order->getQuoteId())
-            ->setLastOrderId($order->getEntityId())
-            ->setLastRealOrderId($order->getIncrementId())
-            ->setLastOrderStatus($order->getStatus());
+        $this->checkoutSession->clearStorage();
+        $this->checkoutSession->setLastQuoteId($order->getQuoteId());
+        $this->checkoutSession->setLastSuccessQuoteId($order->getQuoteId());
+        $this->checkoutSession->setLastOrderId($order->getEntityId());
+        $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
+        $this->checkoutSession->setLastOrderStatus($order->getStatus());
     }
 
     /**

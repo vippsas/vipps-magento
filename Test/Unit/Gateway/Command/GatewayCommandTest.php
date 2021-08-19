@@ -102,7 +102,7 @@ class GatewayCommandTest extends TestCase
      */
     private $objectManagerHelper;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->transferFactory = $this->getMockBuilder(TransferFactoryInterface::class)
             ->disableOriginalConstructor()

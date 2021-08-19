@@ -50,7 +50,7 @@ class ModuleMetadataTest extends TestCase
      */
     private $module;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->resource = $this->getMockBuilder(ResourceInterface::class)
             ->disableOriginalConstructor()

@@ -16,12 +16,10 @@
 
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
-use Magento\Quote\Model\Quote\Address;
-use Magento\Framework\App\Action\Context;
+use Laminas\Http\Response;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -30,16 +28,15 @@ use Magento\Quote\Api\Data\AddressInterfaceFactory;
 use Magento\Quote\Api\Data\ShippingMethodInterface;
 use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Address;
 use PHPUnit\Framework\TestCase;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Controller\Payment\ShippingDetails;
 use Vipps\Payment\Model\Gdpr\Compliance;
+use Vipps\Payment\Model\QuoteLocator;
 use Vipps\Payment\Model\Quote\AddressUpdater;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
-use Vipps\Payment\Model\QuoteLocator;
-use Vipps\Payment\Model\TransactionProcessor;
-use Laminas\Http\Response;
 
 /**
  * Class ShippingDetailsTest
@@ -130,7 +127,7 @@ class ShippingDetailsTest extends TestCase
      */
     private $shippingMethod;
 
-    protected function setUp() //@codingStandardsIgnoreLine
+    protected function setUp(): void //@codingStandardsIgnoreLine
     {
         $this->cartRepository = $this->getMockBuilder(CartRepositoryInterface::class)
             ->disableOriginalConstructor()
@@ -177,21 +174,10 @@ class ShippingDetailsTest extends TestCase
             ->setMethods(['create'])
             ->getMock();
 
-        $context = $this->getMockBuilder(Context::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $context->expects(self::once())
-            ->method('getResultFactory')
-            ->willReturn($this->resultFactory);
-        $context->expects(self::once())
-            ->method('getRequest')
-            ->willReturn($this->request);
-
         $this->response = $this->getMockBuilder(ResultInterface::class)
             ->setMethods(['setData', 'setHttpResponseCode'])
             ->getMockForAbstractClass();
-        $this->resultFactory->expects(self::once())
+        $this->resultFactory
             ->method('create')
             ->with(ResultFactory::TYPE_JSON)
             ->willReturn($this->response);
@@ -203,6 +189,10 @@ class ShippingDetailsTest extends TestCase
         $this->logger = $this->getMockBuilder(LoggerInterface::class)
             ->setMethods(['critical', 'debug'])
             ->getMockForAbstractClass();
+
+        $this->addressFactory
+            ->method('create')
+            ->willReturn($this->address);
 
         $this->addressUpdater = $this->getMockBuilder(AddressUpdater::class)
             ->disableOriginalConstructor()
@@ -221,7 +211,8 @@ class ShippingDetailsTest extends TestCase
 
         $managerHelper = new ObjectManager($this);
         $this->action = $managerHelper->getObject(ShippingDetails::class, [
-            'context' => $context,
+            'resultFactory' => $this->resultFactory,
+            'request' => $this->request,
             'cartRepository' => $this->cartRepository,
             'quoteLocator' => $this->quoteLocator,
             'serializer' => $this->serializer,
@@ -244,7 +235,7 @@ class ShippingDetailsTest extends TestCase
         $this->request->method('getParams')
             ->willReturn($params);
 
-        $this->quoteLocator->expects(self::once())
+        $this->quoteLocator->expects(self::never())
             ->method('get')
             ->with($reservedOrderId)
             ->willReturn($this->quote);
@@ -260,11 +251,6 @@ class ShippingDetailsTest extends TestCase
             ->method('unserialize')
             ->with($content)
             ->willThrowException($exception);
-
-        $this->logger->expects(self::once())
-            ->method('critical')
-            ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
-            ->willReturnSelf();
 
         $errorStatus = Response::STATUS_CODE_500;
         $errorMessage2 = __('An error occurred during Shipping Details processing.');
@@ -307,21 +293,10 @@ class ShippingDetailsTest extends TestCase
         $this->request->method('getParams')
             ->willReturn($params);
 
-        $errorMessage1 = 'Requested Quote does not exist';
-        $this->quoteLocator->expects(self::once())
-            ->method('get')
-            ->with($reservedOrderId)
-            ->willThrowException(new LocalizedException(__($errorMessage1)));
-
-        $this->logger->expects(self::once())
-            ->method('critical')
-            ->with('Reserved Order id: ' . $reservedOrderId . ' . Exception message: ' . $errorMessage1)
-            ->willReturnSelf();
-
         $errorStatus = Response::STATUS_CODE_500;
         $responseData = [
             'status' => $errorStatus,
-            'message' => $errorMessage1
+            'message' => \__('An error occurred during Shipping Details processing.')
         ];
         $this->response->expects(self::once())
             ->method('setHttpResponseCode')
@@ -334,7 +309,7 @@ class ShippingDetailsTest extends TestCase
             ->willReturnSelf();
 
         $content = 'some bad content';
-        $this->request->expects(self::once())
+        $this->request->expects(self::exactly(2))
             ->method('getContent')
             ->willReturn($content);
 
@@ -368,7 +343,7 @@ class ShippingDetailsTest extends TestCase
             ->willReturn($this->quote);
 
         $unSerializedValue =
-            'a:6:{s:8:"postCode";s:4:"1234";s:12:"addressLine1";s:4:"city";s:4:"Oslo";s:10:"country_id";s:2:"NO";}';
+            '{a:6:{s:8:"postCode";s:4:"1234";s:12:"addressLine1";s:4:"city";s:4:"Oslo";s:10:"country_id";s:2:"NO";}';
         $this->request->expects(self::exactly(2))
             ->method('getContent')
             ->willReturn($unSerializedValue);
@@ -386,19 +361,14 @@ class ShippingDetailsTest extends TestCase
             ->with($unSerializedValue)
             ->willReturn($serializedValue);
 
-        $this->addressFactory->expects(self::once())
+        $this->addressFactory
             ->method('create')
             ->willReturn($this->address);
 
         $quoteId = 1111;
-        $this->quote->expects(self::exactly(2))
+        $this->quote->expects(self::exactly(1))
             ->method('getId')
             ->willReturn($quoteId);
-
-        $this->cartRepository->expects(self::once())
-            ->method('get')
-            ->with($quoteId)
-            ->willReturn($this->quote);
 
         $this->addressUpdater->expects(self::once())
             ->method('fromSourceAddress')
