@@ -178,6 +178,10 @@ class CaptureCommand extends GatewayCommand
         $amount = $this->subjectReader->readAmount($commandSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
 
+        if ($amount === 0) {
+            return true;
+        }
+
         $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
         $transaction = $this->paymentDetailsProvider->get($orderId);
 
