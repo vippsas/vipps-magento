@@ -511,7 +511,7 @@ class TransactionProcessor
     {
         if ($order->getState() === Order::STATE_NEW) {
             $this->orderManagement->cancel($order->getEntityId());
-        } else {
+        } elseif ($order->getState() === Order::STATE_PAYMENT_REVIEW) {
             $connection = $this->resourceConnection->getConnection();
             try {
                 $connection->beginTransaction();
