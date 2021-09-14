@@ -380,6 +380,7 @@ class TransactionProcessor
         $order = $this->orderRepository->get($orderId);
 
         $quote->setReservedOrderId(null);
+        $quote->setIsActive(false);
         $this->cartRepository->save($quote);
 
         return $order;
