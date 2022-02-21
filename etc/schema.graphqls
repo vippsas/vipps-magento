@@ -6,7 +6,7 @@ type Mutation {
 }
 
 input vippsInitPaymentInput {
-    order_number: String!
+    cart_id: String!
     fallback_url: String
 }
 

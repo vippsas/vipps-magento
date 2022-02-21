@@ -16,14 +16,12 @@
 namespace Vipps\Payment\GraphQl\Resolver;
 
 use Magento\Framework\GraphQl\Config\Element\Field;
-use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
-use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
-use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
-use Vipps\Payment\Model\OrderLocator;
 
 class InitPayment implements ResolverInterface
 {
@@ -31,46 +29,56 @@ class InitPayment implements ResolverInterface
      * @var CommandManagerInterface
      */
     private $commandManager;
-    
+
     /**
-     * @var OrderLocator
+     * @var MaskedQuoteIdToQuoteIdInterface
      */
-    private $orderLocator;
+    private $maskedCartId;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
 
     /**
      * InitPayment constructor.
      *
      * @param CommandManagerInterface $commandManager
-     * @param OrderLocator $orderLocator
+     * @param MaskedQuoteIdToQuoteIdInterface $maskedCartId
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
         CommandManagerInterface $commandManager,
-        OrderLocator $orderLocator
+        MaskedQuoteIdToQuoteIdInterface $maskedCartId,
+        CartRepositoryInterface $cartRepository
     ) {
         $this->commandManager = $commandManager;
-        $this->orderLocator = $orderLocator;
+        $this->maskedCartId = $maskedCartId;
+        $this->cartRepository = $cartRepository;
     }
     public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
     {
-        $responseData = [];
+        $redirectUrl = null;
 
-        $incrementId = $args['input']['order_number'] ?? null;
-        $fallbackUrl = $args['input']['fallback_url'] ?? null;
-        if ($incrementId) {
-            $order = $this->orderLocator->get($incrementId);
-            if ($order) {
-                $responseData = $this->commandManager->initiatePayment(
-                    $order->getPayment(),
-                    [
-                        'amount' => $order->getGrandTotal(),
-                        InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
-                            InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
-                        'fallback_url' => $fallbackUrl
-                    ]
-                );
-            }
+        $maskedCartId = $args['input']['cart_id'] ?? '';
+        $fallbackUrl = $args['input']['fallback_url'] ?? '';
+
+        $cartId = $this->maskedCartId->execute($maskedCartId);
+        if ($cartId) {
+            $quote = $this->cartRepository->get($cartId);
+            $responseData = $this->commandManager->initiatePayment(
+                $quote->getPayment(),
+                [
+                    'amount' => $quote->getGrandTotal(),
+                    InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
+                        InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
+                    'fallback_url' => $fallbackUrl
+                ]
+            );
+
+            $redirectUrl = $responseData['url'] ?? null;
         }
 
-        return ['url' => $responseData['url']];
+        return ['url' => $redirectUrl];
     }
 }
