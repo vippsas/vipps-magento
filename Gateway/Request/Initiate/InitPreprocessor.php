@@ -22,10 +22,10 @@ use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
 /**
- * Class OrderIdBuilder
+ * Class InitPreprocessor
  * @package Vipps\Payment\Gateway\Request\Initiate
  */
-class OrderIdBuilder implements InitiateBuilderInterface
+class InitPreprocessor implements InitiateBuilderInterface
 {
     /**
      * @var SubjectReader
@@ -66,10 +66,15 @@ class OrderIdBuilder implements InitiateBuilderInterface
         /** @var Payment $payment */
         $orderAdapter = $paymentDO->getOrder();
 
-        if (!$orderAdapter->getOrderIncrementId() && $orderAdapter instanceof QuoteAdapter) {
+        if ($orderAdapter instanceof QuoteAdapter) {
             /** @var \Magento\Quote\Model\Quote $quote */
             $quote = $this->cartRepository->get($orderAdapter->getId());
-            $quote->reserveOrderId();
+
+            $quote->getPayment()->setMethod('vipps');
+            
+            if (!$quote->getReservedOrderId()) {
+                $quote->reserveOrderId();
+            }
         }
 
         return [];
