@@ -15,77 +15,63 @@
  */
 namespace Vipps\Payment\Gateway\Request\Initiate;
 
-use Magento\Payment\Helper\Formatter;
+use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
+use Magento\Payment\Gateway\Data\Quote\QuoteAdapter;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
 /**
- * Class Transaction
- * @package Vipps\Payment\Gateway\Request\InitiateData
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * Class OrderIdBuilder
+ * @package Vipps\Payment\Gateway\Request\Initiate
  */
-class TransactionDataBuilder implements InitiateBuilderInterface
+class OrderIdBuilder implements InitiateBuilderInterface
 {
-    use Formatter;
-
-    /**
-     * Transaction block name
-     *
-     * @var string
-     */
-    private static $transaction = 'transaction';
-
-    /**
-     * Id which uniquely identifies a payment. Maximum length is 30 alphanumeric characters.
-     *
-     * @var string
-     */
-    private static $orderId = 'orderId';
-
-    /**
-     * Amount in order. 32 Bit Integer (2147483647)
-     *
-     * @var string
-     */
-    private static $amount = 'amount';
-
     /**
      * @var SubjectReader
      */
     private $subjectReader;
 
     /**
-     * TransactionDataBuilder constructor.
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
+     * MerchantDataBuilder constructor.
      *
      * @param SubjectReader $subjectReader
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
-        SubjectReader $subjectReader
+        SubjectReader $subjectReader,
+        CartRepositoryInterface $cartRepository
     ) {
         $this->subjectReader = $subjectReader;
+        $this->cartRepository = $cartRepository;
     }
 
     /**
      * Get merchant related data for Initiate payment request.
      *
      * @param array $buildSubject
+     *
      * @return array
+     * @throws \Exception
      */
     public function build(array $buildSubject)
     {
+        /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         /** @var Payment $payment */
-        $payment = $paymentDO->getPayment();
         $orderAdapter = $paymentDO->getOrder();
 
-        $amount = $this->subjectReader->readAmount($buildSubject);
-        $amount = (int)round($this->formatPrice($amount) * 100);
+        if (!$orderAdapter->getOrderIncrementId() && $orderAdapter instanceof QuoteAdapter) {
+            /** @var \Magento\Quote\Model\Quote $quote */
+            $quote = $this->cartRepository->get($orderAdapter->getId());
+            $quote->reserveOrderId();
+        }
 
-        return [
-            self::$transaction => [
-                self::$orderId => $orderAdapter->getOrderIncrementId(),
-                self::$amount => $amount
-            ]
-        ];
+        return [];
     }
 }

@@ -142,6 +142,7 @@
     <virtualType name="VippsInitiateRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
+                <item name="orderIdBuilder" xsi:type="string">Vipps\Payment\Gateway\Request\Initiate\OrderIdBuilder</item>
                 <item name="customerInfo" xsi:type="string">Vipps\Payment\Gateway\Request\Initiate\CustomerDataBuilder</item>
                 <item name="merchantInfo" xsi:type="string">Vipps\Payment\Gateway\Request\Initiate\MerchantDataBuilder</item>
                 <item name="merchantSerialNumber" xsi:type="string">Vipps\Payment\Gateway\Request\MerchantDataBuilder</item>
