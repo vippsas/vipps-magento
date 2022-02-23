@@ -1,8 +1,9 @@
 type Query {
-    vippsGetPaymentDetails(order_number: String!): VippsPaymentDetails @resolver (class: "Vipps\\Payment\\GraphQl\\Resolver\\GetPaymentDetails") @doc(description:"Returns information about Vipps Payment") @cache(cacheable: false)
+    vippsGetPaymentDetails(order_number: String!): VippsPaymentDetails @resolver (class: "Vipps\\Payment\\GraphQl\\Resolver\\GetPaymentDetails") @doc(description: "Returns information about Vipps Payment") @cache(cacheable: false)
 }
 type Mutation {
-    vippsInitPayment(input: vippsInitPaymentInput): vippsInitPaymentOutput @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\InitPayment") @doc(description:"Initialize Vipps Payment.")
+    vippsInitPayment(input: vippsInitPaymentInput): vippsInitPaymentOutput @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\InitPayment") @doc(description: "Initialize Vipps Payment")
+    vippsActivateCart(order_number: String!): String @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\ActivateCart") @doc(description: "Activate Cart")
 }
 
 input vippsInitPaymentInput {
@@ -18,4 +19,5 @@ type VippsPaymentDetails {
     order_number: String,
     cancelled: Boolean,
     reserved: Boolean
+    restore_cart: Boolean
 }

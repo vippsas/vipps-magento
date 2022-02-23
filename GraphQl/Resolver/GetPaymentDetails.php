@@ -21,23 +21,31 @@ use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Magento\Payment\Gateway\ConfigInterface;
 
 class GetPaymentDetails implements ResolverInterface
 {
     /**
-     * @var PaymentDetailsProvider 
+     * @var PaymentDetailsProvider
      */
     private $detailsProvider;
+    /**
+     * @var ConfigInterface
+     */
+    private $config;
 
     /**
      * GetPaymentDetails constructor.
      *
      * @param PaymentDetailsProvider $detailsProvider
+     * @param ConfigInterface $config
      */
     public function __construct(
-        PaymentDetailsProvider $detailsProvider
+        PaymentDetailsProvider $detailsProvider,
+        ConfigInterface $config
     ) {
         $this->detailsProvider = $detailsProvider;
+        $this->config = $config;
     }
 
     public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
@@ -45,13 +53,19 @@ class GetPaymentDetails implements ResolverInterface
         $result = [];
         $incrementId = $args['order_number'] ?? null;
 
+        $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
+
         if ($incrementId) {
             $transaction = $this->detailsProvider->get($incrementId);
             if ($transaction) {
+                $quoteCouldBeRestored = $transaction->transactionWasCancelled()
+                    || $transaction->isTransactionExpired();
+
                 $result = [
                     'order_number' => $transaction->getOrderId(),
                     'cancelled' => $transaction->transactionWasCancelled() || $transaction->transactionWasVoided(),
-                    'reserved' => $transaction->transactionWasReserved()
+                    'reserved' => $transaction->transactionWasReserved(),
+                    'restore_cart' => $cartPersistence && $quoteCouldBeRestored
                 ];
             }
         }
