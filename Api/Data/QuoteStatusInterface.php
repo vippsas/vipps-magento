@@ -45,6 +45,11 @@ interface QuoteStatusInterface
     /**
      * @const string
      */
+    const STATUS_CANCEL_FAILED = 'cancel_failed';
+
+    /**
+     * @const string
+     */
     const STATUS_EXPIRED = 'expired';
 
     /**

@@ -39,6 +39,11 @@ class CancelQuoteByAttempts
      * Order collection page size
      */
     const COLLECTION_PAGE_SIZE = 250;
+    
+    /**
+     * @var string
+     */
+    const DEFAULT_ATTEMPTS_MAX_COUNT = 3;
 
     /**
      * @var LoggerInterface
@@ -133,13 +138,15 @@ class CancelQuoteByAttempts
     {
         /** @var VippsQuoteCollection $collection */
         $collection = $this->vippsQuoteCollectionFactory->create();
+        
+        $attemptsMaxCount = \max(self::DEFAULT_ATTEMPTS_MAX_COUNT, $this->cancellationConfig->getAttemptsMaxCount());
 
         $collection
             ->setPageSize(self::COLLECTION_PAGE_SIZE)
             ->setCurPage($currentPage)
             ->addFieldToFilter(
                 'attempts',
-                ['gteq' => $this->cancellationConfig->getAttemptsMaxCount()]
+                ['gteq' => $attemptsMaxCount]
             );
 
         // Filter processing cancelled quotes.
