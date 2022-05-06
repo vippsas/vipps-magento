@@ -64,7 +64,7 @@ class Debug extends Base
      *
      * @return bool
      */
-    public function isHandling(array $record)
+    public function isHandling(array $record): bool
     {
         if ($this->config && (bool)$this->config->getValue('debug')) {
             return parent::isHandling($record);
