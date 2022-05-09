@@ -110,7 +110,7 @@ For information about how to find the above values, see the [Vipps Developer Por
 ![Screenshot of Vipps Additional Settings](docs/images/vipps_additional_settings.png)
 
 
-**Process type** - wether cancel quote automatically or not.  
+**Process type** - whether cancel quote automatically or not.  
 **Enable Partial Void** - allow cancellation for captured(not refunded) transaction (mostly used to cancel order item).
 
 # Quote Monitoring
