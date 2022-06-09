@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2020 Vipps
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+  ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+  ~ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+  ~ and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+  ~ TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+  ~ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  ~ IN THE SOFTWARE.
+  -->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="vipps_payment_jwt" resource="default" engine="innodb" comment="JWT access token">
+        <column xsi:type="int" name="token_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Token ID"/>
+        <column xsi:type="int" name="scope_id" padding="11" unsigned="false" nullable="false" identity="false" default="0" comment="Config Scope Id"/>
+        <column xsi:type="varchar" name="token_type" nullable="false" length="16" default="Bearer" comment="Token Type (default Bearer)"/>
+        <column xsi:type="int" name="expires_in" padding="11" unsigned="false" nullable="true" identity="false" comment="Token expiry duration in seconds"/>
+        <column xsi:type="int" name="ext_expires_in" padding="11" unsigned="false" nullable="false" identity="false" default="0" comment="Any extra expiry time. This is zero only"/>
+        <column xsi:type="int" name="expires_on" padding="11" unsigned="false" nullable="true" identity="false" comment="Token expiry time in epoch time format"/>
+        <column xsi:type="int" name="not_before" padding="11" unsigned="false" nullable="true" identity="false" comment="Token creation time in epoch time format"/>
+        <column xsi:type="varchar" name="resource" nullable="true" length="255" comment="A common resource object that comes by default. Not used in token validation"/>
+        <column xsi:type="text" name="access_token" nullable="false" comment="The actual access token that needs to be used in request header"/>
+        <column xsi:type="varchar" name="scope" nullable="false" length="8" default="default" comment="Scope"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="token_id"/>
+        </constraint>
+    </table>
+    <table name="vipps_profiling" resource="default" engine="innodb" comment="vipps_profiling">
+        <column xsi:type="int" name="entity_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <column xsi:type="varchar" name="increment_id" nullable="true" length="32" comment="Increment Id"/>
+        <column xsi:type="varchar" name="status_code" nullable="true" length="4" comment="Status Code"/>
+        <column xsi:type="varchar" name="request_type" nullable="true" length="50" comment="Request Type"/>
+        <column xsi:type="text" name="request" nullable="true" comment="Request"/>
+        <column xsi:type="text" name="response" nullable="true" comment="Response"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+    </table>
+    <table name="vipps_quote" resource="default" engine="innodb" comment="vipps_quote">
+        <column xsi:type="int" name="entity_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <column xsi:type="int" name="quote_id" padding="10" unsigned="true" nullable="true" identity="false" comment="Quote Id"/>
+        <column xsi:type="varchar" name="reserved_order_id" nullable="false" length="32" default="" comment="Order Increment Id"/>
+        <column xsi:type="int" name="attempts" padding="11" unsigned="false" nullable="false" identity="false" default="0" comment="Attempts Number"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created at"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated at"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="20" default="new" comment="Status"/>
+        <column xsi:type="smallint" name="store_id" padding="5" unsigned="false" nullable="false" identity="false" default="0" comment="Store ID"/>
+        <column xsi:type="int" name="order_id" padding="10" unsigned="true" nullable="true" identity="false" comment="Order Id"/>
+        <column xsi:type="varchar" name="auth_token" nullable="true" length="32" comment="Auth Token"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="VIPPS_QUOTE_QUOTE_ID_QUOTE_ENTITY_ID" table="vipps_quote" column="quote_id" referenceTable="quote" referenceColumn="entity_id" onDelete="SET NULL"/>
+        <constraint xsi:type="unique" referenceId="VIPPS_QUOTE_RESERVED_ORDER_ID">
+            <column name="reserved_order_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="VIPPS_QUOTE_ORDER_ID">
+            <column name="order_id"/>
+        </constraint>
+        <index referenceId="VIPPS_QUOTE_QUOTE_ID" indexType="btree">
+            <column name="quote_id"/>
+        </index>
+    </table>
+    <table name="vipps_quote_attempt" resource="default" engine="innodb" comment="vipps_quote_attempt">
+        <column xsi:type="int" name="entity_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <column xsi:type="int" name="parent_id" padding="10" unsigned="true" nullable="false" identity="false" comment="Vipps Quote Id"/>
+        <column xsi:type="text" name="message" nullable="true" comment="Message"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created at"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="VIPPS_QUOTE_ATTEMPTS_PARENT_ID_VIPPS_QUOTE_ENTITY_ID" table="vipps_quote_attempt" column="parent_id" referenceTable="vipps_quote" referenceColumn="entity_id" onDelete="CASCADE"/>
+    </table>
+</schema>
