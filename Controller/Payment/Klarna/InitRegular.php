@@ -201,8 +201,8 @@ class InitRegular implements ActionInterface
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
-                    InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
+                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
             ]
         );
     }
@@ -215,9 +215,6 @@ class InitRegular implements ActionInterface
      */
     private function placeOrder(CartInterface $quote): void
     {
-        $quote->getPayment()
-            ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
-
         $this->setCheckoutMethod($quote);
 
         $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute((int)$quote->getId());
@@ -228,15 +225,12 @@ class InitRegular implements ActionInterface
                     $quote->getPayment()
                 );
                 break;
-            case Onepage::METHOD_GUEST:
+            default:
                 $this->guestPaymentInformationManagement->savePaymentInformationAndPlaceOrder(
                     $maskedQuoteId,
                     $quote->getCustomerEmail(),
                     $quote->getPayment()
                 );
-                break;
-            case Onepage::METHOD_REGISTER:
-            default:
                 break;
         }
     }

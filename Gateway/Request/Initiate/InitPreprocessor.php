@@ -18,8 +18,9 @@ namespace Vipps\Payment\Gateway\Request\Initiate;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Payment\Gateway\Data\Quote\QuoteAdapter;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Model\Quote\Payment;
+use Magento\Quote\Model\Quote\Payment as QuotePayment;
 use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Model\Method\Vipps;
 
 /**
  * Class InitPreprocessor
@@ -63,18 +64,18 @@ class InitPreprocessor implements InitiateBuilderInterface
     {
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
-        /** @var Payment $payment */
-        $orderAdapter = $paymentDO->getOrder();
+        $payment = $paymentDO->getPayment();
 
-        if ($orderAdapter instanceof QuoteAdapter) {
-            /** @var \Magento\Quote\Model\Quote $quote */
-            $quote = $this->cartRepository->get($orderAdapter->getId());
+        if ($payment instanceof QuotePayment) {
+            $payment->setMethod('vipps');
 
-            $quote->getPayment()->setMethod('vipps');
-            
+            $quote = $payment->getQuote();
             if (!$quote->getReservedOrderId()) {
                 $quote->reserveOrderId();
             }
+
+            $quote->getPayment()
+                ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, $buildSubject[Vipps::METHOD_TYPE_KEY] ?? null);
         }
 
         return [];

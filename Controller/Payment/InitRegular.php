@@ -112,10 +112,6 @@ class InitRegular implements ActionInterface
             // init Vipps payment and retrieve redirect url
             $responseData = $this->initiatePayment($quote);
 
-            $quote->getPayment()
-                ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
-
-            $this->cartRepository->save($quote);
             $response->setData($responseData);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
@@ -143,8 +139,8 @@ class InitRegular implements ActionInterface
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
-                    InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
+                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
             ]
         );
     }
