@@ -201,8 +201,8 @@ class InitRegular implements ActionInterface
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
-                    InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
+                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
             ]
         );
     }
@@ -215,28 +215,22 @@ class InitRegular implements ActionInterface
      */
     private function placeOrder(CartInterface $quote): void
     {
-        $quote->getPayment()
-            ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_REGULAR_CHECKOUT);
-
         $this->setCheckoutMethod($quote);
 
         $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute((int)$quote->getId());
-        switch ($quote->getCheckoutMethod()) {
+        switch ($quote->getCheckoutMethod(true)) {
             case Onepage::METHOD_CUSTOMER:
                 $this->paymentInformationManagement->savePaymentInformationAndPlaceOrder(
-                    $maskedQuoteId,
+                    $quote->getId(),
                     $quote->getPayment()
                 );
                 break;
-            case Onepage::METHOD_GUEST:
+            default:
                 $this->guestPaymentInformationManagement->savePaymentInformationAndPlaceOrder(
                     $maskedQuoteId,
                     $quote->getCustomerEmail(),
                     $quote->getPayment()
                 );
-                break;
-            case Onepage::METHOD_REGISTER:
-            default:
                 break;
         }
     }
@@ -246,7 +240,7 @@ class InitRegular implements ActionInterface
      */
     private function setCheckoutMethod(Quote $quote)
     {
-        if (!$quote->getCheckoutMethod()) {
+        if (!$quote->getCheckoutMethod(true)) {
             if ($this->customerSession->isLoggedIn()) {
                 $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
             } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
