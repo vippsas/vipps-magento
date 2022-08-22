@@ -218,7 +218,7 @@ class InitRegular implements ActionInterface
         $this->setCheckoutMethod($quote);
 
         $maskedQuoteId = $this->quoteIdToMaskedQuoteId->execute((int)$quote->getId());
-        switch ($quote->getCheckoutMethod()) {
+        switch ($quote->getCheckoutMethod(true)) {
             case Onepage::METHOD_CUSTOMER:
                 $this->paymentInformationManagement->savePaymentInformationAndPlaceOrder(
                     $quote->getId(),
