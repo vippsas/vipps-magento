@@ -198,7 +198,7 @@ class InitExpress implements ActionInterface
      */
     private function setCheckoutMethod($quote): void
     {
-        if (!$quote->getCheckoutMethod()) {
+        if (!$quote->getCheckoutMethod(true)) {
             if ($this->customerSession->isLoggedIn()) {
                 $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
             } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {

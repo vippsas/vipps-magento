@@ -221,7 +221,7 @@ class InitRegular implements ActionInterface
         switch ($quote->getCheckoutMethod()) {
             case Onepage::METHOD_CUSTOMER:
                 $this->paymentInformationManagement->savePaymentInformationAndPlaceOrder(
-                    $maskedQuoteId,
+                    $quote->getId(),
                     $quote->getPayment()
                 );
                 break;
@@ -240,7 +240,7 @@ class InitRegular implements ActionInterface
      */
     private function setCheckoutMethod(Quote $quote)
     {
-        if (!$quote->getCheckoutMethod()) {
+        if (!$quote->getCheckoutMethod(true)) {
             if ($this->customerSession->isLoggedIn()) {
                 $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
             } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
