@@ -170,27 +170,35 @@ class InitExpress implements ActionInterface
      */
     private function initiatePayment()
     {
-        $responseData = null;
-
         $quote = $this->checkoutSession->getQuote();
 
-        $quote->getPayment()
-            ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_EXPRESS_CHECKOUT);
+        $this->setCheckoutMethod($quote);
+        if ($quote->getCheckoutMethod() === Onepage::METHOD_REGISTER) {
+            throw new LocalizedException(__('Sorry, guest checkout is not available.'));
+        }
 
         $shippingAddress = $quote->getShippingAddress();
-        $shippingAddress->setShippingMethod(null);
+        $shippingAddress->setShippingMethod('');
         $quote->collectTotals();
 
-        $responseData = $this->commandManager->initiatePayment(
+        $quote->setIsActive(false);
+
+        return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY
-                => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
+                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
             ]
         );
+    }
 
-        if (!$quote->getCheckoutMethod()) {
+    /**
+     * @param $quote
+     */
+    private function setCheckoutMethod($quote): void
+    {
+        if (!$quote->getCheckoutMethod(true)) {
             if ($this->customerSession->isLoggedIn()) {
                 $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
             } elseif ($this->checkoutHelper->isAllowedGuestCheckout($quote)) {
@@ -199,11 +207,6 @@ class InitExpress implements ActionInterface
                 $quote->setCheckoutMethod(Onepage::METHOD_REGISTER);
             }
         }
-
-        $quote->setIsActive(false);
-        $this->cartRepository->save($quote);
-
-        return $responseData;
     }
 
     /**

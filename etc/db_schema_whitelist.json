@@ -1,0 +1,68 @@
+{
+    "vipps_payment_jwt": {
+        "column": {
+            "token_id": true,
+            "scope_id": true,
+            "token_type": true,
+            "expires_in": true,
+            "ext_expires_in": true,
+            "expires_on": true,
+            "not_before": true,
+            "resource": true,
+            "access_token": true,
+            "scope": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "vipps_profiling": {
+        "column": {
+            "entity_id": true,
+            "increment_id": true,
+            "status_code": true,
+            "request_type": true,
+            "request": true,
+            "response": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "vipps_quote": {
+        "column": {
+            "entity_id": true,
+            "quote_id": true,
+            "reserved_order_id": true,
+            "attempts": true,
+            "created_at": true,
+            "updated_at": true,
+            "status": true,
+            "store_id": true,
+            "order_id": true,
+            "auth_token": true
+        },
+        "index": {
+            "VIPPS_QUOTE_QUOTE_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "VIPPS_QUOTE_QUOTE_ID_QUOTE_ENTITY_ID": true,
+            "VIPPS_QUOTE_RESERVED_ORDER_ID": true,
+            "VIPPS_QUOTE_ORDER_ID": true
+        }
+    },
+    "vipps_quote_attempt": {
+        "column": {
+            "entity_id": true,
+            "parent_id": true,
+            "message": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "VIPPS_QUOTE_ATTEMPT_PARENT_ID_VIPPS_QUOTE_ENTITY_ID": true
+        }
+    }
+}

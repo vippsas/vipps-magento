@@ -126,11 +126,11 @@ class CancelFacade implements CancelFacadeInterface
                 $this->commandManager->cancel($quote->getPayment());
             }
 
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERTED);
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
             $this->quoteRepository->save($vippsQuote);
         } catch (\Throwable $t) {
             $this->logger->critical($t);
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_REVERT_FAILED);
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCEL_FAILED);
             $this->quoteRepository->save($vippsQuote);
 
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);

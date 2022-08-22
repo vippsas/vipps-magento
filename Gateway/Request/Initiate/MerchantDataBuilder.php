@@ -16,11 +16,8 @@
 namespace Vipps\Payment\Gateway\Request\Initiate;
 
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
-use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Payment;
 use Magento\Framework\UrlInterface;
-use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Gateway\Request\SubjectReader;
 
 /**
@@ -98,25 +95,17 @@ class MerchantDataBuilder implements InitiateBuilderInterface
     private $subjectReader;
 
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
      * MerchantDataBuilder constructor.
      *
      * @param UrlInterface $urlBuilder
      * @param SubjectReader $subjectReader
-     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
         UrlInterface $urlBuilder,
-        SubjectReader $subjectReader,
-        CartRepositoryInterface $cartRepository
+        SubjectReader $subjectReader
     ) {
         $this->urlBuilder = $urlBuilder;
         $this->subjectReader = $subjectReader;
-        $this->cartRepository = $cartRepository;
     }
 
     /**
@@ -131,29 +120,29 @@ class MerchantDataBuilder implements InitiateBuilderInterface
     {
         $authToken = $this->generateAuthToken();
 
+        $fallbackUrl = $buildSubject['fallback_url'] ?? null;
+
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         /** @var Payment $payment */
-        $payment = $paymentDO->getPayment();
-        $quote = $this->cartRepository->get($payment->getQuote()->getId());
-
-        /** @var $quote Quote */
-        $quote->getPayment()->setMethod('vipps');
-        $quote->setReservedOrderId(null);
-        $quote->reserveOrderId();
-        $this->cartRepository->save($quote);
+        $orderAdapter = $paymentDO->getOrder();
 
         $merchantInfo = [
             self::$merchantInfo => [
                 self::$authToken => $authToken,
                 self::$callbackPrefix => $this->urlBuilder->getUrl('vipps/payment/callback'),
-                self::$fallBack => $this->urlBuilder->getUrl(
-                    'vipps/payment/fallback',
-                    [
-                        'auth_token' => $authToken,
-                        'order_id' => $quote->getReservedOrderId()
-                    ]
-                ),
+                self::$fallBack => $fallbackUrl
+                    ? rtrim($fallbackUrl, '/') 
+                        . '/vipps/payment/fallback/'
+                        . '?auth_token=' . $authToken
+                        . '&order_id=' . $orderAdapter->getOrderIncrementId()
+                    : $this->urlBuilder->getUrl(
+                        'vipps/payment/fallback',
+                        [
+                            'auth_token' => $authToken,
+                            'order_id' => $orderAdapter->getOrderIncrementId()
+                        ]
+                    ),
                 self::$consentRemovalPrefix => $this->urlBuilder->getUrl('vipps/payment/consentRemoval'),
                 self::$isApp => false,
                 self::PAYMENT_TYPE_KEY => $buildSubject[self::PAYMENT_TYPE_KEY],

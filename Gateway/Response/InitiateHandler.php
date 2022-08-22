@@ -19,10 +19,12 @@ namespace Vipps\Payment\Gateway\Response;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Payment\Gateway\Http\Transfer;
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Quote\Model\Quote\Payment;
+use Magento\Quote\Model\Quote\Payment as QuotePayment;
+use Magento\Sales\Model\Order\Payment as OrderPayment;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Gateway\Request\SubjectReader;
-use Vipps\Payment\Model\Method\Vipps;
 use Vipps\Payment\Model\QuoteFactory;
 use Vipps\Payment\Model\QuoteRepository;
 
@@ -49,20 +51,36 @@ class InitiateHandler implements HandlerInterface
     private $quoteRepository;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
      * InitiateHandler constructor.
      *
      * @param SubjectReader $subjectReader
      * @param QuoteFactory $quoteFactory
      * @param QuoteRepository $quoteRepository
+     * @param OrderRepositoryInterface $orderRepository
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
         SubjectReader $subjectReader,
         QuoteFactory $quoteFactory,
-        QuoteRepository $quoteRepository
+        QuoteRepository $quoteRepository,
+        OrderRepositoryInterface $orderRepository,
+        CartRepositoryInterface $cartRepository
     ) {
         $this->subjectReader = $subjectReader;
         $this->quoteFactory = $quoteFactory;
         $this->quoteRepository = $quoteRepository;
+        $this->orderRepository = $orderRepository;
+        $this->cartRepository = $cartRepository;
     }
 
     /**
@@ -79,16 +97,25 @@ class InitiateHandler implements HandlerInterface
         $transfer = $handlingSubject['transferObject'];
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
-        /** @var Payment $payment */
+
         $payment = $paymentDO->getPayment();
-        $quote = $payment->getQuote();
+        $orderAdapter = $paymentDO->getOrder();
+
+        if ($payment instanceof OrderPayment) {
+            $order = $this->orderRepository->get($orderAdapter->getId());
+            $quoteId = $order->getQuoteId();
+        } elseif ($payment instanceof QuotePayment) {
+            $cart = $payment->getQuote();
+            $this->cartRepository->save($cart);
+            $quoteId = $cart->getId();
+        }
 
         /** @var QuoteInterface $vippsQuote */
         $vippsQuote = $this->quoteFactory->create();
-        $vippsQuote->setStoreId($quote->getStoreId());
-        $vippsQuote->setQuoteId($quote->getId());
+        $vippsQuote->setStoreId($orderAdapter->getStoreId());
+        $vippsQuote->setQuoteId($quoteId);
         $vippsQuote->setStatus(QuoteInterface::STATUS_NEW);
-        $vippsQuote->setReservedOrderId($quote->getReservedOrderId());
+        $vippsQuote->setReservedOrderId($orderAdapter->getOrderIncrementId());
         $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['authToken'] ?? '');
         $this->quoteRepository->save($vippsQuote);
     }

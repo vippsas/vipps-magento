@@ -80,7 +80,7 @@ class CheckoutSubmitBefore implements ObserverInterface
             return;
         }
 
-        if ('vipps' == $payment->getMethod()) {
+        if ('vipps' === $payment->getMethod()) {
             try {
                 $vippsQuote = $this->quoteRepository->loadNewByQuote($quote->getId());
 
