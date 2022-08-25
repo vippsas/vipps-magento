@@ -22,6 +22,7 @@ use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerInterface as PaymentCommandManagerInterface;
 use Magento\Payment\Gateway;
 use Magento\Framework\Exception\NotFoundException;
+use Magento\Quote\Model\Quote\Payment as QuotePayment;
 use Vipps\Payment\Api\CommandManagerInterface;
 
 /**
@@ -56,7 +57,19 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
      */
     public function initiatePayment(InfoInterface $payment, $arguments)
     {
-        return $this->executeByCode('initiate', $payment, $arguments);
+        try {
+            return $this->executeByCode('initiate', $payment, $arguments);
+        } catch (\Exception $e) {
+            if ($payment instanceof QuotePayment) {
+                // process error "orderId is already in used and must be unique"
+                if ((int)$e->getCode() === 34) {
+                    $quote = $payment->getQuote();
+                    $quote->setReservedOrderId(null);
+
+                    return $this->executeByCode('initiate', $payment, $arguments);
+                }
+            }
+        }
     }
 
     /**
