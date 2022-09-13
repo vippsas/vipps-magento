@@ -22,7 +22,7 @@ define([
     $.widget('mage.vippsCheckout', {
         options: {
             originalForm:
-                'form:not(#product_addtocart_form_from_popup):has(input[name="product"][value=%1])',
+                'form:not(#product_addtocart_form_from_popup):has(input[name="product"][value="%1"])',
             productId: 'input[type="hidden"][name="product"]',
             vippsCheckoutSelector: '[data-role=vipps-checkout-url]',
             vippsCheckoutInput: '<input type="hidden" data-role="vipps-checkout-url" name="return_url" value=""/>'
