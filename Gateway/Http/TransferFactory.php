@@ -60,6 +60,8 @@ class TransferFactory implements TransferFactoryInterface
         'customerInfo',
         'merchantInfo',
         'transaction',
+        'orderLines',
+        'bottomLine'
     ];
 
     /**

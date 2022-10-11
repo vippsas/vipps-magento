@@ -39,6 +39,7 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\Gateway\Command\ReceiptSender;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
@@ -114,6 +115,11 @@ class TransactionProcessor
     private $paymentDetailsProvider;
 
     /**
+     * @var ReceiptSender
+     */
+    private $receiptSender;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -130,6 +136,7 @@ class TransactionProcessor
      * @param CartRepositoryInterface $cartRepository
      * @param CartManagementInterface $cartManagement
      * @param QuoteLocator $quoteLocator
+     * @param OrderLocator $orderLocator
      * @param Processor $processor
      * @param QuoteUpdater $quoteUpdater
      * @param LockManager $lockManager
@@ -137,6 +144,7 @@ class TransactionProcessor
      * @param QuoteManagement $quoteManagement
      * @param OrderManagementInterface $orderManagement
      * @param PaymentDetailsProvider $paymentDetailsProvider
+     * @param ReceiptSender $receiptSender
      * @param LoggerInterface $logger
      * @param ResourceConnection $resourceConnection
      *
@@ -155,6 +163,7 @@ class TransactionProcessor
         QuoteManagement $quoteManagement,
         OrderManagementInterface $orderManagement,
         PaymentDetailsProvider $paymentDetailsProvider,
+        ReceiptSender $receiptSender,
         LoggerInterface $logger,
         ResourceConnection $resourceConnection
     ) {
@@ -170,6 +179,7 @@ class TransactionProcessor
         $this->quoteManagement = $quoteManagement;
         $this->orderManagement = $orderManagement;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
+        $this->receiptSender = $receiptSender;
         $this->logger = $logger;
         $this->resourceConnection = $resourceConnection;
     }
@@ -247,6 +257,8 @@ class TransactionProcessor
             $order = $this->placeOrder($vippsQuote, $transaction);
         }
 
+        $this->sendReceipt($order, $transaction);
+
         $paymentAction = $this->config->getValue('vipps_payment_action');
         $this->processAction($paymentAction, $order, $transaction);
 
@@ -292,6 +304,19 @@ class TransactionProcessor
             default:
                 $this->authorize($order, $transaction);
         }
+    }
+
+    /**
+     * @param OrderInterface $order
+     * @param Transaction $transaction
+     */
+    private function sendReceipt(OrderInterface $order, Transaction $transaction)
+    {
+        if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
+            return;
+        }
+
+        $this->receiptSender->send($order);
     }
 
     /**

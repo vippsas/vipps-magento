@@ -117,8 +117,9 @@
                 <item name="initiate" xsi:type="string">VippsInitiateCommand</item>
                 <item name="capture" xsi:type="string">VippsCaptureCommand</item>
                 <item name="refund" xsi:type="string">VippsRefundCommand</item>
-                <item name="getPaymentDetails" xsi:type="string">VippsGetPaymentDetailsCommand</item>
                 <item name="cancel" xsi:type="string">VippsCancelCommand</item>
+                <item name="getPaymentDetails" xsi:type="string">VippsGetPaymentDetailsCommand</item>
+                <item name="sendReceipt" xsi:type="string">VippsSendReceiptCommand</item>
             </argument>
         </arguments>
     </virtualType>
@@ -237,6 +238,34 @@
             </argument>
         </arguments>
     </virtualType>
+
+    <!-- Vipps Send Receipt command declaration -->
+    <virtualType name="VippsSendReceiptCommand" type="Vipps\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsSendReceiptRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsSendReceiptTransportFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsSendReceiptRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\SendReceipt\GenericDataBuilder</item>
+                <item name="orderLines" xsi:type="string">Vipps\Payment\Gateway\Request\SendReceipt\OrderLinesBuilder</item>
+                <item name="bottomLine" xsi:type="string">Vipps\Payment\Gateway\Request\SendReceipt\BottomLineBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsSendReceiptTransportFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/order-management/v2/ecom/receipts/:orderId</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="orderId" xsi:type="string">orderId</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- end Vipps Send Receipt command declaration -->
 
     <!-- Vipps Cancel command declaration -->
     <virtualType name="VippsCancelCommand" type="Vipps\Payment\Gateway\Command\CancelCommand">
@@ -426,6 +455,12 @@
         </arguments>
     </type>
     <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Gateway\Command\ReceiptSender">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>
