@@ -13,40 +13,32 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Model\Profiling;
+namespace Vipps\Payment\Gateway\Request\SendReceipt;
+
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\Order;
 
 /**
- * Interface TypeInterface
- * @package Vipps\Payment\Model\Profiling
+ * Class GenericDataBuilder
+ * @package Vipps\Payment\Gateway\Request
  */
-interface TypeInterface
+class GenericDataBuilder implements BuilderInterface
 {
     /**
-     * Values/labels for all request types we are sending to Vipps
+     * This builders for passing parameters into TransferFactory object.
      *
-     * @var string
+     * @param array $buildSubject
+     * @return array
      */
-    const INITIATE_PAYMENT = 'initiate';
-    const INITIATE_PAYMENT_LABEL = 'Initiate Payment';
+    public function build(array $buildSubject)
+    {
+        /** @var OrderInterface|Order $order */
+        $order = $buildSubject['order'] ?? null;
+        if ($order) {
+            return ['orderId' => $order->getIncrementId()];
+        }
 
-    const GET_PAYMENT_DETAILS = 'details';
-    const GET_PAYMENT_DETAILS_LABEL = 'Get Payment Details';
-
-    const GET_ORDER_STATUS = 'status';
-    const GET_ORDER_STATUS_LABEL = 'Get Order Status';
-
-    const CAPTURE = 'capture';
-    const CAPTURE_LABEL = 'Capture';
-
-    const REFUND = 'refund';
-    const REFUND_LABEL = 'Refund';
-
-    const CANCEL = 'cancel';
-    const CANCEL_LABEL = 'Cancel';
-
-    const VOID = 'void';
-    const VOID_LABEL = 'Void';
-
-    const SEND_RECEIPT = 'send_receipt';
-    const SEND_RECEIPT_LABEL = 'Send Receipt';
+        return [];
+    }
 }

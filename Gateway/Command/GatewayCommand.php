@@ -145,7 +145,12 @@ class GatewayCommand implements CommandInterface
 
         /** @var Response $response */
         $response = $result['response'];
-        $responseBody = $this->jsonDecoder->decode($response->getContent());
+
+        try {
+            $responseBody = $this->jsonDecoder->decode($response->getContent());
+        } catch (\Exception $e) {
+            $responseBody = [];
+        }
 
         $this->profiler->save($transfer, $response);
 

@@ -23,6 +23,7 @@ use Magento\Payment\Gateway\Command\CommandManagerInterface as PaymentCommandMan
 use Magento\Payment\Gateway;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Quote\Model\Quote\Payment as QuotePayment;
+use Magento\Sales\Api\Data\OrderInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 
 /**
@@ -85,6 +86,18 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
     public function getPaymentDetails($arguments = [])
     {
         return $this->executeByCode('getPaymentDetails', null, $arguments);
+    }
+
+    /**
+     * @param OrderInterface $order
+     * @param array $arguments
+     *
+     * @return mixed|void
+     */
+    public function sendReceipt(OrderInterface $order, $arguments = [])
+    {
+        $arguments['order'] = $order;
+        return $this->executeByCode('sendReceipt', null, $arguments);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2020 Vipps
+ * Copyright 2022 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,57 +13,56 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Api;
+namespace Vipps\Payment\Gateway\Command;
 
-use Magento\Payment\Gateway\Command\ResultInterface;
-use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Api\Data\OrderInterface;
+use Psr\Log\LoggerInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**
- * Interface CommandManagerInterface
- * @package Vipps\Payment\Api
- * @api
+ * Class ReceiptSender
+ * @package Vipps\Payment\Gateway\Command
+ * @spi
  */
-interface CommandManagerInterface
+class ReceiptSender
 {
     /**
-     * Initiate payment action.
-     *
-     * @param InfoInterface $payment
-     * @param array $arguments
-     *
-     * @return ResultInterface|null
+     * @var CommandManagerInterface
      */
-    public function initiatePayment(InfoInterface $payment, $arguments);
+    private $commandManager;
 
     /**
-     * Get Payment details command.
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * ReceiptSender constructor.
      *
-     * @param array $arguments
+     * @param CommandManagerInterface $commandManager
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        CommandManagerInterface $commandManager,
+        LoggerInterface $logger
+    ) {
+        $this->commandManager = $commandManager;
+        $this->logger = $logger;
+    }
+
+    /**
+     * @param OrderInterface $order
      *
-     * @return mixed
+     * @return void
      * @throws VippsException
      */
-    public function getPaymentDetails($arguments = []);
-
-    /**
-     * Send Receipt.
-     *
-     * @param array $arguments
-     *
-     * @return mixed
-     * @throws VippsException
-     */
-    public function sendReceipt(OrderInterface $order, $arguments = []);
-
-    /**
-     * Method to execute cancel Command.
-     *
-     * @param InfoInterface $payment
-     * @param array $arguments
-     *
-     * @return mixed
-     */
-    public function cancel(InfoInterface $payment, $arguments = []);
+    public function send(OrderInterface $order): void
+    {
+        try {
+            $this->commandManager->sendReceipt($order);
+        } catch (\Exception $e) {
+            $this->logger->critical($e->getMessage());
+        }
+    }
 }
