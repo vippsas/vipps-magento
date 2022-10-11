@@ -59,6 +59,10 @@ class RequestTypes implements OptionSourceInterface
             [
                 'value' => TypeInterface::VOID,
                 'label' => TypeInterface::VOID_LABEL,
+            ],
+            [
+                'value' => TypeInterface::SEND_RECEIPT,
+                'label' => TypeInterface::SEND_RECEIPT_LABEL,
             ]
         ];
     }

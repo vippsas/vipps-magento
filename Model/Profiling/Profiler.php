@@ -136,6 +136,12 @@ class Profiler implements ProfilerInterface
             $result['order_id'] = $matches[2] ?? ($transfer->getBody()['transaction']['orderId'] ?? null);
             $result['type'] = $matches[3] ?? TypeInterface::INITIATE_PAYMENT;
         }
+
+        if (preg_match('/order-management\/v2\/ecom\/receipts\/(.+)/i', $transfer->getUri(), $matches)) {
+            $result['order_id'] = $matches[1] ?? null;
+            $result['type'] = TypeInterface::SEND_RECEIPT;
+        }
+
         return $result;
     }
 
@@ -148,7 +154,12 @@ class Profiler implements ProfilerInterface
      */
     private function parseResponse(Response $response)
     {
-        return $this->depersonalizedResponse($this->jsonDecoder->decode($response->getContent()));
+        try {
+            $result = $this->jsonDecoder->decode($response->getContent());
+        } catch (\Exception $e) {
+            $result = [];
+        }
+        return $this->depersonalizedResponse($result);
     }
 
     /**

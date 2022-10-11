@@ -62,4 +62,9 @@ interface ClientInterface extends MagentoClientInterface
      * @var string
      */
     const HEADER_PARAM_CLIENT_SECRET = 'client_secret';
+
+    /**
+     * @var string
+     */
+    const HEADER_PARAM_MERCHANT_SERIAL_NUMBER = 'Merchant-Serial-Number';
 }
