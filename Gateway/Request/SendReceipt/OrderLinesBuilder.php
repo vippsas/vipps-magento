@@ -57,15 +57,22 @@ class OrderLinesBuilder implements BuilderInterface
         }
 
         $orderLines = [];
-        foreach ($order->getAllVisibleItems() as $item) {
+        foreach ($order->getItemsCollection() as $item) {
             /** @var Order\Item $item */
+            if ($item->getChildrenItems()) {
+                continue;
+            }
+
+            $totalAmount = $item->getRowTotal() + $item->getTaxAmount() - $item->getDiscountAmount();
+            $totalAmountExcludingTax = $totalAmount - $item->getTaxAmount();
+
             $orderLines[] = [
                 'name' => $item->getName(),
                 'id' => $item->getSku(),
-                'totalAmount' => (int)($item->getRowTotalInclTax() * 100),
-                'totalAmountExcludingTax' => (int)($item->getRowTotal() * 100),
+                'totalAmount' => (int)($totalAmount * 100),
+                'totalAmountExcludingTax' => (int)($totalAmountExcludingTax * 100),
                 'totalTaxAmount' => (int)($item->getTaxAmount() * 100),
-                'taxPercentage' => (int)round($item->getTaxAmount() * 100 / $item->getRowTotal()),
+                'taxPercentage' => (int)round($item->getTaxAmount() * 100 / $totalAmount),
                 'unitInfo' => [
                     'unitPrice' => (int)($item->getPrice() * 100),
                     'quantity' => (string)$item->getQtyOrdered()
