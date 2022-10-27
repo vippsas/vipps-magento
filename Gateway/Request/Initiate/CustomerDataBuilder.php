@@ -56,9 +56,11 @@ class CustomerDataBuilder implements InitiateBuilderInterface
      */
     public function build(array $buildSubject)
     {
+        $telephone = $this->subjectReader->readTelephone($buildSubject) ?? '';
+
         return [
             self::$customerInfo => [
-                self::$mobileNumber => str_replace(' ', '', $this->subjectReader->readTelephone($buildSubject))
+                self::$mobileNumber => \str_replace(' ', '', $telephone)
             ]
         ];
     }
