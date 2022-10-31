@@ -15,10 +15,10 @@
  */
 namespace Vipps\Payment\Model;
 
-use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteRepository;
+use Vipps\Checkout\Api\QuoteRepositoryInterface as VippsQuoteRepositoryInterface;
 
 /**
  * Class QuoteLocator
@@ -27,27 +27,26 @@ use Magento\Quote\Model\QuoteRepository;
 class QuoteLocator
 {
     /**
-     * @var SearchCriteriaBuilder
-     */
-    private $searchCriteriaBuilder;
-
-    /**
      * @var QuoteRepository
      */
     private $quoteRepository;
+    /**
+     * @var VippsQuoteRepositoryInterface
+     */
+    private VippsQuoteRepositoryInterface $vippsQuoteRepository;
 
     /**
      * QuoteLocator constructor.
      *
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param QuoteRepository $quoteRepository
+     * @param VippsQuoteRepositoryInterface $vippsQuoteRepository
      */
     public function __construct(
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        QuoteRepository $quoteRepository
+        QuoteRepository $quoteRepository,
+        VippsQuoteRepositoryInterface $vippsQuoteRepository
     ) {
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->quoteRepository = $quoteRepository;
+        $this->vippsQuoteRepository = $vippsQuoteRepository;
     }
 
     /**
@@ -59,10 +58,12 @@ class QuoteLocator
      */
     public function get($incrementId): ?CartInterface
     {
-        $searchCriteria = $this->searchCriteriaBuilder->addFilter('reserved_order_id', $incrementId, 'eq')
-            ->create();
-        $quoteList = $this->quoteRepository->getList($searchCriteria)->getItems();
-        $quote = current($quoteList);
+        try {
+            $vippsQuote = $this->vippsQuoteRepository->loadByOrderId($incrementId);
+            $quote = $this->quoteRepository->get($vippsQuote->getQuoteId());
+        } catch (\Exception $e) {
+            $quote = null;
+        }
 
         return $quote ?: null;
     }
