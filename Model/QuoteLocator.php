@@ -33,7 +33,7 @@ class QuoteLocator
     /**
      * @var VippsQuoteRepositoryInterface
      */
-    private VippsQuoteRepositoryInterface $vippsQuoteRepository;
+    private $vippsQuoteRepository;
 
     /**
      * QuoteLocator constructor.

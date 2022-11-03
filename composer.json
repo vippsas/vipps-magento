@@ -4,10 +4,10 @@
     "description": "Vipps Payment Method",
     "license": "proprietary",
     "require": {
-        "magento/framework": "103.0.*",
-        "magento/module-sales": "103.0.*",
-        "magento/module-payment": "100.4.*",
-        "magento/module-checkout": "100.4.*",
+        "magento/framework": "101.0.*|103.0.*",
+        "magento/module-sales": "101.0.*|103.0.*",
+        "magento/module-payment": "100.2.*|100.4.*",
+        "magento/module-checkout": "100.2.*|100.4.*",
         "psr/log": "~1.0"
     },
     "require-dev": {
