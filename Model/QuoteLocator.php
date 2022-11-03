@@ -18,7 +18,7 @@ namespace Vipps\Payment\Model;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteRepository;
-use Vipps\Checkout\Api\QuoteRepositoryInterface as VippsQuoteRepositoryInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface as VippsQuoteRepositoryInterface;
 
 /**
  * Class QuoteLocator
