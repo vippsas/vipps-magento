@@ -14,7 +14,7 @@
   ~ IN THE SOFTWARE.
   -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Vipps_Payment" setup_version="2.4.37">
+    <module name="Vipps_Payment" setup_version="2.4.38">
         <sequence>
             <module name="Magento_Sales" />
             <module name="Magento_Payment" />
