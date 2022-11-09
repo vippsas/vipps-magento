@@ -15,6 +15,7 @@
  */
 namespace Vipps\Payment\Gateway\Request\SendReceipt;
 
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
@@ -59,7 +60,11 @@ class OrderLinesBuilder implements BuilderInterface
         $orderLines = [];
         foreach ($order->getItemsCollection() as $item) {
             /** @var Order\Item $item */
-            if ($item->getChildrenItems()) {
+            if (($item->getChildrenItems() && $item->getProductType() !== Configurable::TYPE_CODE)
+                || ($item->getParentItem() && $item->getParentItem()->getProductType() === Configurable::TYPE_CODE)
+            ) {
+                // it means we take into account only simple products that is not a part of configurable
+                // for configurable product we take into account main configurable product bu not its simples
                 continue;
             }
 
@@ -72,7 +77,9 @@ class OrderLinesBuilder implements BuilderInterface
                 'totalAmount' => (int)($totalAmount * 100),
                 'totalAmountExcludingTax' => (int)($totalAmountExcludingTax * 100),
                 'totalTaxAmount' => (int)($item->getTaxAmount() * 100),
-                'taxPercentage' => (int)round($item->getTaxAmount() * 100 / $totalAmount),
+                'taxPercentage' => $totalAmount > 0
+                    ? (int)round($item->getTaxAmount() * 100 / $totalAmount)
+                    : $item->getTaxPercent(),
                 'unitInfo' => [
                     'unitPrice' => (int)($item->getPrice() * 100),
                     'quantity' => (string)$item->getQtyOrdered()
@@ -90,12 +97,13 @@ class OrderLinesBuilder implements BuilderInterface
             'totalAmount' => (int)($order->getShippingInclTax() * 100),
             'totalAmountExcludingTax' => (int)($order->getShippingAmount() * 100),
             'totalTaxAmount' => (int)($order->getShippingTaxAmount() * 100),
-            'taxPercentage' => (int)round($order->getShippingTaxAmount() * 100 / $order->getShippingInclTax()),
+            'taxPercentage' => $order->getShippingInclTax() > 0
+                ? (int)round($order->getShippingTaxAmount() * 100 / $order->getShippingInclTax())
+                : 0,
             'discount' => (int)($order->getShippingDiscountAmount() * 100),
             'isReturn' => false,
             'isShipping' => true
         ];
-
 
         return ['orderLines'=> $orderLines];
     }
