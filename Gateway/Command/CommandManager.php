@@ -58,19 +58,10 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
      */
     public function initiatePayment(InfoInterface $payment, $arguments)
     {
-        try {
-            return $this->executeByCode('initiate', $payment, $arguments);
-        } catch (\Exception $e) {
-            if ($payment instanceof QuotePayment) {
-                // process error "orderId is already in used and must be unique"
-                if ((int)$e->getCode() === 34) {
-                    $quote = $payment->getQuote();
-                    $quote->setReservedOrderId(null);
-
-                    return $this->executeByCode('initiate', $payment, $arguments);
-                }
-            }
-        }
+        $quote = $payment->getQuote();
+        $quote->setReservedOrderId(null);
+        
+        return $this->executeByCode('initiate', $payment, $arguments);
     }
 
     /**
