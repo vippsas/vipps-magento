@@ -15,6 +15,7 @@
  */
 namespace Vipps\Payment\Model;
 
+use Magento\Store\Model\ScopeInterface;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\App\ScopeResolverInterface;
@@ -116,15 +117,17 @@ class TokenProvider implements TokenProviderInterface
     /**
      * {@inheritdoc}
      *
+     * @param null $scopeId
+     *
      * @return mixed|string
      * @throws AuthenticationException
      * @throws CouldNotSaveException
      */
-    public function get()
+    public function get($scopeId = null)
     {
-        $this->loadTokenRecord();
+        $this->loadTokenRecord($scopeId);
         if (!$this->isValidToken()) {
-            $this->regenerate();
+            $this->regenerate($scopeId);
         }
         return $this->jwtRecord['access_token'];
     }
@@ -147,28 +150,33 @@ class TokenProvider implements TokenProviderInterface
     /**
      * Method to regenerate access token from Vipps and save it to storage.
      *
+     * @param int|null $scopeId
+     *
      * @throws CouldNotSaveException
      * @throws AuthenticationException
      */
-    public function regenerate()
+    public function regenerate($scopeId = null)
     {
-        $jwt = $this->readJwt();
-        $this->refreshJwt($jwt);
+        $jwt = $this->readJwt($scopeId);
+        $this->refreshJwt($jwt, $scopeId);
     }
 
     /**
      * Method to authenticate into Vipps API to retrieve access token(Json Web Token).
      *
+     * @param int $scopeId
+     *
      * @return array
      * @throws AuthenticationException
      */
-    private function readJwt()
+    private function readJwt($scopeId)
     {
         /** Configuring headers for Vipps authentication method */
         $headers = [
-            Curl::HEADER_PARAM_CLIENT_ID => $this->config->getValue('client_id'),
-            Curl::HEADER_PARAM_CLIENT_SECRET => $this->config->getValue('client_secret'),
-            Curl::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key1'),
+            Curl::HEADER_PARAM_CLIENT_ID => $this->config->getValue('client_id', $this->getScopeId($scopeId)),
+            Curl::HEADER_PARAM_CLIENT_SECRET => $this->config->getValue('client_secret', $this->getScopeId($scopeId)),
+            Curl::HEADER_PARAM_SUBSCRIPTION_KEY =>
+                $this->config->getValue('subscription_key1', $this->getScopeId($scopeId)),
         ];
         /** @var ZendClient $client */
         $client = $this->httpClientFactory->create();
@@ -203,14 +211,14 @@ class TokenProvider implements TokenProviderInterface
      *
      * @return array
      */
-    private function loadTokenRecord()
+    private function loadTokenRecord($scopeId)
     {
         if (!$this->jwtRecord) {
             $connection = $this->resourceConnection->getConnection();
             $select = $connection->select(); //@codingStandardsIgnoreLine
             $select->from($this->resourceConnection->getTableName('vipps_payment_jwt')) //@codingStandardsIgnoreLine
-                ->where('scope = ?', $this->getScopeType()) // @codingStandardsIgnoreLine
-                ->where('scope_id = ?', $this->getScopeId()) //@codingStandardsIgnoreLine
+                ->where('scope = ?', ScopeInterface::SCOPE_STORE) // @codingStandardsIgnoreLine
+                ->where('scope_id = ?', $this->getScopeId($scopeId)) //@codingStandardsIgnoreLine
                 ->limit(1) //@codingStandardsIgnoreLine
                 ->order("token_id DESC"); //@codingStandardsIgnoreLine
             $this->jwtRecord = $connection->fetchRow($select) ?: []; //@codingStandardsIgnoreLine
@@ -223,10 +231,11 @@ class TokenProvider implements TokenProviderInterface
      * and insert a new one in another case.
      *
      * @param $jwt
+     * @param $scopeId
      *
      * @throws CouldNotSaveException
      */
-    private function refreshJwt($jwt)
+    private function refreshJwt($jwt, $scopeId)
     {
         $connection = $this->resourceConnection->getConnection();
         try {
@@ -239,8 +248,8 @@ class TokenProvider implements TokenProviderInterface
                     'token_id = ' . $this->jwtRecord['token_id']
                 );
             } else {
-                $this->jwtRecord['scope'] = $this->getScopeType();
-                $this->jwtRecord['scope_id'] = $this->getScopeId();
+                $this->jwtRecord['scope'] = ScopeInterface::SCOPE_STORE;
+                $this->jwtRecord['scope_id'] = $this->getScopeId($scopeId);
                 $connection->insert( //@codingStandardsIgnoreLine
                     $this->resourceConnection->getTableName('vipps_payment_jwt'),
                     $this->jwtRecord
@@ -251,26 +260,6 @@ class TokenProvider implements TokenProviderInterface
             $this->logger->critical($e->getMessage());
             throw new CouldNotSaveException(__('Can\'t save jwt data to database.' . $e->getMessage()));
         }
-    }
-
-    /**
-     * Return current scope Id.
-     *
-     * @return int
-     */
-    private function getScopeId()
-    {
-        return $this->scopeResolver->getScope()->getId();
-    }
-
-    /**
-     * Return current scope type.
-     *
-     * @return string
-     */
-    private function getScopeType()
-    {
-        return $this->scopeResolver->getScope()->getScopeType();
     }
 
     /**
@@ -291,5 +280,10 @@ class TokenProvider implements TokenProviderInterface
             }
         }
         return true;
+    }
+
+    private function getScopeId($scopeId = null)
+    {
+        return $scopeId ?? $this->scopeResolver->getScope()->getId();
     }
 }
