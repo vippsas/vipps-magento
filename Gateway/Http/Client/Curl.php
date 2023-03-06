@@ -136,7 +136,7 @@ class Curl implements ClientInterface
                     ];
             }
             $adapter->setOptions($options);
-            $headers = $this->getHeaders($transfer->getHeaders());
+            $headers = $this->getHeaders($transfer);
             // send request
             $adapter->write(
                 $transfer->getMethod(),
@@ -153,17 +153,21 @@ class Curl implements ClientInterface
     }
 
     /**
-     * @param $headers
+     * @param TransferInterface $transfer
      *
      * @return array
      * @throws AuthenticationException
      */
-    private function getHeaders($headers)
+    private function getHeaders(TransferInterface $transfer)
     {
+        $clientConfig = $transfer->getClientConfig();
+
+        $headers = $transfer->getHeaders();
         $headers = array_merge(
             [
                 self::HEADER_PARAM_CONTENT_TYPE => 'application/json',
-                self::HEADER_PARAM_AUTHORIZATION => 'Bearer ' . $this->tokenProvider->get(),
+                self::HEADER_PARAM_AUTHORIZATION => 'Bearer '
+                    . $this->tokenProvider->get($clientConfig['scopeId'] ?? null),
                 self::HEADER_PARAM_X_REQUEST_ID => '',
                 self::HEADER_PARAM_X_SOURCE_ADDRESS => '',
                 self::HEADER_PARAM_X_TIMESTAMP => '',
