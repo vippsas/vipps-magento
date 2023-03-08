@@ -60,6 +60,7 @@ class GenericDataBuilder implements BuilderInterface
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         if ($paymentDO) {
             $scopeId = $paymentDO->getOrder()->getStoreId();
+            $incrementId = $paymentDO->getOrder()->getOrderIncrementId();
         }
 
         if (!$scopeId && $incrementId) {
@@ -72,6 +73,7 @@ class GenericDataBuilder implements BuilderInterface
         $buildSubject = array_merge(
             $buildSubject,
             [
+                'orderId' => $incrementId,
                 'scopeId' => $scopeId
             ]
         );
