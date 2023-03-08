@@ -58,7 +58,7 @@ class BuilderComposite implements BuilderInterface
     {
         $result = $buildSubject;
         foreach ($this->builders as $builder) {
-            $result = $this->merge($result, array_merge($buildSubject, $builder->build($result)));
+            $result = $this->merge($result, $builder->build($result));
         }
 
         return $result;
