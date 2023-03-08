@@ -16,6 +16,7 @@
 namespace Vipps\Payment\Gateway\Request;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Vipps\Payment\Model\OrderLocator;
 
 /**
  * Class GenericDataBuilder
@@ -27,6 +28,10 @@ class GenericDataBuilder implements BuilderInterface
      * @var SubjectReader
      */
     private $subjectReader;
+    /**
+     * @var OrderLocator
+     */
+    private $orderLocator;
 
     /**
      * GenericDataBuilder constructor.
@@ -34,9 +39,11 @@ class GenericDataBuilder implements BuilderInterface
      * @param SubjectReader $subjectReader
      */
     public function __construct(
-        SubjectReader $subjectReader
+        SubjectReader $subjectReader,
+        OrderLocator $orderLocator
     ) {
         $this->subjectReader = $subjectReader;
+        $this->orderLocator = $orderLocator;
     }
 
     /**
@@ -47,19 +54,27 @@ class GenericDataBuilder implements BuilderInterface
      */
     public function build(array $buildSubject)
     {
+        $scopeId = null;
+        $incrementId = $buildSubject['orderId'] ?? null;
+
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         if ($paymentDO) {
-            $orderAdapter = $paymentDO->getOrder();
-            if ($orderAdapter) {
-                $buildSubject = array_merge(
-                    $buildSubject,
-                    [
-                        'orderId' => $orderAdapter->getOrderIncrementId(),
-                        'scopeId' => $orderAdapter->getStoreId()
-                    ]
-                );
+            $scopeId = $paymentDO->getOrder()->getStoreId();
+        }
+
+        if (!$scopeId && $incrementId) {
+            $order = $this->orderLocator->get($incrementId);
+            if ($order) {
+                $scopeId = $order->getStoreId();
             }
         }
+
+        $buildSubject = array_merge(
+            $buildSubject,
+            [
+                'scopeId' => $scopeId
+            ]
+        );
 
         return $buildSubject;
     }
