@@ -53,7 +53,10 @@ class GenericDataBuilder implements BuilderInterface
             if ($orderAdapter) {
                 $buildSubject = array_merge(
                     $buildSubject,
-                    ['orderId' => $orderAdapter->getOrderIncrementId()]
+                    [
+                        'orderId' => $orderAdapter->getOrderIncrementId(),
+                        'scopeId' => $orderAdapter->getStoreId()
+                    ]
                 );
             }
         }

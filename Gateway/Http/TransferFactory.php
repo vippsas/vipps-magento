@@ -65,15 +65,10 @@ class TransferFactory implements TransferFactoryInterface
         'orderLines',
         'bottomLine'
     ];
-    /**
-     * @var OrderLocator
-     */
-    private OrderLocator $orderLocator;
 
     /**
      * @param TransferBuilder $transferBuilder
      * @param UrlResolver $urlResolver
-     * @param OrderLocator $orderLocator
      * @param string $method
      * @param string $endpointUrl
      * @param array $urlParams
@@ -81,14 +76,12 @@ class TransferFactory implements TransferFactoryInterface
     public function __construct(
         TransferBuilder $transferBuilder,
         UrlResolver $urlResolver,
-        OrderLocator $orderLocator,
         string $method,
         string $endpointUrl,
         array $urlParams = []
     ) {
         $this->transferBuilder = $transferBuilder;
         $this->urlResolver = $urlResolver;
-        $this->orderLocator = $orderLocator;
         $this->method = $method;
         $this->endpointUrl = $endpointUrl;
         $this->urlParams = $urlParams;
@@ -108,14 +101,14 @@ class TransferFactory implements TransferFactoryInterface
             ClientInterface::HEADER_PARAM_X_REQUEST_ID => $request['requestId'] ?? $this->generateRequestId()
         ]);
 
-        $incrementId = $request['orderId'] ?? null;
+        $scopeId = $request['scopeId'] ?? null;
         $request = $this->filterPostFields($request);
 
         $this->transferBuilder
             ->setBody($this->getBody($request))
             ->setMethod($this->method)
             ->setUri($this->getUrl($request))
-            ->setClientConfig(['scopeId' => $this->getScopeId($incrementId)]);
+            ->setClientConfig(['scopeId' => $scopeId]);
 
         return $this->transferBuilder->build();
     }
@@ -185,15 +178,5 @@ class TransferFactory implements TransferFactoryInterface
     private function generateRequestId()
     {
         return uniqid('req-id-', true);
-    }
-
-    private function getScopeId($incrementId)
-    {
-        $order = $this->orderLocator->get($incrementId);
-        if ($order) {
-            return $order->getStoreId();
-        }
-
-        return null;
     }
 }
