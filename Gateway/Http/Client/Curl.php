@@ -171,8 +171,10 @@ class Curl implements ClientInterface
                 self::HEADER_PARAM_X_REQUEST_ID => '',
                 self::HEADER_PARAM_X_SOURCE_ADDRESS => '',
                 self::HEADER_PARAM_X_TIMESTAMP => '',
-                self::HEADER_PARAM_MERCHANT_SERIAL_NUMBER => $this->config->getValue('merchant_serial_number'),
-                self::HEADER_PARAM_SUBSCRIPTION_KEY => $this->config->getValue('subscription_key1'),
+                self::HEADER_PARAM_MERCHANT_SERIAL_NUMBER =>
+                    $this->config->getValue('merchant_serial_number', $clientConfig['scopeId'] ?? null),
+                self::HEADER_PARAM_SUBSCRIPTION_KEY =>
+                    $this->config->getValue('subscription_key1', $clientConfig['scopeId'] ?? null),
             ],
             $headers
         );
