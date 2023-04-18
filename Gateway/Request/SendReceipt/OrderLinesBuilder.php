@@ -83,7 +83,7 @@ class OrderLinesBuilder implements BuilderInterface
                 'totalTaxAmount' => $monitaryTaxAmount,
                 'taxPercentage' => $monitaryTotalAmountExcludingTax > 0
                     ? (int)round($monitaryTaxAmount * 100 / $monitaryTotalAmountExcludingTax)
-                    : $item->getTaxPercent(),
+                    : (int)$item->getTaxPercent(),
                 'unitInfo' => [
                     'unitPrice' => (int)($item->getPrice() * 100),
                     'quantity' => (string)$item->getQtyOrdered()

@@ -185,7 +185,7 @@ class TokenProvider implements TokenProviderInterface
                 'Content-Length: 0'
             ];
             // send request
-            $adapter->write('post', $this->urlResolver->getUrl(self::$endpointUrl), '1.1', $headers);
+            $adapter->write('POST', $this->urlResolver->getUrl(self::$endpointUrl), '1.1', $headers);
             $response = Response::fromString($adapter->read());
             $jwt = $this->serializer->unserialize($response->getBody());
             if (!$response->isSuccess()) {
