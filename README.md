@@ -55,6 +55,6 @@ Please see: https://github.com/vippsas/vipps-magento-v1
 
 ### Vipps contact information
 
-Please follow this [instruction](https://github.com/vippsas/vipps-developers/blob/master/contact.md) to contact us.
+Please follow this [instruction](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/) to contact us.
 
-For plugin related issues please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact integration@vipps.no.
+For plugin related issues, please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact integration@vipps.no.
