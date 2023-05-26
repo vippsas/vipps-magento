@@ -18,7 +18,7 @@ For more information about Vipps Payment and Magento 2, please visit [Vipps Paym
 
 
 ### Prerequisites
-* Magento 2.2.x, Mageton 2.3.x, Magento 2.4.x
+* Magento 2.2.x, Magento 2.3.x, Magento 2.4.x
    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
 * Supported protocols HTTP1/HTTP1.1
