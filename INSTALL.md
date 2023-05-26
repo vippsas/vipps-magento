@@ -77,7 +77,7 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 ![Screenshot of Express Vipps Settings](docs/images/express_vipps_settings.png)
 
-# Addtional Settings
+# Additional Settings
 
 ![Screenshot of Vipps Additional Settings](docs/images/vipps_additional_settings.png)
 
