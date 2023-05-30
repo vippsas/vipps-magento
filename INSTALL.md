@@ -93,17 +93,17 @@ For information about how to find the above values, see the [Vipps Developer Por
 
 Quote is for cart contents in Magento. Theoretically, the quote is an offer and if the user accepts it (by checking out) it converts to order.
 
-When payment is initiated (customer is redirected to Vipps), Magento creates a new record on `Vipps Quote Monitoring` page and starts tracking an Vipps order.
+When payment is initiated (customer is redirected to Vipps), Magento creates a new record on `Vipps Quote Monitoring` page and starts tracking a Vipps order.
 To do that, Magento has a cron job that runs by schedule, each 10 minutes.
 
 You can find this page under `System -> Vipps` menu section. Under `Store -> Sales -> Payment Methods -> Vipps -> Cancellation`, you can find appropriate configuration settings.
 
 ## Support
 
-Magento is an open source ecommerce solution: https://magento.com
+Magento is an open source ecommerce solution: <https://magento.com>
 
-Magento Inc is an Adobe company: https://business.adobe.com/products/magento/magento-commerce.html
+Magento Inc is an Adobe company. Read about it [here](https://business.adobe.com/products/magento/magento-commerce.html).
 
-For Magento support, see Magento Help Center: https://support.magento.com/hc/en-us
+For Magento support, see the [Magento Help Center](https://support.magento.com/hc/en-us).
 
-Vipps has a dedicated team ready to help: magento@vipps.no
+Vipps has a dedicated team ready to help: [magento@vipps.no](mailto:magento@vipps.no).
