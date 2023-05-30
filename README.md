@@ -4,9 +4,9 @@ This Magento v2 module is hosted on [GitHub](https://github.com/vippsas/vipps-ma
 
 ## Magento
 
-Magento is an open-source e-commerce platform written in PHP: https://magento.com.
+Magento is an open-source e-commerce platform written in PHP: <https://magento.com>.
 For Magento support, please see the [Magento Help Center](https://support.magento.com/hc/en-us).
-Magento Inc is an Adobe company: https://magento.com/about.
+Magento Inc is an Adobe company: https://business.adobe.com/products/magento/magento-commerce.html.
 
 ## About Vipps Payment for Magento 2
 
@@ -19,7 +19,7 @@ For more information about Vipps Payment and Magento 2, please visit [Vipps Paym
 
 ### Prerequisites
 * Magento 2.2.x, Magento 2.3.x, Magento 2.4.x
-   * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
+   * [Magento 2 System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
 * Supported protocols HTTP1/HTTP1.1
    * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.

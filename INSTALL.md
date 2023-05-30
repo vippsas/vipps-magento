@@ -102,7 +102,7 @@ You can find this page under `System -> Vipps` menu section. Under `Store -> Sal
 
 Magento is an open source ecommerce solution: https://magento.com
 
-Magento Inc is an Adobe company: https://magento.com/about
+Magento Inc is an Adobe company: https://business.adobe.com/products/magento/magento-commerce.html
 
 For Magento support, see Magento Help Center: https://support.magento.com/hc/en-us
 
