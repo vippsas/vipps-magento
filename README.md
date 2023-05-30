@@ -1,12 +1,11 @@
-
-
 # Vipps Payment Module for Magento 2
 
+This Magento v2 module is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
 
 ## Magento
 
 Magento is an open-source e-commerce platform written in PHP: https://magento.com.
-For Magento support, please see the Magento Help Center: https://support.magento.com/hc/en-us.
+For Magento support, please see the [Magento Help Center](https://support.magento.com/hc/en-us).
 Magento Inc is an Adobe company: https://magento.com/about.
 
 ## About Vipps Payment for Magento 2
@@ -19,7 +18,7 @@ For more information about Vipps Payment and Magento 2, please visit [Vipps Paym
 
 
 ### Prerequisites
-* Magento 2.2.x, Mageton 2.3.x, Magento 2.4.x
+* Magento 2.2.x, Magento 2.3.x, Magento 2.4.x
    * [Magento 2 System Requirements](http://devdocs.magento.com/magento-system-requirements.html)
 * SSL is installed on your site and active on the Checkout page
 * Supported protocols HTTP1/HTTP1.1
@@ -29,19 +28,19 @@ For more information about Vipps Payment and Magento 2, please visit [Vipps Paym
 
 ### Installation and Configuration
 
-Please follow the instructions in [INSTALL.md](INSTALL.md)
+Please follow the instructions in the [installation guide](INSTALL.md).
 
 ### Documentation
 
-Please see our [Documentation](https://github.com/vippsas/vipps-magento/wiki/Documentation)
+Please see our [Documentation](https://github.com/vippsas/vipps-magento/wiki/Documentation).
 
 ### FAQ
 
-Please see our [FAQ section](https://github.com/vippsas/vipps-magento/wiki/FAQ)
+Please see our [FAQ section](https://github.com/vippsas/vipps-magento/wiki/FAQ).
 
 ### Customization
 
-Please see our [Customization section](https://github.com/vippsas/vipps-magento/wiki/Customization)
+Please see our [Customization section](https://github.com/vippsas/vipps-magento/wiki/Customization).
 
 
 
@@ -57,4 +56,4 @@ Please see: https://github.com/vippsas/vipps-magento-v1
 
 Please follow this [instruction](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/) to contact us.
 
-For plugin related issues, please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact integration@vipps.no.
+For plugin related issues, please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact developer@vippsmobilepay.com.
