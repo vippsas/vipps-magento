@@ -1,4 +1,4 @@
-# Frequently asked questions
+# Vipps Payment Module for Magento 2: Frequently asked questions
 
 ## How do I capture an order?
 

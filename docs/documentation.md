@@ -1,4 +1,4 @@
-# Vipps Payment Module for Magento 2: Documentation
+# Vipps Payment Module for Magento 2: User Guide
 
 ## Prerequisites
 
