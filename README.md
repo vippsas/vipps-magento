@@ -21,19 +21,15 @@ Vipps Payment is used by large and small companies. From years of shopping safel
 For more information about Vipps Payment and Magento 2, please visit [Vipps Payment for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/) site.
 
 
-See also the Magento documentation for order management: https://docs.magento.com/m2/ce/user_guide/sales/order-management.html
+See also the [Magento documentation for order management](https://docs.magento.com/m2/ce/user_guide/sales/order-management.html).
 
 ### Documentation
 
-Please see our [Documentation](https://github.com/vippsas/vipps-magento/wiki/Documentation).
-
-### Installation and Configuration
-
-Please follow the instructions in the [installation guide](./DOCUMENTATION.md#installation).
+Please see our [Documentation](./docs/documentation.md)
 
 ### FAQ
 
-Please see our [FAQ section](https://github.com/vippsas/vipps-magento/wiki/FAQ).
+Please see our [FAQ section](./docs/FAQ.md).
 
 ### Customization
 
@@ -41,9 +37,9 @@ Please see our [Customization section](https://github.com/vippsas/vipps-magento/
 
 ### Vipps Login module for Magento
 
-Please see: [Vipps Login module for Magento](https://github.com/vippsas/vipps-login-magento)
+Please see: [Vipps Login module for Magento](https://developer.vippsmobilepay.com/docs/plugins-ext/login-magento/).
 
 ### Vipps Payment module for Magento 1
 
 Vipps Payment module for Magento 1 is deprecated.
-You can still find the documentation on GitHub: <https://github.com/vippsas/vipps-magento-v1>
+You can still find the documentation on GitHub: <https://github.com/vippsas/vipps-magento-v1>.

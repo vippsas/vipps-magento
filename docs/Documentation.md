@@ -211,3 +211,18 @@ This means that you should change Tax Calculation Settings to be based on **Ship
 ![Tax Calculation Settings](images/tax-origin-settings.png)
 
 Otherwise, an issue with calculating delivery cost might occur.
+
+## Customization
+
+The Magento platform provides various ways to create custom flows that are difficult and unnecessary to describe in one page. Here we provide a guide and references that can help you to understand the general idea of where to start.
+
+For example, to customize the *Order Success* page, you can:
+
+* Use an existing 3rd party module or by doing the customization yourself. Visit [Magento Marketplace](https://marketplace.magento.com/) to see which 3rd party solutions are available.
+
+* Do the customization yourself. Refer to [Magento Frontend Developer Guide](https://devdocs.magento.com/guides/v2.4/frontend-dev-guide/bk-frontend-dev-guide.html).
+
+   The following code is related to the *Order Success* page:
+
+   - Template: `magento/module-checkout/view/frontend/templates/success.phtml`
+   - Layout: `magento/module-checkout/view/frontend/layout/checkout_onepage_success.xml`
