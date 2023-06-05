@@ -1,21 +1,3 @@
-
-## Table of contents
-
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Add a separate connection for Vipps resources](#add-a-separate-connection-for-vipps-resources)
-- [Enable debug mode / requests profiling](#enable-debug-mode--requests-profiling)
-- [Settings](#settings)
-- [Basic Vipps Settings](#basic-vipps-settings)
-- [Checkout Settings](#checkout-settings)
-- [Express Checkout Settings](#express-checkout-settings)
-- [Cancellation](#cancellation-settings)
-- [Order processing](#order-processing)
-- [Quote Processing Flow](#quote-processing-flow)
-- [Requests Profiling](#requests-profiling)
-- [Additional info](#additional-info)
-
-
 ### Installation
 
 1. Navigate to your [Magento root directory](https://devdocs.magento.com/guides/v2.2/extension-dev-guide/build/module-file-structure.html).

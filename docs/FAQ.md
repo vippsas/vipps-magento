@@ -1,17 +1,4 @@
-
-<!-- START_COMMENT -->
-## Table of contents
-
-- [How can I get help with Vipps for Magento?](#how-can-i-get-help-with-vipps-for-magento)
-  - [How can I get help with Vipps (unrelated to Magento)?](#how-can-i-get-help-with-vipps-unrelated-to-magento)
-- [Why does it take so long after purchase before orders are created in Magento?](#why-does-it-take-so-long-after-purchase-before-orders-are-created-in-magento)
-- [Why are some orders missing in Magento?](#why-are-some-orders-missing-in-magento)
-- [Klarna Checkout](#klarna-checkout)
-- [Known issues](#known-issues)
-- [How to enable debug mode / requests profiling](#how-to-enable-debug-mode-requests-profiling)
-- [Quote Monitoring Tool](#quote-monitoring-tool)
-- [Tax Calculation for Express Checkout](#tax-calculation-for-express-checkout)
-<!-- END_COMMENT -->
+# Frequently asked Questions
 
 ## How can I get help with Vipps for Magento?
 
