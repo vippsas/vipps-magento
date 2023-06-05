@@ -25,6 +25,7 @@ See also the [Frequently asked questions](./docs/FAQ.md) page.
 
 This page contains documentation about Vipps Payment Module for Magento 2. The plugin is available at <https://github.com/vippsas/vipps-magento/releases>.
 
+<!-- START_COMMENT -->
 ## Related topics
 
 * [Magento documentation for order management](https://docs.magento.com/m2/ce/user_guide/sales/order-management.html)
@@ -36,3 +37,4 @@ This page contains documentation about Vipps Payment Module for Magento 2. The p
 [Magento](https://magento.com) is an open-source e-commerce platform written in PHP.
 Magento Inc is an [Adobe company](https://business.adobe.com/products/magento/magento-commerce.html).
 For Magento support, please see the [Magento Help Center](https://support.magento.com/hc/en-us).
+<!-- END_COMMENT -->
