@@ -75,19 +75,18 @@ These settings are required to prevent the loss of profiles when Magento reverts
 
 The Vipps Payments configuration is divided by sections. It helps to quickly find and manage settings of each module feature:
 
-* [Basic Vipps Settings](#basic-vipps-settings)
+* [Basic Settings](#basic-settings)
 * [Checkout settings](#checkout-settings)
 * [Express Checkout Settings](#express-checkout-settings)
 * [Cancellation Settings](#cancellation-settings)
 
+Ensure that you check all configuration settings before using Vipps Payment. Pay special attention to the [Basic Settings](#basic-settings) section.
 
-Ensure that you check all configuration settings before using Vipps Payment. Pay special attention to the [Basic Vipps Settings](#basic-vipps-settings) section.
+### Basic Settings
 
-### Basic Vipps Settings
+Basic Settings include:
 
-![Screenshot of Basic Vipps Settings](images/vipps_basic_v2.png)
-
-* *Environment*  - Vipps API mode, which can be *Production* or *Develop*.
+* *Environment* - Vipps API mode, which can be *Production* or *Develop*.
 * *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
 * *Debug* - Log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
 * *Order Status* - Default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.
@@ -97,11 +96,13 @@ Ensure that you check all configuration settings before using Vipps Payment. Pay
 * *Client Secret* - Client secret for the merchant (the "password").
 * *Subscription Key* - Subscription key for the API product.
 
-Pay careful attention to: *Merchant Serial Number*, *Client ID*, *Client Secret*, *Subscription Key*. See [API keys](https://developer.vippsmobilepay.com/docs/vipps-developers/common-topics/api-keys/) for information about how to find these values.
+See [API keys](https://developer.vippsmobilepay.com/docs/vipps-developers/common-topics/api-keys/) for information about how to find the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*.
+
+![Screenshot of Basic Vipps Settings](images/vipps_basic_v2.png)
 
 ### Checkout Settings
 
-Vipps payment will be unavailable when disallowed methods are selected on checkout. Also chosen methods will be unavailable on Vipps Express Checkout page.
+Vipps payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the Express Checkout page.
 
 ![Screenshot of Checkout Settings](images/checkout_settings.png)
 
@@ -111,7 +112,7 @@ Vipps payment will be unavailable when disallowed methods are selected on checko
 
 ### Cancellation Settings
 
-Here you could configure following settings:
+The Cancellation Settings include:
 
  - *Cart Persistence* - If set to *Yes* and client cancels an order on Vipps side, the cart will still contain the recently added products.
  - *Number of Attempts* - The number of failed order placement attempts allowed before the order will be canceled.
@@ -121,40 +122,40 @@ Here you could configure following settings:
 
 ![Screenshot of Checkout Settings](images/cancellation_settings.png)
 
+
 ## Order processing
 
 Please refer to the Magento official documentation to learn more about [order processing](https://docs.magento.com/user-guide/sales/order-processing.html) and [order management](https://docs.magento.com/m2/ce/user_guide/sales/order-management.html).
 
 ### Quote Processing Flow
 
-The quote is an offer and if the user accepts it (by checking out) it converts to order.
+The quote is an offer. The user accepts the offer when checking out, and it is converted to an order.
 
-When payment has been initiated (customer redirected to Vipps) Magento creates a new record on `Vipps Quote Monitoring` page and starts tracking a Vipps order.
-To do that Magento has a cron job that runs by schedule/each 10 min.
+When the payment has been initiated (customer redirected to Vipps), Magento creates a new record on the *Quote Monitoring* page and starts tracking a Vipps order.
+To do that, Magento has a cron job that runs by schedule/each 10 minutes.
 
-You can find this page under the *System* > *Vipps* menu. Under *Store* > *Sales* > *Payment Methods* > *Vipps* > *Cancellation*, you can find appropriate configuration settings.
-
+You can find this page under the *System* > *Vipps* menu. For the cancellation configuration settings, see *Store* > *Sales* > *Payment Methods* > *Vipps* > *Cancellation*.
 
 1. When a payment is initiated, a new record is created on the Vipps *Quote Monitoring* page with status `New`.
-   - In case of "Regular Payment" order immediately placed on Magento side with status "new/pending/payment review" (depends on appropriate configuration)
+   - For a "Regular Payment", the order is immediately placed on the Magento side with status *new*, *pending*, or *payment review*, depending on the configuration.
 
-1. Magento polls Vipps for orders to process by cron.
-1. When order was accepted on Vipps side, Magento is trying to place an order and marks a record as `Placed`
-   - In case of "Regular Payment" Magento order moved to status "processing"
+1. Magento regularly (by cron) polls Vipps for orders to process.
+1. When an order is accepted on Vipps side, Magento tries to place the order and marks a record as `Placed`
+   - For a "Regular Payment", the Magento order is moved to status `Processing`.
 
-1. When order was cancelled on Vipps side, Magento marks such record as `Cancelled`
-   - Cancel order on Magento side if it was previously placed.
+1. When an order is cancelled on the Vipps side, Magento marks such record as `Cancelled`.
+   - The order is canceled on the Magento side, if it was previously placed.
 
-1. If order has not been accepted on Vipps side within some period of time so it marked as expired, Magento marks it as `Expired`
-   - Cancel order on Magento side if it was placed before.
+1. If an order has not been accepted on the Vipps side within some period of time, it marked as expired. Magento subsequently marks the order as `Expired`.
+   - The order is canceled on the Magento side, if it was previously placed.
 
-1. If order has not been yet accepted on Vipps side and has not been expired yet, Magento marks it as `Processing`. Appropriate message added on record details page.
-1. If order accepted on Vipps side but an error occurred during order placement on Magento side, such record marks as `Processing`. Appropriate message added on record details page.
-1. Magento is trying to process the same record `3` times and when it failed after `3` times such record marks as `Place Failed`.
-1. It is possible to specify that Magento has to cancel Vipps order automatically when appropriate Magento quote was failed so that client's money released. See `Store -> Sales -> Payment Methods -> Vipps -> Cancellation`
-1. If it is specified that Magento has to cancel all failed quotes then Magento fetches all records marked as `Place Failed`, cancel them and marks as `Cancelled`
+1. If an order has not been yet been accepted on the Vipps side and has not yet expired, Magento marks it as `Processing`. An appropriate message is added on *Record details* page.
+1. If an order has been accepted on the Vipps side, but an error has occurred during order placement on Magento side, such record marks as `Processing`. An appropriate message is added on record details page.
+1. Magento will attempt to process a record three times. After it fails three times, the record is marked as `Place Failed`.
+1. It is possible to specify that Magento must cancel a Vipps order automatically when an appropriate Magento quote has failed, so that client's money released. See *Store* > *Sales* > *Payment Methods* > *Vipps* > *Cancellation*.
+1. If it is specified that Magento must cancel all failed quotes, then Magento fetches all records marked as `Place Failed`, cancels them, and marks them as `Cancelled`.
 
-Here is a diagram of the process
+Here is a diagram of the process:
 
 ![Screenshot of Quote Processing Flow](images/quote-monitoring-flow.png)
 
