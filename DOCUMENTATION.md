@@ -66,31 +66,37 @@ These settings are required to prevent profiles loss when Magento reverts invoic
 
 ### Enable debug mode / requests profiling
 
-If you have experienced any issue with Vipps, try to enable *Request Profiling* and *Debug* features in the Vipps payment configuration area: *Stores* > *Configuration* > *Sales* > *Payment Methods* > *Vipps*
+If you have experienced any issue with Vipps, try to enable *Request Profiling* and *Debug* features in the Vipps payment configuration area: *Stores* > *Configuration* > *Sales* > *Payment Methods* > *Vipps*.
 
-After that, all information related to Vipps payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
+![Screenshot of Vipps Configuration Area](docs/images/vipps_basic.png)
 
-Requests Profiling is a page in Magento admin panel that helps you to track a communication between Vipps and Magento.
-You can find the page under `System -> Vipps`
+
+*Requests Profiling* is a page in the Magento admin panel that helps you to track a communication between Vipps and Magento.
+You can find the page under *System* > *Vipps*.
 
 ![Screenshot of Request Profiling Grid](docs/images/request_profiling.png)
 
-On the page you can see the list of all requests for all orders that Magento sends to Vipps.
-By clicking on a link `Show` in an `Action` column of grid you can find appropriate response from Vipps.
+On the page, you can see the list of all requests for all orders that Magento sends to Vipps.
+By clicking on *Show* in the *Action* column of the grid, you can find the appropriate response from Vipps.
 
-Using built-in Magento grid filter you could find all requests per order that you are interested in.
+By using the built-in Magento grid filter, you can find all requests per order that you are interested in.
+
+Logs which are related to the Vipps payment module are located under two files:
+
+* `{project_root}/var/log/vipps_exception.log`
+* `{project_root}/var/log/vipps_debug.log`
 
 ## Settings
 
-The Payments configuration settings are divided into sections:
+The payments configuration settings are divided into these sections:
 
-1. Basic Vipps Settings.
-1. Express Checkout Settings.
-1. Additional Settings.
+1. Basic Vipps Settings
+1. Express Checkout Settings
+1. Additional Settings
 
 ![Screenshot of Vipps Settings](docs/images/vipps_method.png)
 
-Please ensure that you check all configuration settings before using Vipps Payment. Pay attention to the Vipps Basic Settings section, namely *Saleunit Serial Number*, *Client ID*, *Client Secret*, *Subscription Key*.
+Ensure that you check all configuration settings before using Vipps Payment. Pay special attention to the Vipps Basic Settings section, namely *Saleunit Serial Number*, *Client ID*, *Client Secret*, *Subscription Key*.
 
 For information about how to find the above values, see the [Vipps Developer documentation](https://developer.vippsmobilepay.com/).
 
@@ -98,11 +104,11 @@ For information about how to find the above values, see the [Vipps Developer doc
 
 ![Screenshot of Basic Vipps Settings](docs/images/vipps_basic.png)
 
-* *Environment*  - Vipps API mode. Can be *production/develop*.
-* *Payment Action* - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
-* *Order Status* - default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.
-* *Debug* - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
-* *Request/Response Profiling* - log all requests/responses to Vipps API into `vipps_profiling` table.
+* *Environment*  - Vipps API mode, which can be *Production* or *Develop*.
+* *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
+* *Order Status* - Default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.
+* *Debug* - Log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
+* *Request/Response Profiling* - Log all requests/responses to Vipps API into `vipps_profiling` table.
 
 ### Express Checkout Settings
 
@@ -112,7 +118,7 @@ For information about how to find the above values, see the [Vipps Developer doc
 
 ![Screenshot of Vipps Additional Settings](docs/images/vipps_additional_settings.png)
 
-* *Process type* - Whether cancel quote automatically or not.
+* *Processing type* - Manually or automatically cancel quote.
 * *Enable Partial Void* - Allow cancellation for captured (not refunded) transaction (mostly used to cancel order item).
 
 ## Quote Monitoring
@@ -122,7 +128,7 @@ Quote cart contents in Magento. Theoretically, the quote is an offer and if the 
 When payment has been initiated (customer redirected to Vipps) Magento creates a new record on `Vipps Quote Monitoring` page and starts tracking a Vipps order.
 To do that Magento has a cron job that runs by schedule/each 10 min.
 
-You can find this page under `System -> Vipps` menu section. Under `Store -> Sales -> Payment Methods -> Vipps -> Cancellation` you can find appropriate configuration settings.
+You can find this page under the *System* > *Vipps* menu. Under *Store* > *Sales* > *Payment Methods* > *Vipps* > *Cancellation*, you can find appropriate configuration settings.
 
 ## Order handling
 
