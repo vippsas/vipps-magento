@@ -46,8 +46,6 @@ Please see our [FAQ section](https://github.com/vippsas/vipps-magento/wiki/FAQ).
 
 Please see our [Customization section](https://github.com/vippsas/vipps-magento/wiki/Customization).
 
-
-
 ### Vipps Login module for Magento
 
 Please see: https://github.com/vippsas/vipps-login-magento
@@ -59,5 +57,3 @@ Please see: https://github.com/vippsas/vipps-magento-v1
 ### Vipps contact information
 
 Please follow this [instruction](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/) to contact us.
-
-For plugin related issues, please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact developer@vippsmobilepay.com.
