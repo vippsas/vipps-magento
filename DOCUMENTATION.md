@@ -11,7 +11,6 @@
   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
 
-
 ## Installation
 
 ### Installation via Composer
@@ -31,8 +30,8 @@ Here are steps required to install Payments extension via Component Manager.
 1. Enter Marketplace authentication keys. Please read about authentication keys generation.
 1. Navigate to *Component Manager* page.
 1. On the *Component Manager* page, click the *Sync* button to update your new purchased extensions.
-6. Click *Install* in the *Action* column for Realex Payments component.
-7. Follow *Web Setup* Wizard instructions.
+1. Click *Install* in the *Action* column for Realex Payments component.
+1. Follow *Web Setup* Wizard instructions.
 
 ## Configuration
 
@@ -157,8 +156,10 @@ In Magento, an order can be canceled in the case where all invoices and shipment
 Otherwise, the refund should be finished first. The Vipps Payment module supports offline partial cancellation. It is used to cancel separate order items.
 
 ### How do I refund an order?
+
 For orders refunding Magento propose [Credit Memo](https://docs.magento.com/user-guide/sales/credit-memos.html) functionality.
-Credit Memo allows to make a refund for captured transaction.
+Credit Memo allows you to make a refund for captured transaction.
 
 ### How do I partially refund an order?
-It can be done by specifying `Items to Refund` on `Credit Memo` page and updating `Qty to Refund` field.
+
+You can partially refund an order by specifying *Items to Refund* on the *Credit Memo* page and updating the *Qty to Refund* field.
