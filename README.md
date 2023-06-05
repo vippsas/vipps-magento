@@ -1,63 +1,49 @@
+<!-- START_METADATA
+---
+sidebar_position: 1
+hide_table_of_contents: true
+pagination_next: null
+pagination_prev: null
+---
+END_METADATA -->
+
 # Vipps Payment Module for Magento 2
 
 <!-- START_COMMENT -->
 💥 Please use the plugin pages on [https://developer.vippsmobilepay.com](https://developer.vippsmobilepay.com/docs/vipps-plugins/). 💥
 <!-- END_COMMENT -->
 
-This Magento v2 module is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
+*Vipps Payment* offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
 
-## Magento
+*Vipps Payment* is used by large and small companies. From years of shopping safely with Vipps, customers trust their personal information will remain secure. Businesses have the reassurance of our advanced fraud protection and payment protection policy.
 
-Magento is an open-source e-commerce platform written in PHP: <https://magento.com>.
+Information about ordering the plugin is available at [Vipps for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/).
+
+## Documentation
+
+The [Vipps Payment Module for Magento 2: User Guide](./docs/documentation.md) contains:
+
+* [Installation](./docs/documentation.md#installation)
+* [Configuration](./docs/documentation.md#configuration)
+* [Debugging](./docs/documentation.md#enable-debug-mode--requests-profiling)
+* [Customization](./docs/documentation.md#customization)
+
+See also the [Frequently asked questions](./docs/FAQ.md) page.
+
+## Plugin module
+
+This page contains documentation about Vipps Payment Module for Magento 2. The plugin is available at <https://github.com/vippsas/vipps-magento/releases>.
+
+<!-- START_COMMENT -->
+## Related topics
+
+* [Magento documentation for order management](https://docs.magento.com/m2/ce/user_guide/sales/order-management.html)
+* [Vipps Login module for Magento](https://developer.vippsmobilepay.com/docs/plugins-ext/login-magento/)
+* [Vipps Payment module for Magento 1 (deprecated)](https://github.com/vippsas/vipps-magento-v1)
+
+## About Magento
+
+[Magento](https://magento.com) is an open-source e-commerce platform written in PHP.
+Magento Inc is an [Adobe company](https://business.adobe.com/products/magento/magento-commerce.html).
 For Magento support, please see the [Magento Help Center](https://support.magento.com/hc/en-us).
-Magento Inc is an Adobe company: https://business.adobe.com/products/magento/magento-commerce.html.
-
-## About Vipps Payment for Magento 2
-
-Vipps Payment offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
-
-Vipps Payment is used by large and small companies.  From years of shopping safely with Vipps, customers trust their personal information will remain secure.  Businesses have the reassurance of our advanced fraud protection and payment protection policy.
-
-For more information about Vipps Payment and Magento 2, please visit [Vipps Payment for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/) site.
-
-
-### Prerequisites
-* Magento 2.2.x, Magento 2.3.x, Magento 2.4.x
-   * [Magento 2 System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
-* SSL is installed on your site and active on the Checkout page
-* Supported protocols HTTP1/HTTP1.1
-   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
-   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
-* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)
-
-### Installation and Configuration
-
-Please follow the instructions in the [installation guide](INSTALL.md).
-
-### Documentation
-
-Please see our [Documentation](https://github.com/vippsas/vipps-magento/wiki/Documentation).
-
-### FAQ
-
-Please see our [FAQ section](https://github.com/vippsas/vipps-magento/wiki/FAQ).
-
-### Customization
-
-Please see our [Customization section](https://github.com/vippsas/vipps-magento/wiki/Customization).
-
-
-
-### Vipps Login module for Magento
-
-Please see: https://github.com/vippsas/vipps-login-magento
-
-### Vipps Payment module for Magento 1
-
-Please see: https://github.com/vippsas/vipps-magento-v1
-
-### Vipps contact information
-
-Please follow this [instruction](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/) to contact us.
-
-For plugin related issues, please submit an issue on GitHub [for Magento 2](https://github.com/vippsas/vipps-magento) or contact developer@vippsmobilepay.com.
+<!-- END_COMMENT -->
