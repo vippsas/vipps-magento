@@ -3,7 +3,7 @@
 1. Magento 2 installed ([Magento 2.2.x](https://devdocs.magento.com/guides/v2.2/release-notes/bk-release-notes.html), [Magento 2.3.x](https://devdocs.magento.com/guides/v2.3/release-notes/bk-release-notes.html), [Magento 2.4.x](https://devdocs.magento.com/guides/v2.4/release-notes/bk-release-notes.html))
 1. SSL must be installed on your site and active on your Checkout pages.
 1. You must have a Vipps merchant account. See [Vipps på Nett](https://www.vipps.no/bedrift/vipps-pa-nett)
-1. As with _all_ Magento extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
+1. As with *all* Magento extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
 
 ## Installation
 
@@ -33,11 +33,12 @@ The Vipps Payment module can be easily configured to meet business expectations 
 
 1. From Magento *Admin*, navigate to *Store* > *Configuration* > *Sales* > *Payment Methods* section.
 1. On the *Payments Methods* page, the *Vipps Payments* method should be listed together with other installed payment methods in a system.
-1. By clicking the `Configure` button, all configuration module settings will be shown.
-1. Once you have finished with the configuration simply click *Close* and *Save* button for your convenience.
-1. [Clear Magento Cache.](https://devdocs.magento.com/guides/v2.4/config-guide/cli/config-cli-subcommands-cache.html)
+1. By clicking the *Configure* button, all configuration module settings will be shown.
+1. Once you have finished with the configuration, click *Close* and *Save* button.
+1. [Clear Magento Cache](https://devdocs.magento.com/guides/v2.4/config-guide/cli/config-cli-subcommands-cache.html).
 
 ### Add a separate connection for Vipps resources
+
 These settings are required to prevent profiles loss when Magento reverts invoice/refund transactions.  
 
 * Duplicate 'default' connection in `app/etc/env.php` and name it 'vipps'. It should look like:
@@ -55,7 +56,7 @@ These settings are required to prevent profiles loss when Magento reverts invoic
          ),
 ```
 
-* Add also the following configuration to 'resource' array in the same file:
+* Then, add the following configuration to the `resource` array in the same file:
 
 ```php
          'vipps' => array (
@@ -65,9 +66,7 @@ These settings are required to prevent profiles loss when Magento reverts invoic
 
 ### Enable debug mode / requests profiling
 
-If you have experienced any issue with Vipps, try to enable `Request Profiling` and `Debug` features under Vipps payment configuration area:
-
-`Stores -> Configuration -> Sales -> Payment Methods -> Vipps`
+If you have experienced any issue with Vipps, try to enable *Request Profiling* and *Debug* features in the Vipps payment configuration area: *Stores* > *Configuration* > *Sales* > *Payment Methods* > *Vipps*
 
 After that, all information related to Vipps payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
 
@@ -76,14 +75,14 @@ You can find the page under `System -> Vipps`
 
 ![Screenshot of Request Profiling Grid](docs/images/request_profiling.png)
 
-On the page you can see the list of all requests for all orders that Magento sends to Vipps. 
+On the page you can see the list of all requests for all orders that Magento sends to Vipps.
 By clicking on a link `Show` in an `Action` column of grid you can find appropriate response from Vipps.
 
 Using built-in Magento grid filter you could find all requests per order that you are interested in.
 
 ## Settings
 
-Vipps Payments configuration is divided by sections. It helps to quickly find and manage settings of each module feature:
+The Payments configuration settings are divided into sections:
 
 1. Basic Vipps Settings.
 1. Express Checkout Settings.
@@ -91,7 +90,7 @@ Vipps Payments configuration is divided by sections. It helps to quickly find an
 
 ![Screenshot of Vipps Settings](docs/images/vipps_method.png)
 
-Please ensure you check all configuration settings prior to using Vipps Payment. Pay attention to the Vipps Basic Settings section, namely `Saleunit Serial Number`, `Client ID`, `Client Secret`, `Subscription Key`.
+Please ensure that you check all configuration settings before using Vipps Payment. Pay attention to the Vipps Basic Settings section, namely *Saleunit Serial Number*, *Client ID*, *Client Secret*, *Subscription Key*.
 
 For information about how to find the above values, see the [Vipps Developer documentation](https://developer.vippsmobilepay.com/).
 
@@ -99,11 +98,11 @@ For information about how to find the above values, see the [Vipps Developer doc
 
 ![Screenshot of Basic Vipps Settings](docs/images/vipps_basic.png)
 
-*Environment*  - Vipps API mode. Can be *production/develop*.
-*Payment Action* - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
-*Order Status* - default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.
-*Debug* - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.  
-*Request/Response Profiling* - log all requests/responses to Vipps API into `vipps_profiling` table.
+* *Environment*  - Vipps API mode. Can be *production/develop*.
+* *Payment Action* - *Authorize*(process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
+* *Order Status* - default order status before redirecting back to Magento. Can be *Pending* or *Payment Review*.
+* *Debug* - log all actions with Vipps Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
+* *Request/Response Profiling* - log all requests/responses to Vipps API into `vipps_profiling` table.
 
 ### Express Checkout Settings
 
@@ -113,9 +112,8 @@ For information about how to find the above values, see the [Vipps Developer doc
 
 ![Screenshot of Vipps Additional Settings](docs/images/vipps_additional_settings.png)
 
-
-*Process type* - whether cancel quote automatically or not.  
-*Enable Partial Void* - allow cancellation for captured(not refunded) transaction (mostly used to cancel order item).
+* *Process type* - Whether cancel quote automatically or not.
+* *Enable Partial Void* - Allow cancellation for captured (not refunded) transaction (mostly used to cancel order item).
 
 ## Quote Monitoring
 
@@ -127,19 +125,23 @@ To do that Magento has a cron job that runs by schedule/each 10 min.
 You can find this page under `System -> Vipps` menu section. Under `Store -> Sales -> Payment Methods -> Vipps -> Cancellation` you can find appropriate configuration settings.
 
 ## Order handling
-Please refer to Magento official documentation to learn more about [order processing](https://docs.magento.com/user-guide/sales/order-processing.html).
+
+Please refer to the Magento official documentation to learn more about [order processing](https://docs.magento.com/user-guide/sales/order-processing.html).
 
 ### How do I capture an order?
-When Payment Action is set to Authorize and Capture invoice is created automatically in Magento. In such a case, the Invoice button does not appear, and the order is ready to ship.
-For more details about capturing order refer to [Creating an Invoice documentation](https://docs.magento.com/user-guide/sales/invoice-create.html).
+
+When *Payment Action* is set to *Authorize* and *Capture*, the invoice is created automatically in Magento. In such a case, the *Invoice* button does not appear, and the order is ready to ship.
+For more details about capturing orders, refer to [Creating an Invoice documentation](https://docs.magento.com/user-guide/sales/invoice-create.html).
 
 ### How do I partially capture an order?
-Visit invoice page of your order by click `Invoice` button on order page. In the `Items to Invoice` section, update the `Qty to Invoice` column to include only specific items on the invoice.
-Then, click `Update Qty’s` and submit Invoice.
+
+Visit the invoice page of your order by clicking the *Invoice* button on the order page. In the *Items to Invoice* section, update the *Qty to Invoice* column to include only specific items on the invoice.
+Then, click *Update Qty’s* and submit *Invoice*.
 
 ### How do I cancel an order?
-In Magento an order can be canceled in case when all invoices and shipments has been returned. When Vipps Payment transaction has not been captured.
-Otherwise, refund should be finished first. Vipps Payment module supports offline partial cancellation. It is used to cancel separate order items.
+
+In Magento, an order can be canceled in the case where all invoices and shipments have been returned and the Vipps Payment transaction has not been captured.
+Otherwise, the refund should be finished first. The Vipps Payment module supports offline partial cancellation. It is used to cancel separate order items.
 
 ### How do I refund an order?
 For orders refunding Magento propose [Credit Memo](https://docs.magento.com/user-guide/sales/credit-memos.html) functionality.
@@ -147,7 +149,3 @@ Credit Memo allows to make a refund for captured transaction.
 
 ### How do I partially refund an order?
 It can be done by specifying `Items to Refund` on `Credit Memo` page and updating `Qty to Refund` field.
-
-## Additional info
-
-Please contact by [support](https://github.com/vippsas/vipps-magento/wiki).
