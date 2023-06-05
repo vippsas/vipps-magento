@@ -1,4 +1,11 @@
-# Vipps Payment Module for Magento 2: User Guide
+<!-- START_METADATA
+---
+pagination_next: null
+pagination_prev: null
+---
+END_METADATA -->
+
+# User Guide
 
 ## Prerequisites
 
