@@ -35,12 +35,12 @@ Here are steps required to install Payments extension via Component Manager.
 
 ## Configuration
 
-The Vipps Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via `Magento Admin Panel`.
+The Vipps Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via the *Magento Admin Panel*.
 
 1. From Magento *Admin*, navigate to *Store* > *Configuration* > *Sales* > *Payment Methods* section.
 1. On the *Payments Methods* page, the *Vipps Payments* method should be listed together with other installed payment methods in a system.
 1. By clicking the *Configure* button, all configuration module settings will be shown.
-1. Once you have finished with the configuration, click *Close* and *Save* button.
+1. Once you have finished the configuration, click *Close* and *Save* button.
 1. [Clear Magento Cache](https://devdocs.magento.com/guides/v2.4/config-guide/cli/config-cli-subcommands-cache.html).
 
 ### Add a separate connection for Vipps resources

@@ -16,10 +16,12 @@ Magento Inc is an Adobe company: https://business.adobe.com/products/magento/mag
 
 Vipps Payment offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
 
-Vipps Payment is used by large and small companies.  From years of shopping safely with Vipps, customers trust their personal information will remain secure.  Businesses have the reassurance of our advanced fraud protection and payment protection policy.
+Vipps Payment is used by large and small companies. From years of shopping safely with Vipps, customers trust their personal information will remain secure. Businesses have the reassurance of our advanced fraud protection and payment protection policy.
 
 For more information about Vipps Payment and Magento 2, please visit [Vipps Payment for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/) site.
 
+
+See also the Magento documentation for order management: https://docs.magento.com/m2/ce/user_guide/sales/order-management.html
 
 ### Documentation
 
