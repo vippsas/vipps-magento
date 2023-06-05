@@ -21,22 +21,13 @@ Vipps Payment is used by large and small companies.  From years of shopping safe
 For more information about Vipps Payment and Magento 2, please visit [Vipps Payment for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/) site.
 
 
-### Prerequisites
-* Magento 2.2.x, Magento 2.3.x, Magento 2.4.x
-   * [Magento 2 System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
-* SSL is installed on your site and active on the Checkout page
-* Supported protocols HTTP1/HTTP1.1
-   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
-   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://documentation.cpanel.net/display/EA4/Apache+Module%3A+HTTP2) or similar.
-* A verified Vipps Payment merchant account - [sign up here](https://vippsbedrift.no/signup/vippspanett/)
-
-### Installation and Configuration
-
-Please follow the instructions in the [installation guide](INSTALL.md).
-
 ### Documentation
 
 Please see our [Documentation](https://github.com/vippsas/vipps-magento/wiki/Documentation).
+
+### Installation and Configuration
+
+Please follow the instructions in the [installation guide](./DOCUMENTATION.md#installation).
 
 ### FAQ
 
@@ -48,12 +39,9 @@ Please see our [Customization section](https://github.com/vippsas/vipps-magento/
 
 ### Vipps Login module for Magento
 
-Please see: https://github.com/vippsas/vipps-login-magento
+Please see: [Vipps Login module for Magento](https://github.com/vippsas/vipps-login-magento)
 
 ### Vipps Payment module for Magento 1
 
-Please see: https://github.com/vippsas/vipps-magento-v1
-
-### Vipps contact information
-
-Please follow this [instruction](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/) to contact us.
+Vipps Payment module for Magento 1 is deprecated.
+You can still find the documentation on GitHub: <https://github.com/vippsas/vipps-magento-v1>
