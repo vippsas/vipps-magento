@@ -1,3 +1,14 @@
+<!-- START_METADATA
+---
+sidebar_label: Contributing
+sidebar_position: 100
+draft: true
+hide_table_of_contents: true
+pagination_next: null
+pagination_prev: null
+---
+END_METADATA -->
+
 # Contributing to Checkout with Vipps for Magento
 
 If you want to contribute: Great! No issue or pull request is too small!

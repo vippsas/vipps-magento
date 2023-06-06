@@ -1,6 +1,8 @@
 <!-- START_METADATA
 ---
+title: Vipps Payment Module for Magento 2 FAQ
 sidebar_label: FAQ
+sidebar_position: 50
 pagination_next: null
 pagination_prev: null
 ---

@@ -1,5 +1,8 @@
 <!-- START_METADATA
 ---
+title: Vipps Payment Module for Magento 2 User Guide
+sidebar_label: User Guide
+sidebar_position: 10
 pagination_next: null
 pagination_prev: null
 ---
