@@ -1,6 +1,6 @@
 <!-- START_METADATA
 ---
-title: Payment Module for Magento 2 plugin
+title: Vipps Payment Module for Magento 2
 sidebar_label: Introduction
 sidebar_position: 1
 hide_table_of_contents: true
@@ -9,13 +9,13 @@ pagination_prev: null
 ---
 END_METADATA -->
 
-# Payment Module for Magento 2
+# Vipps Payment Module for Magento 2
+
+*This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).*
 
 <!-- START_COMMENT -->
 💥 Please use the plugin pages on [https://developer.vippsmobilepay.com](https://developer.vippsmobilepay.com/docs/vipps-plugins/). 💥
 <!-- END_COMMENT -->
-
-This module is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
 
 Vipps offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
 
