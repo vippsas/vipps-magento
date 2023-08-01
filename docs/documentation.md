@@ -106,7 +106,7 @@ Basic Settings include:
 * *Client Secret* - Client secret for the merchant (the "password").
 * *Subscription Key* - Subscription key for the API product.
 
-See [API keys](https://developer.vippsmobilepay.com/docs/vipps-developers/common-topics/api-keys/) for information about how to find the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*.
+See [API keys](https://developer.vippsmobilepay.com/docs/common-topics/api-keys/) for information about how to find the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*.
 
 ![Screenshot of Basic Vipps Settings](images/vipps_basic_v2.png)
 
