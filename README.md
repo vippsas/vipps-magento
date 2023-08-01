@@ -14,7 +14,7 @@ END_METADATA -->
 *This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).*
 
 <!-- START_COMMENT -->
-💥 Please use the plugin pages on [https://developer.vippsmobilepay.com](https://developer.vippsmobilepay.com/docs/vipps-plugins/). 💥
+💥 Please use the plugin pages on [https://developer.vippsmobilepay.com](https://developer.vippsmobilepay.com/docs/plugins/). 💥
 <!-- END_COMMENT -->
 
 Vipps offers a familiar and convenient buying experience that can help your customers spend more time shopping and less time checking out.
