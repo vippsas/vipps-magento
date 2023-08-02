@@ -47,7 +47,7 @@ The best way to report a problem (or ask a question) is to use GitHub's built-in
 
 ### How can I get help with Vipps (unrelated to Magento)?
 
-See: [How to contact Vipps](https://developer.vippsmobilepay.com/docs/vipps-developers/contact/).
+See: [How to contact Vipps](https://developer.vippsmobilepay.com/docs/contact/).
 
 ## Why does it take so long after purchase before orders are created in Magento?
 
