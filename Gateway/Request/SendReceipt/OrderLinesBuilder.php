@@ -99,19 +99,21 @@ class OrderLinesBuilder implements BuilderInterface
         $monitaryShippingTotalAmountExcludingTax = (int)($order->getShippingAmount() * 100);
         $monitaryShippingTaxAmount = $monitaryShippingTotalAmount - $monitaryShippingTotalAmountExcludingTax;
 
-        $orderLines[] = [
-            'name' => $order->getShippingDescription(),
-            'id' => 'shipping',
-            'totalAmount' => (int)($order->getShippingInclTax() * 100),
-            'totalAmountExcludingTax' => (int)($order->getShippingAmount() * 100),
-            'totalTaxAmount' => (int)($order->getShippingTaxAmount() * 100),
-            'taxPercentage' => $monitaryShippingTotalAmountExcludingTax > 0
-                ? (int)round($monitaryShippingTaxAmount * 100 / $monitaryShippingTotalAmountExcludingTax)
-                : 0,
-            'discount' => (int)($order->getShippingDiscountAmount() * 100),
-            'isReturn' => false,
-            'isShipping' => true
-        ];
+        if ($monitaryShippingTotalAmount > 0) {
+            $orderLines[] = [
+                'name' => $order->getShippingDescription(),
+                'id' => 'shipping',
+                'totalAmount' => (int)($order->getShippingInclTax() * 100),
+                'totalAmountExcludingTax' => (int)($order->getShippingAmount() * 100),
+                'totalTaxAmount' => (int)($order->getShippingTaxAmount() * 100),
+                'taxPercentage' => $monitaryShippingTotalAmountExcludingTax > 0
+                    ? (int)round($monitaryShippingTaxAmount * 100 / $monitaryShippingTotalAmountExcludingTax)
+                    : 0,
+                'discount' => (int)($order->getShippingDiscountAmount() * 100),
+                'isReturn' => false,
+                'isShipping' => true
+            ];
+        }
 
         return ['orderLines'=> $orderLines];
     }
