@@ -63,7 +63,8 @@ class TransferFactory implements TransferFactoryInterface
         'merchantInfo',
         'transaction',
         'orderLines',
-        'bottomLine'
+        'bottomLine',
+        'shouldReleaseRemainingFunds'
     ];
 
     /**
