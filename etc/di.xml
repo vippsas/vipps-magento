@@ -293,6 +293,7 @@
                 <item name="merchantInfo" xsi:type="string">Vipps\Payment\Gateway\Request\MerchantDataBuilder</item>
                 <item name="transaction" xsi:type="string">Vipps\Payment\Gateway\Request\TransactionDataBuilder</item>
                 <item name="transactionText" xsi:type="string">Vipps\Payment\Gateway\Request\TransactionTextDataBuilder</item>
+                <item name="shouldReleaseRemainingFunds" xsi:type="string">Vipps\Payment\Gateway\Request\ShouldReleaseRemainingFunds</item>
             </argument>
         </arguments>
     </virtualType>
