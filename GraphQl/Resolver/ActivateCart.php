@@ -22,7 +22,7 @@ use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
-use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Magento\Quote\Model\QuoteIdMask;

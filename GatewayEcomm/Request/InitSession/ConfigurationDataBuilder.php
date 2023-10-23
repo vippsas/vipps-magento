@@ -13,56 +13,51 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Command;
+namespace Vipps\Payment\GatewayEcomm\Request\InitSession;
 
-use Magento\Sales\Api\Data\OrderInterface;
-use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
-use Vipps\Payment\Gateway\Exception\VippsException;
+use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Directory\Model\AllowedCountries;
 
 /**
- * Class ReceiptSender
- * @package Vipps\Payment\Gateway\Command
- * @spi
+ * Class ConfigurationDataBuilder
+ * @package Vipps\Payment\GatewayEcomm\Request\InitSession
  */
-class ReceiptSender
+class ConfigurationDataBuilder implements BuilderInterface
 {
     /**
-     * @var CommandManagerInterface
+     * @var AllowedCountries
      */
-    private $commandManager;
+    private $allowedCountries;
 
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * ReceiptSender constructor.
+     * ConfigurationDataBuilder constructor.
      *
-     * @param CommandManagerInterface $commandManager
-     * @param LoggerInterface $logger
+     * @param AllowedCountries $allowedCountries
      */
     public function __construct(
-        CommandManagerInterface $commandManager,
-        LoggerInterface $logger
+        AllowedCountries $allowedCountries
     ) {
-        $this->commandManager = $commandManager;
-        $this->logger = $logger;
+        $this->allowedCountries = $allowedCountries;
     }
 
     /**
-     * @param OrderInterface $order
+     * Get related data for transaction section.
      *
-     * @return void
-     * @throws VippsException
+     * @param array $buildSubject
+     *
+     * @return array
+     * @throws \Exception
      */
-    public function send(OrderInterface $order): void
+    public function build(array $buildSubject)
     {
-        try {
-            $this->commandManager->sendReceipt($order);
-        } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
-        }
+        $data = [];
+
+
+        $data['customerInteraction'] = 'CUSTOMER_NOT_PRESENT';
+        $data['elements'] = 'Full';
+        //$data['userFlow'] = 'WEB_REDIRECT'; //WEB_REDIRECT|NATIVE_REDIRECT
+        $data['countries']['supported'] = $this->allowedCountries->getAllowedCountries();
+
+        return $data;
     }
 }

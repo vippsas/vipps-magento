@@ -22,7 +22,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;

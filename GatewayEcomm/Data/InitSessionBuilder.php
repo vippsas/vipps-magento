@@ -13,56 +13,60 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Command;
-
-use Magento\Sales\Api\Data\OrderInterface;
-use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
-use Vipps\Payment\Gateway\Exception\VippsException;
+namespace Vipps\Payment\GatewayEcomm\Data;
 
 /**
- * Class ReceiptSender
- * @package Vipps\Payment\Gateway\Command
- * @spi
+ * Class InitSessionBuilder
+ * @package Vipps\Payment\GatewayEcomm\Data
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ReceiptSender
+class InitSessionBuilder
 {
     /**
-     * @var CommandManagerInterface
+     * @var InitSessionFactory
      */
-    private $commandManager;
+    private $initSessionFactory;
 
     /**
-     * @var LoggerInterface
+     * @var array
      */
-    private $logger;
+    private $response;
 
     /**
-     * ReceiptSender constructor.
+     * InitSessionBuilder constructor.
      *
-     * @param CommandManagerInterface $commandManager
-     * @param LoggerInterface $logger
+     * @param InitSessionFactory $initSessionFactory
      */
     public function __construct(
-        CommandManagerInterface $commandManager,
-        LoggerInterface $logger
+        InitSessionFactory $initSessionFactory
     ) {
-        $this->commandManager = $commandManager;
-        $this->logger = $logger;
+        $this->initSessionFactory = $initSessionFactory;
     }
 
     /**
-     * @param OrderInterface $order
+     * Set request to builder
      *
-     * @return void
-     * @throws VippsException
+     * @param $response
+     *
+     * @return $this
      */
-    public function send(OrderInterface $order): void
+    public function setData($response)
     {
-        try {
-            $this->commandManager->sendReceipt($order);
-        } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
-        }
+        $this->response = $response;
+        return $this;
+    }
+
+    /**
+     * build session object
+     *
+     * @return InitSession
+     */
+    public function build()
+    {
+        return $this->initSessionFactory->create(['data' => [
+            'token' => $this->response['token'] ?? null,
+            'checkoutFrontendUrl' => $this->response['checkoutFrontendUrl'] ?? null,
+            'pollingUrl' => $this->response['pollingUrl'] ?? null,
+        ]]);
     }
 }

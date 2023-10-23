@@ -1,0 +1,561 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2020 Vipps
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+  ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+  ~ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+  ~ and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+  ~ TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL
+  ~ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  ~ IN THE SOFTWARE.
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+<!-- from this -->
+<!--    <preference for="Vipps\Payment\Api\TokenProviderInterface"-->
+<!--                type="Vipps\Payment\Model\TokenProvider"/>-->
+
+    <preference for="Vipps\Payment\Api\CheckoutCommandManagerInterface"
+                type="Vipps\Payment\GatewayEcomm\Command\CheckoutCommandManager" />
+
+    <preference for="Vipps\Payment\Api\PaymentCommandManagerInterface"
+                type="Vipps\Payment\GatewayEcomm\Command\PaymentCommandManager" />
+
+    <preference for="Vipps\Payment\Model\ModuleMetadataInterface"
+                type="Vipps\Payment\Model\ModuleMetadata"/>
+
+    <preference for="Vipps\Payment\Api\QuoteRepositoryInterface"
+                type="Vipps\Payment\Model\QuoteRepository"/>
+
+
+    <preference for="Vipps\Payment\Api\Profiling\Data\ItemSearchResultsInterface"
+                type="Magento\Framework\Api\SearchResults" />
+    <preference for="Vipps\Payment\Api\Profiling\Data\ItemInterface"
+                type="Vipps\Payment\Model\Profiling\Item" />
+    <preference for="Vipps\Payment\Api\Profiling\ItemRepositoryInterface"
+                type="Vipps\Payment\Model\Profiling\ItemRepository" />
+    <preference for="Vipps\Payment\Model\Profiling\ProfilerInterface"
+                type="Vipps\Payment\Model\Profiling\Profiler" />
+
+    <preference for="Vipps\Payment\Api\Logistics\IntegrationsProviderInterface"
+                type="Vipps\Payment\Model\Logistics\IntegrationsProvider" />
+
+    <type name="Vipps\Payment\Model\Logistics\IntegrationsProvider">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="porterbuddy" xsi:type="string">Vipps\Payment\Model\Logistics\IntegrationProvider\Porterbuddy</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Model\Logistics\IntegrationProvider\Porterbuddy">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\GatewayEcomm\Command\CheckoutCommandManager">
+        <arguments>
+            <argument name="commandManager" xsi:type="object">VippsCheckoutCommandManager</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\GatewayEcomm\Command\PaymentCommandManager">
+        <arguments>
+            <argument name="commandManager" xsi:type="object">VippsPaymentCommandManager</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Model\Method\Vipps">
+        <arguments>
+            <argument name="code" xsi:type="const">Vipps\Payment\Model\Method\Vipps::METHOD_CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Vipps\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Vipps\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">VippsValueHandlerPool</argument>
+            <argument name="commandExecutor" xsi:type="object">VippsPaymentCommandManager</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="VippsValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">VippsConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="VippsConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="VippsPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">VippsPaymentCommandPool</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="capture" xsi:type="string">VippsPaymentCaptureCommand</item>
+                <item name="refund" xsi:type="string">VippsPaymentRefundCommand</item>
+                <item name="cancel" xsi:type="string">VippsPaymentCancelCommand</item>
+                <item name="get-payment" xsi:type="string">VippsGetPaymentCommand</item>
+                <item name="get-payment-event-log" xsi:type="string">VippsGetPaymentEventLogCommand</item>
+                <item name="send-receipt" xsi:type="string">VippsCheckoutSendReceiptCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="VippsCheckoutCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">VippsCheckoutCommandPool</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="init-session" xsi:type="string">VippsCheckoutInitSessionCommand</item>
+                <item name="get-session" xsi:type="string">VippsCheckoutGetSessionCommand</item>
+                <item name="adjust-authorization" xsi:type="string">VippsCheckoutAdjustAuthorizationCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutInitSessionCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsCheckoutInitSessionRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCheckoutInitSessionTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\CheckoutCurl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEcomm\Response\InitSessionHandler</argument>
+            <argument name="profiler" xsi:type="object">VippsCheckoutInitProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutGetSessionCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsCheckoutGetSessionRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCheckoutGetSessionTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\CheckoutCurl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEcomm\Response\GetSessionHandler</argument>
+            <argument name="profiler" xsi:type="object">VippsCheckoutGetSessionProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutAdjustAuthorizationCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsCheckoutAdjustAuthorizationRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCheckoutAdjustAuthorizationTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="profiler" xsi:type="object">VippsCheckoutAdjustAuthorizationProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutInitSessionRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="initPreprocessor" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\InitPreprocessor</item>
+                <item name="merchantInfo" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\MerchantDataBuilder</item>
+                <item name="transaction" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\TransactionDataBuilder</item>
+                <item name="logistics" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\LogisticsDataBuilder</item>
+                <item name="customer" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\CustomerDataBuilder</item>
+                <item name="configuration" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\InitSession\ConfigurationDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Vipps\Payment\GatewayEcomm\Request\InitSession\CustomerDataBuilder">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <virtualType name="VippsCheckoutGetSessionRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="reference" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\GetSession\ReferenceDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutAdjustAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="order_id" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\OrderIdDataBuilder</item>
+                <item name="modification" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\ModificationDataBuilder</item>
+                <item name="authorisation_type" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\AdjustAuthorization\AuthorisationTypeBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutInitSessionTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/checkout/v3/session</argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="merchantInfo" xsi:type="string">merchantInfo</item>
+                <item name="transaction" xsi:type="string">transaction</item>
+                <item name="logistics" xsi:type="string">logistics</item>
+                <item name="prefillCustomer" xsi:type="string">prefillCustomer</item>
+                <item name="customerInteraction" xsi:type="string">customerInteraction</item>
+                <item name="contactFields" xsi:type="string">contactFields</item>
+                <item name="addressFields" xsi:type="string">addressFields</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutGetSessionTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">GET</argument>
+            <argument name="endpointUrl" xsi:type="string">/checkout/v3/session/:reference</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="reference" xsi:type="string">reference</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutAdjustAuthorizationTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">PUT</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:reference/adjustAuthorization</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="reference" xsi:type="string">reference</item>
+            </argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="authorisationType" xsi:type="string">authorisationType</item>
+                <item name="modificationAmount" xsi:type="string">modificationAmount</item>
+                <item name="modificationReference" xsi:type="string">modificationReference</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Vipps Capture command declaration -->
+    <virtualType name="VippsPaymentCaptureCommand" type="Vipps\Payment\GatewayEcomm\Command\CaptureCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsPaymentCaptureRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsPaymentCaptureTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEcomm\Response\Payment\TransactionHandler</argument>
+            <argument name="profiler" xsi:type="object">VippsPaymentCaptureProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCaptureTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:order_id/capture</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="modificationAmount" xsi:type="string">modificationAmount</item>
+                <item name="modificationReference" xsi:type="string">modificationReference</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCaptureRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="order_id" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\OrderIdDataBuilder</item>
+                <item name="modification" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\ModificationDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- end Vipps Capture command declaration -->
+
+    <!-- Vipps Refund command declaration -->
+    <virtualType name="VippsPaymentRefundCommand" type="Vipps\Payment\GatewayEcomm\Command\RefundCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsPaymentRefundRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsPaymentRefundTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEcomm\Response\Payment\TransactionHandler</argument>
+            <argument name="profiler" xsi:type="object">VippsPaymentRefundProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentRefundTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:order_id/refund</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="modificationAmount" xsi:type="string">modificationAmount</item>
+                <item name="modificationReference" xsi:type="string">modificationReference</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="order_id" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\OrderIdDataBuilder</item>
+                <item name="modification" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\ModificationDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- end Vipps Refund command declaration -->
+
+    <!-- Vipps Cancel command declaration -->
+    <virtualType name="VippsPaymentCancelCommand" type="Vipps\Payment\GatewayEcomm\Command\CancelCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsPaymentCancelRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsPaymentCancelTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEcomm\Response\Payment\TransactionHandler</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+            <argument name="profiler" xsi:type="object">VippsPaymentCancelProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCancelTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:order_id/cancel</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="modificationReference" xsi:type="string">modificationReference</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCancelRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="order_id" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\OrderIdDataBuilder</item>
+                <item name="modification" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\ModificationDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- end Vipps Cancel command declaration -->
+
+    <!-- Vipps Get Payment command declaration -->
+    <virtualType name="VippsGetPaymentCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsGetPaymentRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsGetPaymentTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="profiler" xsi:type="object">VippsGetPaymentProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsGetPaymentTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">GET</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:order_id</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsGetPaymentRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="default" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\DefaultDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Vipps Get Payment Event Log command declaration -->
+    <virtualType name="VippsGetPaymentEventLogCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsGetPaymentEventLogRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsGetPaymentEventLogTransferFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsGetPaymentEventLogTransferFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">GET</argument>
+            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:order_id/events</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsGetPaymentEventLogRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="default" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\DefaultDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Vipps\Payment\GatewayEcomm\Http\Client\CheckoutCurl">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Model\SessionProcessor">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Model\UrlResolver">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Observer\CheckoutSubmitBefore">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Observer\CheckoutSubmitAllAfter">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Observer\OrderPaymentAfter">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Vipps\Payment\Model\Logger" type="Monolog\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">vipps</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="error" xsi:type="object">Vipps\Payment\Model\Logger\Handler\Error</item>
+                <item name="debug" xsi:type="object">Vipps\Payment\Model\Logger\Handler\Debug</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Vipps\Payment\Model\Logger\Handler\Debug">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEcomm\Config\Config</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\FetchOrderFromVipps">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\CancelQuoteByAttempts">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Cron\ClearQuotesHistory">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Vipps Send Receipt command declaration -->
+    <virtualType name="VippsCheckoutSendReceiptCommand" type="Vipps\Payment\GatewayEcomm\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">VippsCheckoutSendReceiptRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsCheckoutSendReceiptTransportFty</argument>
+            <argument name="client" xsi:type="object">Vipps\Payment\GatewayEcomm\Http\Client\PaymentCurl</argument>
+            <argument name="profiler" xsi:type="object">VippsCheckoutSendReceiptProfiler</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutSendReceiptRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="generic" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\SendReceipt\GenericDataBuilder</item>
+                <item name="orderLines" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\SendReceipt\OrderLinesBuilder</item>
+                <item name="bottomLine" xsi:type="string">Vipps\Payment\GatewayEcomm\Request\SendReceipt\BottomLineBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutSendReceiptTransportFty" type="Vipps\Payment\GatewayEcomm\Http\TransferFactory">
+        <arguments>
+            <argument name="method" xsi:type="string">POST</argument>
+            <argument name="endpointUrl" xsi:type="string">/order-management/v2/ecom/receipts/:order_id</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="order_id" xsi:type="string">order_id</item>
+            </argument>
+            <argument name="allowedBodyKeys" xsi:type="array">
+                <item name="orderLines" xsi:type="string">orderLines</item>
+                <item name="bottomLine" xsi:type="string">bottomLine</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- end Vipps Send Receipt command declaration -->
+    <type name="Vipps\Payment\Model\ReceiptSender">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Vipps\Payment\Model\ResourceModel\Profiling\Item">
+        <arguments>
+            <argument name="connectionName" xsi:type="string">vipps</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_profiling_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Profiling\Item\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_profiling_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Profiling\Item\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="vipps_monitoring_data_source" xsi:type="string">Vipps\Payment\Model\ResourceModel\Quote\GridCollection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="VippsCheckoutInitProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::INIT_CHECKOUT_SESSION</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutGetSessionProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::GET_CHECKOUT_SESSION</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutAdjustAuthorizationProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::ADJUST_AUTHORIZATION</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCancelProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::CANCEL</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentCaptureProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::CAPTURE</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentRefundProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::REFUND</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsPaymentRefundProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::REFUND</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsGetPaymentProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::GET_PAYMENT_DETAILS</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="VippsCheckoutSendReceiptProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+        <arguments>
+            <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::SEND_RECEIPT</argument>
+        </arguments>
+    </virtualType>
+    <!-- to this -->
+</config>

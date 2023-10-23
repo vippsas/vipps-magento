@@ -31,7 +31,7 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 

@@ -61,8 +61,8 @@ define(
                     {}
                 ).done(
                     function (response, msg, xhr) {
-                        if (response.hasOwnProperty('url')) {
-                            self.redirectUrl = response.url;
+                        if (response.hasOwnProperty('redirectUrl')) {
+                            self.redirectUrl = response.redirectUrl;
 
                             self.isPlaceOrderActionAllowed(true);
                             return self.placeOrder(data, event);

@@ -13,56 +13,51 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Command;
+namespace Vipps\Payment\GatewayEcomm\Request;
 
-use Magento\Sales\Api\Data\OrderInterface;
-use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
-use Vipps\Payment\Gateway\Exception\VippsException;
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
- * Class ReceiptSender
- * @package Vipps\Payment\Gateway\Command
- * @spi
+ * Class OrderIdDataBuilder
+ * @package Vipps\Payment\GatewayEcomm\Request
  */
-class ReceiptSender
+class OrderIdDataBuilder implements BuilderInterface
 {
     /**
-     * @var CommandManagerInterface
+     * @var SubjectReader
      */
-    private $commandManager;
+    private $subjectReader;
 
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * ReceiptSender constructor.
+     * GenericDataBuilder constructor.
      *
-     * @param CommandManagerInterface $commandManager
-     * @param LoggerInterface $logger
+     * @param SubjectReader $subjectReader
      */
     public function __construct(
-        CommandManagerInterface $commandManager,
-        LoggerInterface $logger
+        SubjectReader $subjectReader
     ) {
-        $this->commandManager = $commandManager;
-        $this->logger = $logger;
+        $this->subjectReader = $subjectReader;
     }
 
     /**
-     * @param OrderInterface $order
+     * This builders for passing parameters into TransferFactory object.
      *
-     * @return void
-     * @throws VippsException
+     * @param array $buildSubject
+     * @return array
      */
-    public function send(OrderInterface $order): void
+    public function build(array $buildSubject)
     {
-        try {
-            $this->commandManager->sendReceipt($order);
-        } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+        $paymentDO = $this->subjectReader->readPayment($buildSubject);
+        if ($paymentDO) {
+            $orderAdapter = $paymentDO->getOrder();
+            if ($orderAdapter) {
+                $buildSubject = array_merge(
+                    $buildSubject,
+                    ['order_id' => $orderAdapter->getOrderIncrementId()]
+                );
+            }
         }
+
+        return $buildSubject;
     }
 }
