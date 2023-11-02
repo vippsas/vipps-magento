@@ -29,7 +29,8 @@ Vipps is used by large and small companies. From years of shopping safely with V
 
 Information about ordering the plugin is available at [Vipps for Magento](https://vipps.no/produkter-og-tjenester/bedrift/ta-betalt-paa-nett/ta-betalt-paa-nett/magento/).
 
-The *Vipps Payment Module for Magento 2* plugin is available for download at <https://github.com/vippsas/vipps-magento/releases>.
+The *Vipps Payment Module for Magento 2* plugin is available for download at
+[https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases).
 
 ## Documentation
 
