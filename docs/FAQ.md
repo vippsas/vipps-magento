@@ -40,7 +40,7 @@ Vipps for Magento is developed by [Vaimo](https://www.vaimo.com), and the same d
 the plugin also help with improvements, maintenance and developer assistance.
 
 If you are having a problem, please make sure that you are using the latest version:
-<https://github.com/vippsas/vipps-magento/releases>
+[https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases)
 
 The best way to report a problem (or ask a question) is to use GitHub's built-in "issue" functionality:
 [Issues](https://github.com/vippsas/vipps-magento/issues).
