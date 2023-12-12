@@ -16,24 +16,14 @@
 namespace Vipps\Payment\GatewayEcomm\Request\InitSession;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\GatewayEcomm\Request\SubjectReader;
 
-/**
- * Class TransactionDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request\InitSession
- */
 class TransactionDataBuilder implements BuilderInterface
 {
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
-    /**
-     * TransactionDataBuilder constructor.
-     *
-     * @param SubjectReader $subjectReader
-     */
     public function __construct(
         SubjectReader $subjectReader
     ) {
@@ -51,9 +41,9 @@ class TransactionDataBuilder implements BuilderInterface
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
 
-        /** @var \Magento\Quote\Model\Quote\Payment $payment */
+        /** @var Payment $payment */
         $payment = $paymentDO->getPayment();
-        /** @var \Magento\Quote\Model\Quote $quote */
+        /** @var Quote $quote */
         $quote = $payment->getQuote();
 
         return [

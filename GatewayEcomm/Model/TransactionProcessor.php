@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 /**
  * Copyright 2020 Vipps
  *
@@ -36,8 +37,8 @@ use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Processor;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Psr\Log\LoggerInterface;
-use Vipps\Checkout\Model\QuoteUpdater;
-use Vipps\Checkout\Model\SessionManager;
+use Vipps\Payment\GatewayEcomm\Data\Payment as DataPayment;
+use Vipps\Payment\Model\QuoteUpdater;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\GatewayEcomm\Command\PaymentDetailsProvider;
@@ -60,101 +61,24 @@ class TransactionProcessor
 {
     use Formatter;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * @var CartManagementInterface
-     */
-    private $cartManagement;
-
-    /**
-     * @var QuoteLocator
-     */
-    private $quoteLocator;
-
-    /**
-     * @var OrderLocator
-     */
-    private $orderLocator;
-
-    /**
-     * @var Processor
-     */
-    private $processor;
-
-    /**
-     * @var QuoteUpdater
-     */
-    private $quoteUpdater;
-
-    /**
-     * @var LockManager
-     */
-    private $lockManager;
-
-    /**
-     * @var ConfigInterface
-     */
-    private $config;
-
-    /**
-     * @var QuoteManagement
-     */
-    private $quoteManagement;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    private $orderManagement;
-
-    /**
-     * @var PaymentDetailsProvider
-     */
-    private $paymentDetailsProvider;
-
-    /**
-     * @var ReceiptSender
-     */
-    private $receiptSender;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var ResourceConnection
-     */
-    private $resourceConnection;
+    private OrderRepositoryInterface $orderRepository;
+    private CartRepositoryInterface $cartRepository;
+    private CartManagementInterface $cartManagement;
+    private QuoteLocator $quoteLocator;
+    private OrderLocator $orderLocator;
+    private Processor $processor;
+    private QuoteUpdater $quoteUpdater;
+    private LockManager $lockManager;
+    private ConfigInterface $config;
+    private QuoteManagement $quoteManagement;
+    private OrderManagementInterface $orderManagement;
+    private PaymentDetailsProvider $paymentDetailsProvider;
+    private ReceiptSender $receiptSender;
+    private LoggerInterface $logger;
+    private ResourceConnection $resourceConnection;
     private PaymentProvider $paymentProvider;
 
     /**
-     * TransactionProcessor constructor.
-     *
-     * @param OrderRepositoryInterface $orderRepository
-     * @param CartRepositoryInterface $cartRepository
-     * @param CartManagementInterface $cartManagement
-     * @param QuoteLocator $quoteLocator
-     * @param OrderLocator $orderLocator
-     * @param Processor $processor
-     * @param QuoteUpdater $quoteUpdater
-     * @param LockManager $lockManager
-     * @param ConfigInterface $config
-     * @param QuoteManagement $quoteManagement
-     * @param OrderManagementInterface $orderManagement
-     * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param ReceiptSender $receiptSender
-     * @param LoggerInterface $logger
-     * @param ResourceConnection $resourceConnection
-     *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -169,9 +93,7 @@ class TransactionProcessor
         ConfigInterface          $config,
         QuoteManagement          $quoteManagement,
         OrderManagementInterface $orderManagement,
-        PaymentDetailsProvider   $paymentDetailsProvider,
         ReceiptSender            $receiptSender,
-        LoggerInterface          $logger,
         PaymentProvider          $paymentProvider,
         ResourceConnection       $resourceConnection
     ) {
@@ -186,25 +108,14 @@ class TransactionProcessor
         $this->config = $config;
         $this->quoteManagement = $quoteManagement;
         $this->orderManagement = $orderManagement;
-        $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->receiptSender = $receiptSender;
-        $this->logger = $logger;
         $this->resourceConnection = $resourceConnection;
         $this->paymentProvider = $paymentProvider;
     }
 
     /**
-     * @param QuoteInterface $vippsQuote
-     *
-     * @throws AlreadyExistsException
-     * @throws CouldNotSaveException
+     * @return DataPayment|void
      * @throws InputException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     * @throws VippsException
-     * @throws WrongAmountException
-     * @throws AcquireLockException
-     * @throws \Exception
      */
     public function process(QuoteInterface $vippsQuote)
     {
@@ -232,8 +143,6 @@ class TransactionProcessor
     }
 
     /**
-     * @param QuoteInterface $vippsQuote
-     *
      * @throws CouldNotSaveException
      * @throws \Exception
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
@@ -249,9 +158,6 @@ class TransactionProcessor
     }
 
     /**
-     * @param QuoteInterface $vippsQuote
-     * @param Transaction $payment
-     *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
      * @throws LocalizedException
@@ -259,7 +165,7 @@ class TransactionProcessor
      * @throws VippsException
      * @throws WrongAmountException
      */
-    private function processReservedTransaction(QuoteInterface $vippsQuote, \Vipps\Payment\GatewayEcomm\Data\Payment $payment)
+    private function processReservedTransaction(QuoteInterface $vippsQuote, DataPayment $payment)
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if (!$order) {
@@ -280,13 +186,11 @@ class TransactionProcessor
     }
 
     /**
-     * @param QuoteInterface $vippsQuote
-     *
      * @throws CouldNotSaveException
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    private function processExpiredTransaction(QuoteInterface $vippsQuote)
+    private function processExpiredTransaction(QuoteInterface $vippsQuote): void
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if ($order) {
@@ -298,13 +202,9 @@ class TransactionProcessor
     }
 
     /**
-     * @param string|null $action
-     * @param OrderInterface $order
-     * @param Transaction $transaction
-     *
      * @throws LocalizedException
      */
-    private function processAction($action, OrderInterface $order, \Vipps\Payment\GatewayEcomm\Data\Payment $transaction)
+    private function processAction(?string $action, OrderInterface $order, DataPayment $transaction): void
     {
         switch ($action) {
             case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
@@ -316,10 +216,9 @@ class TransactionProcessor
     }
 
     /**
-     * @param OrderInterface $order
-     * @param Payment $payment
+     * @throws VippsException
      */
-    private function sendReceipt(OrderInterface $order, \Vipps\Payment\GatewayEcomm\Data\Payment $payment)
+    private function sendReceipt(OrderInterface $order, DataPayment $payment)
     {
         if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
@@ -352,7 +251,7 @@ class TransactionProcessor
 
         if (!$canLock) {
             throw new AcquireLockException(
-                __('Can not acquire lock for order "%1"', $reservedOrderId)
+                (string)__('Can not acquire lock for order "%1"', $reservedOrderId)
             );
         }
 
@@ -371,12 +270,12 @@ class TransactionProcessor
      * @throws WrongAmountException
      * @throws \Exception
      */
-    private function placeOrder(QuoteInterface $vippsQuote, \Vipps\Payment\GatewayEcomm\Data\Payment $transaction)
+    private function placeOrder(QuoteInterface $vippsQuote, DataPayment $transaction)
     {
         $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         if (!$quote) {
             throw new \Exception( //@codingStandardsIgnoreLine
-                __('Could not place order. Could not find quote.')
+                (string)__('Could not place order. Could not find quote.')
             );
         }
 
@@ -389,7 +288,7 @@ class TransactionProcessor
 
         if (!$quote->getReservedOrderId() || $quote->getReservedOrderId() !== $transaction->getOrderId()) {
             throw new \Exception( //@codingStandardsIgnoreLine
-                __('Quote reserved order id does not match Vipps transaction order id.')
+                (string)__('Quote reserved order id does not match Vipps transaction order id.')
             );
         }
 
@@ -486,9 +385,9 @@ class TransactionProcessor
      * Authorize action
      *
      * @param OrderInterface $order
-     * @param \Vipps\Payment\GatewayEcomm\Data\Payment $dataPayment
+     * @param DataPayment $dataPayment
      */
-    private function authorize(OrderInterface $order, \Vipps\Payment\GatewayEcomm\Data\Payment $dataPayment)
+    private function authorize(OrderInterface $order, DataPayment $dataPayment)
     {
         if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
@@ -500,7 +399,7 @@ class TransactionProcessor
 
         $payment = $order->getPayment();
         if ($payment instanceof Payment) {
-            $transactionId = $dataPayment->getTransactionId();
+            $transactionId = $dataPayment->getPspReference();
             $payment->setIsTransactionClosed(false);
             $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(

@@ -33,7 +33,7 @@ class AggregateFactory
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $objectManager,
         AmountFactory $amountFactory,
-        $instanceName = '\\Vipps\\Checkout\\Gateway\\Data\\Aggregate')
+        $instanceName = '\\Vipps\\Payment\\GatewayEcomm\\Data\\Aggregate')
     {
         $this->objectManager = $objectManager;
         $this->amountFactory = $amountFactory;

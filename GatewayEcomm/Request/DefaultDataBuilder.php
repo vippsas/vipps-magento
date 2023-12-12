@@ -17,21 +17,9 @@ namespace Vipps\Payment\GatewayEcomm\Request;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
 
-/**
- * Class DefaultDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request
- */
 class DefaultDataBuilder implements BuilderInterface
 {
-    /**
-     * Default data builder
-     *
-     * @param array $buildSubject
-     *
-     * @return array
-     * @throws \Exception
-     */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         return $buildSubject;
     }

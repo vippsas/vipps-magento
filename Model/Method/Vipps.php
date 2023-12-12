@@ -17,24 +17,15 @@ namespace Vipps\Payment\Model\Method;
 
 use Magento\Payment\Model\Method\Adapter;
 
-/**
- * Class Vipps
- * @package Vipps\Payment\Model\Method
- */
 class Vipps extends Adapter
 {
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_KEY = 'method_type';
+    public const METHOD_TYPE_KEY = 'method_type';
 
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_EXPRESS_CHECKOUT = 'express_checkout';
+    public const METHOD_TYPE_EXPRESS_CHECKOUT = 'express_checkout';
 
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_REGULAR_CHECKOUT = 'regular_checkout';
+    public const METHOD_TYPE_REGULAR_CHECKOUT = 'regular_checkout';
+
+    public const METHOD_CODE = 'vipps';
+
+    public const METHOD_TYPE_CHECKOUT = 'checkout';
 }

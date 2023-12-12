@@ -60,7 +60,6 @@ class PaymentEventLogProvider
     /**
      * @param string $orderId
      *
-     * @return PaymentEventLog
      * @throws VippsException
      */
     public function get($orderId): PaymentEventLog

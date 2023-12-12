@@ -17,22 +17,10 @@ namespace Vipps\Payment\GatewayEcomm\Request;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
 
-/**
- * Class OrderIdDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request
- */
-class ReferenceBuilder implements BuilderInterface
+class ReferenceDataBuilder implements BuilderInterface
 {
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
-    /**
-     * GenericDataBuilder constructor.
-     *
-     * @param SubjectReader $subjectReader
-     */
     public function __construct(
         SubjectReader $subjectReader
     ) {
@@ -41,19 +29,16 @@ class ReferenceBuilder implements BuilderInterface
 
     /**
      * This builders for passing parameters into TransferFactory object.
-     *
-     * @param array $buildSubject
-     * @return array
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         if ($paymentDO) {
-            $quote = $paymentDO->getQuote();
-            if ($quote) {
+            $orderAdapter = $paymentDO->getOrder();
+            if ($orderAdapter) {
                 $buildSubject = array_merge(
                     $buildSubject,
-                    ['reference' => $quote->getReservedOrderId()]
+                    ['reference' => $orderAdapter->getOrderIncrementId()]
                 );
             }
         }

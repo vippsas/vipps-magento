@@ -21,22 +21,10 @@ use Magento\Quote\Model\Quote\Payment as QuotePayment;
 use Vipps\Payment\GatewayEcomm\Request\SubjectReader;
 use Vipps\Payment\Model\Method\Vipps;
 
-/**
- * Class InitPreprocessor
- * @package Vipps\Payment\GatewayEcomm\Request\InitSession
- */
 class InitPreprocessor implements BuilderInterface
 {
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
-    /**
-     * InitPreprocessor constructor.
-     *
-     * @param SubjectReader $subjectReader
-     */
     public function __construct(
         SubjectReader $subjectReader
     ) {
@@ -46,12 +34,9 @@ class InitPreprocessor implements BuilderInterface
     /**
      * Get merchant related data for Initiate payment request.
      *
-     * @param array $buildSubject
-     *
-     * @return array
      * @throws \Exception
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $this->subjectReader->readPayment($buildSubject);

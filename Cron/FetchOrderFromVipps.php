@@ -27,7 +27,7 @@ use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Order\Cancellation\Config;
-use Vipps\Payment\Model\TransactionProcessor;
+use Vipps\Payment\GatewayEcomm\Model\TransactionProcessor;
 use Vipps\Payment\Model\Quote as VippsQuote;
 use Vipps\Payment\Model\Quote\AttemptManagement;
 use Vipps\Payment\Model\QuoteRepository as VippsQuoteRepository;
@@ -35,69 +35,21 @@ use Vipps\Payment\Model\ResourceModel\Quote\Collection as VippsQuoteCollection;
 use Vipps\Payment\Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory;
 
 /**
- * Class FetchOrderStatus
- * @package Vipps\Payment\Cron
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class FetchOrderFromVipps
 {
-    /**
-     * Order collection page size
-     */
-    const COLLECTION_PAGE_SIZE = 250;
+    private const COLLECTION_PAGE_SIZE = 250;
 
-    /**
-     * @var TransactionProcessor
-     */
-    private $transactionProcessor;
+    private TransactionProcessor $transactionProcessor;
+    private LoggerInterface $logger;
+    private StoreManagerInterface $storeManager;
+    private ScopeCodeResolver $scopeCodeResolver;
+    private Config $cancellationConfig;
+    private AttemptManagement $attemptManagement;
+    private VippsQuoteCollectionFactory $vippsQuoteCollectionFactory;
+    private VippsQuoteRepository $vippsQuoteRepository;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var ScopeCodeResolver
-     */
-    private $scopeCodeResolver;
-
-    /**
-     * @var Config
-     */
-    private $cancellationConfig;
-
-    /**
-     * @var AttemptManagement
-     */
-    private $attemptManagement;
-
-    /**
-     * @var VippsQuoteCollectionFactory
-     */
-    private $vippsQuoteCollectionFactory;
-
-    /**
-     * @var VippsQuoteRepository
-     */
-    private $vippsQuoteRepository;
-
-    /**
-     * FetchOrderFromVipps constructor.
-     *
-     * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
-     * @param VippsQuoteRepository $vippsQuoteRepository
-     * @param TransactionProcessor $orderProcessor
-     * @param LoggerInterface $logger
-     * @param StoreManagerInterface $storeManager
-     * @param ScopeCodeResolver $scopeCodeResolver
-     * @param Config $cancellationConfig
-     * @param AttemptManagement $attemptManagement
-     */
     public function __construct(
         VippsQuoteCollectionFactory $vippsQuoteCollectionFactory,
         VippsQuoteRepository $vippsQuoteRepository,
@@ -169,8 +121,6 @@ class FetchOrderFromVipps
 
     /**
      * Prepare environment.
-     *
-     * @param VippsQuote $quote
      */
     private function prepareEnv(VippsQuote $quote)
     {
@@ -180,12 +130,7 @@ class FetchOrderFromVipps
         $this->storeManager->setCurrentStore($quote->getStoreId());
     }
 
-    /**
-     * @param $currentPage
-     *
-     * @return VippsQuoteCollection
-     */
-    private function createCollection($currentPage)
+    private function createCollection(int $currentPage): VippsQuoteCollection
     {
         /** @var VippsQuoteCollection $collection */
         $collection = $this->vippsQuoteCollectionFactory->create();

@@ -16,53 +16,34 @@
 
 namespace Vipps\Payment\GatewayEcomm\Request\Payment;
 
-use Magento\Customer\Model\Session;
-use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Vipps\Payment\GatewayEcomm\Request\SubjectReader;
 
-/**
- * Class TransactionDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request\InitSession
- */
 class AmountBuilder implements BuilderInterface
 {
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
-     * @var SessionManagerInterface|Session
-     */
-    private SessionManagerInterface $customerSession;
+    private SubjectReader $subjectReader;
     private UrlInterface $urlBuilder;
+    private StoreManagerInterface $storeManager;
 
-
-    /**
-     * TransactionDataBuilder constructor.
-     *
-     * @param SubjectReader $subjectReader
-     */
     public function __construct(
-        SubjectReader           $subjectReader,
-        UrlInterface            $urlBuilder,
-        SessionManagerInterface $customerSession
+        SubjectReader         $subjectReader,
+        UrlInterface          $urlBuilder,
+        StoreManagerInterface $storeManager
     ) {
         $this->subjectReader = $subjectReader;
-        $this->customerSession = $customerSession;
         $this->urlBuilder = $urlBuilder;
+        $this->storeManager = $storeManager;
     }
 
     /**
      * Get related data for transaction section.
      *
-     * @param array $buildSubject
-     *
-     * @return array[]
+     * @throws NoSuchEntityException
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
 
@@ -82,7 +63,7 @@ class AmountBuilder implements BuilderInterface
                 'value'    => $quote->getGrandTotal() * 100
             ],
             'reference'          => $reference,
-            'paymentDescription' => "%order description%",
+            'paymentDescription' => $this->storeManager->getStore()->getName(),
             'paymentMethod'      => ["type" => "WALLET"],
             "userFlow"           => "WEB_REDIRECT",
             'returnUrl'          => $this->urlBuilder->getUrl('vipps/payment/fallback', ['reference' => $reference])

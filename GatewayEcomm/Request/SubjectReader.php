@@ -17,18 +17,9 @@ namespace Vipps\Payment\GatewayEcomm\Request;
 
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 
-/**
- * Class SubjectReader
- * @package Vipps\Payment\GatewayEcomm\Request
- */
 class SubjectReader
 {
-    /**
-     * @param array $subject
-     *
-     * @return PaymentDataObjectInterface|null
-     */
-    public function readPayment($subject)
+    public function readPayment(array $subject): ?PaymentDataObjectInterface
     {
         if (isset($subject['payment']) && $subject['payment'] instanceof PaymentDataObjectInterface) {
             return $subject['payment'];
@@ -36,24 +27,12 @@ class SubjectReader
         return null;
     }
 
-    /**
-     * @param array $subject
-     *
-     * @return PaymentDataObjectInterface|null
-     */
-    public function readReference($subject)
+    public function readReference(array $subject): ?string
     {
         return $subject['jsonData']['reference'] ?? null;
     }
 
-    /**
-     * Read amount from subject
-     *
-     * @param array $subject
-     *
-     * @return int|null
-     */
-    public function readAmount($subject)
+    public function readAmount(array $subject): ?int
     {
         return $subject['amount'] ?? null;
     }

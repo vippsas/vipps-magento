@@ -19,28 +19,11 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Framework\UrlInterface;
 use Vipps\Payment\GatewayEcomm\Request\SubjectReader;
 
-/**
- * Class MerchantDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request\InitSession
- */
 class MerchantDataBuilder implements BuilderInterface
 {
-    /**
-     * @var UrlInterface
-     */
-    private $urlBuilder;
+    private UrlInterface $urlBuilder;
+    private SubjectReader $subjectReader;
 
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
-     * MerchantDataBuilder constructor.
-     *
-     * @param UrlInterface $urlBuilder
-     * @param SubjectReader $subjectReader
-     */
     public function __construct(
         UrlInterface $urlBuilder,
         SubjectReader $subjectReader
@@ -52,12 +35,9 @@ class MerchantDataBuilder implements BuilderInterface
     /**
      * Get merchant related data for session request.
      *
-     * @param array $buildSubject
-     *
-     * @return array
      * @throws \Exception
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         $callbackAuthorizationToken = $this->generateAuthToken();
@@ -76,10 +56,8 @@ class MerchantDataBuilder implements BuilderInterface
 
     /**
      * Method to generate access token.
-     *
-     * @return string
      */
-    private function generateAuthToken()
+    private function generateAuthToken(): string
     {
         return uniqid('', true);
     }

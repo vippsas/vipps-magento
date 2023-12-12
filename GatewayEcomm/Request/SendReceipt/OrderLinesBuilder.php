@@ -20,19 +20,12 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 
-/**
- * Class OrderLinesBuilder
- * @package Vipps\Payment\GatewayEcomm\Request
- */
 class OrderLinesBuilder implements BuilderInterface
 {
     /**
      * This builders for passing parameters into TransferFactory object.
-     *
-     * @param array $buildSubject
-     * @return array
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         /** @var OrderInterface|Order $order */
         $order = $buildSubject['order'] ?? null;

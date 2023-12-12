@@ -20,32 +20,12 @@ use Magento\Framework\UrlInterface;
 use Vipps\Payment\GatewayEcomm\Request\SubjectReader;
 use Vipps\Payment\Api\Logistics\IntegrationsProviderInterface;
 
-/**
- * Class LogisticsDataBuilder
- * @package Vipps\Payment\GatewayEcomm\Request\InitSession
- */
 class LogisticsDataBuilder implements BuilderInterface
 {
-    /**
-     * @var UrlInterface
-     */
-    private $urlBuilder;
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-    /**
-     * @var IntegrationsProviderInterface
-     */
-    private $integrationsProvider;
+    private UrlInterface $urlBuilder;
+    private SubjectReader $subjectReader;
+    private IntegrationsProviderInterface $integrationsProvider;
 
-    /**
-     * LogisticsDataBuilder constructor.
-     *
-     * @param UrlInterface $urlBuilder
-     * @param SubjectReader $subjectReader
-     * @param IntegrationsProviderInterface $integrationsProvider
-     */
     public function __construct(
         UrlInterface $urlBuilder,
         SubjectReader $subjectReader,
@@ -68,12 +48,9 @@ class LogisticsDataBuilder implements BuilderInterface
      * HELTHJEM
      * OTHER
      *
-     * @param array $buildSubject
-     *
-     * @return array
      * @throws \Exception
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         $reference = $paymentDO->getOrder()->getOrderIncrementId();
