@@ -16,10 +16,10 @@
 
 namespace Vipps\Payment\GatewayEpayment\Model;
 
-use Vipps\Checkout\Api\PaymentCommandManagerInterface;
-use Vipps\Checkout\Gateway\Data\PaymentEventLogBuilder;
-use Vipps\Checkout\Gateway\Exception\VippsException;
-use Vipps\Checkout\Gateway\Data\PaymentEventLog;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Vipps\Payment\GatewayEpayment\Data\PaymentEventLogBuilder;
+use Vipps\Payment\GatewayEpayment\Exception\VippsException;
+use Vipps\Payment\GatewayEpayment\Data\PaymentEventLog;
 
 /**
  * Class PaymentEventLogProvider
@@ -29,7 +29,7 @@ use Vipps\Checkout\Gateway\Data\PaymentEventLog;
 class PaymentEventLogProvider
 {
     /**
-     * @var PaymentCommandManagerInterface
+     * @var CommandManagerInterface
      */
     private $commandManager;
 
@@ -46,11 +46,11 @@ class PaymentEventLogProvider
     /**
      * PaymentEventLogProvider constructor.
      *
-     * @param PaymentCommandManagerInterface $commandManager
+     * @param CommandManagerInterface $commandManager
      * @param PaymentEventLogBuilder $paymentEventLogBuilder
      */
     public function __construct(
-        PaymentCommandManagerInterface $commandManager,
+        CommandManagerInterface $commandManager,
         PaymentEventLogBuilder $paymentEventLogBuilder
     ) {
         $this->commandManager = $commandManager;
