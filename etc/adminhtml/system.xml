@@ -17,7 +17,7 @@
     <system>
         <section id="payment">
             <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Vipps</label>
+                <label>Vipps MobilePay</label>
                 <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label></label>
                     <comment><![CDATA[Accept payments with Vipps in your Magento store. Make it easier for your customers to pay, and increase your conversion rates with Vipps. No setup fee or monthly fees.]]></comment>
@@ -50,6 +50,11 @@
                             <label>Environment</label>
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\Environment</source_model>
                             <config_path>payment/vipps/environment</config_path>
+                        </field>
+                        <field id="version" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Api Version</label>
+                            <source_model>Vipps\Payment\Model\Config\Source\Version</source_model>
+                            <config_path>payment/vipps/version</config_path>
                         </field>
                         <field id="debug" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Debug</label>

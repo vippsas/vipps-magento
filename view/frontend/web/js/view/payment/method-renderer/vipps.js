@@ -61,10 +61,12 @@ define(
                     {}
                 ).done(
                     function (response, msg, xhr) {
-                        if (response.hasOwnProperty('redirectUrl')) {
-                            self.redirectUrl = response.redirectUrl;
 
+                        url = response.redirectUrl || response.url;
+                        if (typeof url !== 'undefined') {
+                            self.redirectUrl = url;
                             self.isPlaceOrderActionAllowed(true);
+
                             return self.placeOrder(data, event);
                         } else {
                             errorProcessor.process(xhr, self.messageContainer);

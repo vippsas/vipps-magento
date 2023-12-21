@@ -1,7 +1,7 @@
 {
     "name": "vipps/module-payment",
     "type": "magento2-module",
-    "description": "Vipps Payment Method",
+    "description": "Vipps MobilePay Payment Module for Magento 2",
     "license": "proprietary",
     "require": {
         "magento/framework": "101.0.*|103.0.*",

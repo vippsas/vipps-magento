@@ -20,7 +20,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;

@@ -16,10 +16,10 @@
 
 namespace Vipps\Payment\Model;
 
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
-use Vipps\Payment\GatewayEcomm\Data\PaymentEventLogBuilder;
-use Vipps\Payment\GatewayEcomm\Exception\VippsException;
-use Vipps\Payment\GatewayEcomm\Data\PaymentEventLog;
+use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\GatewayEpayment\Data\PaymentEventLogBuilder;
+use Vipps\Payment\GatewayEpayment\Exception\VippsException;
+use Vipps\Payment\GatewayEpayment\Data\PaymentEventLog;
 
 /**
  * Class PaymentEventLogProvider

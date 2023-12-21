@@ -27,7 +27,7 @@ use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Model\Order\Cancellation\Config;
-use Vipps\Payment\GatewayEcomm\Model\TransactionProcessor;
+use Vipps\Payment\GatewayEpayment\Model\TransactionProcessor;
 use Vipps\Payment\Model\Quote as VippsQuote;
 use Vipps\Payment\Model\Quote\AttemptManagement;
 use Vipps\Payment\Model\QuoteRepository as VippsQuoteRepository;

@@ -17,7 +17,7 @@ namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Sales\Api\Data\OrderInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Exception\VippsException;
 
 /**

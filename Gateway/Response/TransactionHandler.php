@@ -70,7 +70,7 @@ class TransactionHandler implements HandlerInterface
 
         if ($payment instanceof Payment) {
             $status = $transaction->getTransactionInfo()->getStatus();
-            $transactionId = $transaction->getPspReference();
+            $transactionId = $transaction->getOrderId();
 
             switch ($status) {
                 case Transaction::TRANSACTION_STATUS_CANCELLED:
