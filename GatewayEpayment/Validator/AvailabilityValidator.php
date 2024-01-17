@@ -13,7 +13,8 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Validator;
+
+namespace Vipps\Payment\GatewayEpayment\Validator;
 
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
@@ -22,13 +23,11 @@ use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
-/**
- * Class InitiateValidator
- * @package Vipps\Payment\Gateway\Validator
- */
 class AvailabilityValidator extends AbstractValidator
 {
-    const NORWEGIAN_CURRENCY = 'NOK';
+    private const NORWEGIAN_CURRENCY = 'NOK';
+    private const FINNISH_CURRENCY = 'EUR';
+    private const DANISH_CURRENCY = 'DKK';
 
     /**
      * @var StoreManagerInterface
@@ -42,7 +41,7 @@ class AvailabilityValidator extends AbstractValidator
      */
     public function __construct(
         ResultInterfaceFactory $resultFactory,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface  $storeManager
     ) {
         parent::__construct($resultFactory);
         $this->storeManager = $storeManager;
@@ -61,7 +60,11 @@ class AvailabilityValidator extends AbstractValidator
         /** @var Store $store */
         $store = $this->storeManager->getStore();
 
-        $isValid = self::NORWEGIAN_CURRENCY == $store->getBaseCurrencyCode();
+        $isValid = \in_array(
+            $store->getBaseCurrencyCode(),
+            [self::NORWEGIAN_CURRENCY, self::FINNISH_CURRENCY, self::DANISH_CURRENCY],
+            true
+        );
         $errorMessages = $isValid ? [] : [__('Not allowed currency. Please, contact store administrator.')];
 
         return $this->createResult($isValid, $errorMessages);

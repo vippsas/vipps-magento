@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vipps\Payment\Model\Config;
 
-use Magento\Payment\Gateway\Command\CommandPoolInterface;
 use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Model\Config\Source\Version;
 

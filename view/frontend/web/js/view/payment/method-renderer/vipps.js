@@ -19,6 +19,7 @@ define(
         'jquery',
         'mage/storage',
         'mage/url',
+        'mage/translate',
         'Magento_Checkout/js/view/payment/default',
         'Magento_Checkout/js/model/error-processor',
         'Magento_Checkout/js/model/full-screen-loader'
@@ -27,6 +28,7 @@ define(
         $,
         storage,
         url,
+        $t,
         Component,
         errorProcessor,
         fullScreenLoader
@@ -44,6 +46,19 @@ define(
             /** Returns payment image path */
             getVippsLogoSrc: function () {
                 return window.checkoutConfig.payment.vipps.logoSrc;
+            },
+
+            getLogoWidth: function () {
+                return window.checkoutConfig.payment.vipps.logoWidth;
+            },
+
+            getRedirectText: function () {
+                return $t('You will be redirected to the %1 website.').replace('%1', this.getTitle());
+            },
+
+            getNoteText: function () {
+                return $t('Almost done! Remember, there are no fees using %1 when shopping online.')
+                    .replace('%1', this.getTitle());
             },
 
             afterPlaceOrder: function () {

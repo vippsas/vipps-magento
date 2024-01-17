@@ -446,10 +446,28 @@
         <arguments>
             <argument name="validators" xsi:type="array">
                 <item name="initiate" xsi:type="string">Vipps\Payment\Gateway\Validator\InitiateValidator</item>
-                <item name="availability" xsi:type="string">Vipps\Payment\Gateway\Validator\AvailabilityValidator</item>
+                <item name="availability" xsi:type="string">Vipps\Payment\Gateway\Validator\AvailabilityValidatorProxy</item>
           </argument>
         </arguments>
     </virtualType>
+
+    <type name="Vipps\Payment\Gateway\Validator\AvailabilityValidatorProxy">
+        <arguments>
+            <argument xsi:type="object" name="configVersionPool">availabilityValidatorPool</argument>
+        </arguments>
+    </type>
+
+    <!-- availability validator -->
+    <virtualType name="availabilityValidatorPool" type="Vipps\Payment\Model\Config\ConfigVersionPool">
+        <arguments>
+            <argument xsi:type="array" name="pool">
+                <item xsi:type="object" name="vipps_payment">Vipps\Payment\Gateway\Validator\AvailabilityValidator</item>
+                <item xsi:type="object" name="mobile_epayment">Vipps\Payment\GatewayEpayment\Validator\AvailabilityValidator</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- availability validator -->
+
     <virtualType name="VippsEcommInitiateValidator" type="Magento\Payment\Gateway\Validator\ValidatorComposite">
         <arguments>
             <argument name="validators" xsi:type="array">
@@ -850,4 +868,30 @@
         </arguments>
     </virtualType>
 
+    <!-- payment logon on checkout -->
+    <virtualType name="versionedPaymentLogo" type="Vipps\Payment\Model\Config\ConfigVersionPool">
+        <arguments>
+            <argument xsi:type="array" name="pool">
+                <item xsi:type="string" name="vipps_payment">Vipps_Payment::images/vipps_logo_rgb.png</item>
+                <item xsi:type="string" name="mobile_epayment">Vipps_Payment::images/Vipps_MobilePay_Logo_Primary_RGB_Black.png</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- versioned logo class name -->
+    <virtualType name="versionedPaymentLogoWidth" type="Vipps\Payment\Model\Config\ConfigVersionPool">
+        <arguments>
+            <argument xsi:type="array" name="pool">
+                <item xsi:type="string" name="vipps_payment">70</item>
+                <item xsi:type="string" name="mobile_epayment">200</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Vipps\Payment\Model\Checkout\ConfigProvider">
+        <arguments>
+            <argument xsi:type="object" name="logoVersion">versionedPaymentLogo</argument>
+            <argument xsi:type="object" name="logoWidth">versionedPaymentLogoWidth</argument>
+        </arguments>
+    </type>
 </config>
