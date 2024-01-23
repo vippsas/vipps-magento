@@ -15,7 +15,7 @@ END_METADATA -->
 
 ![Vipps](./docs/images/vipps.png) *Available for Vipps.*
 
-![MobilePay](./docs/images/mp.png) *Available for MobilePay in Finland and Denmark in Q1 2024.*
+![MobilePay](./docs/images/mp.png) *Available for MobilePay in Finland. Expected availability in Denmark is Q1 2024.*
 
 *This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).*
 
