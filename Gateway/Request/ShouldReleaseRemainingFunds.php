@@ -15,69 +15,70 @@
  */
 namespace Vipps\Payment\Gateway\Request;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Vipps\Payment\Model\OrderLocator;
+use Magento\Payment\Helper\Formatter;
+use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
 
 /**
- * Class GenericDataBuilder
- * @package Vipps\Payment\Gateway\Request
+ * Class Transaction
+ * @package Vipps\Payment\Gateway\Request\InitiateData
  */
-class GenericDataBuilder implements BuilderInterface
+class ShouldReleaseRemainingFunds implements BuilderInterface
 {
+    use Formatter;
+    
+    /**
+     * Transaction block name
+     *
+     * @var string
+     */
+    private static $fieldName = 'shouldReleaseRemainingFunds';
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    private $scopeConfig;
+
     /**
      * @var SubjectReader
      */
     private $subjectReader;
-    /**
-     * @var OrderLocator
-     */
-    private $orderLocator;
+    private PaymentDetailsProvider $paymentDetailsProvider;
 
     /**
-     * GenericDataBuilder constructor.
+     * TransactionDataBuilder constructor.
      *
+     * @param ScopeConfigInterface $scopeConfig
      * @param SubjectReader $subjectReader
      */
     public function __construct(
+        ScopeConfigInterface $scopeConfig,
         SubjectReader $subjectReader,
-        OrderLocator $orderLocator
+        PaymentDetailsProvider $paymentDetailsProvider
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->subjectReader = $subjectReader;
-        $this->orderLocator = $orderLocator;
+        $this->paymentDetailsProvider = $paymentDetailsProvider;
     }
 
     /**
-     * This builders for passing parameters into TransferFactory object.
+     * Get merchant related data for transaction request.
      *
      * @param array $buildSubject
      * @return array
      */
     public function build(array $buildSubject)
     {
-        $scopeId = null;
-        $incrementId = $buildSubject['orderId'] ?? null;
+        $shouldReleaseRemainingFunds = [];
 
-        $paymentDO = $this->subjectReader->readPayment($buildSubject);
-        if ($paymentDO) {
-            $scopeId = $paymentDO->getOrder()->getStoreId();
-            $incrementId = $paymentDO->getOrder()->getOrderIncrementId();
+        $orderId = $this->subjectReader->readPayment($buildSubject)->getOrder()->getOrderIncrementId();
+
+        $transaction = $this->paymentDetailsProvider->get($orderId);
+        if ($transaction->getTransactionSummary()->getCapturedAmount() > 0) {
+            $shouldReleaseRemainingFunds[self::$fieldName] = true;
         }
 
-        if (!$scopeId && $incrementId) {
-            $order = $this->orderLocator->get($incrementId);
-            if ($order) {
-                $scopeId = $order->getStoreId();
-            }
-        }
-
-        $buildSubject = array_merge(
-            $buildSubject,
-            [
-                'orderId' => $incrementId,
-                'scopeId' => $scopeId
-            ]
-        );
-
-        return $buildSubject;
+        return $shouldReleaseRemainingFunds;
     }
 }

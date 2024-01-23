@@ -184,11 +184,8 @@ class CancelCommand extends GatewayCommand
         }
 
         $offlineVoidEnabled = $this->config->isOfflinePartialVoidEnabled();
-        if ($transaction->getTransactionSummary()->getCapturedAmount() > 0) {
-            if (!$offlineVoidEnabled) {
-                throw new LocalizedException(__('Can\'t cancel captured transaction.'));
-            }
-
+        if ($offlineVoidEnabled
+            && $transaction->getTransactionSummary()->getCapturedAmount() > 0) {
             return true;
         }
 

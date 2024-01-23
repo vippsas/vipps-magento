@@ -140,7 +140,7 @@
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsInitiateRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsInitiateRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="initPreprocessor" xsi:type="string">Vipps\Payment\Gateway\Request\Initiate\InitPreprocessor</item>
@@ -172,7 +172,7 @@
             </argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsCaptureRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsCaptureRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\GenericDataBuilder</item>
@@ -202,7 +202,7 @@
             </argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsRefundRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\GenericDataBuilder</item>
@@ -222,7 +222,7 @@
             <argument name="validator" xsi:type="object">VippsGetPaymentDetailsValidator</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsGetPaymentDetailsRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsGetPaymentDetailsRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\GenericDataBuilder</item>
@@ -247,7 +247,7 @@
             <argument name="client" xsi:type="object">Vipps\Payment\Gateway\Http\Client\Curl</argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsSendReceiptRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsSendReceiptRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\SendReceipt\GenericDataBuilder</item>
@@ -286,13 +286,14 @@
             </argument>
         </arguments>
     </virtualType>
-    <virtualType name="VippsCancelRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsCancelRequest" type="Vipps\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\Gateway\Request\GenericDataBuilder</item>
                 <item name="merchantInfo" xsi:type="string">Vipps\Payment\Gateway\Request\MerchantDataBuilder</item>
                 <item name="transaction" xsi:type="string">Vipps\Payment\Gateway\Request\TransactionDataBuilder</item>
                 <item name="transactionText" xsi:type="string">Vipps\Payment\Gateway\Request\TransactionTextDataBuilder</item>
+                <item name="shouldReleaseRemainingFunds" xsi:type="string">Vipps\Payment\Gateway\Request\ShouldReleaseRemainingFunds</item>
             </argument>
         </arguments>
     </virtualType>

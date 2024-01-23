@@ -20,10 +20,7 @@ namespace Vipps\Payment\Model;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config;
 use Magento\Framework\App\ProductMetadataInterface;
-use Magento\Framework\Component\ComponentRegistrarInterface;
-use Magento\Framework\Component\ComponentRegistrar;
-use Magento\Framework\Filesystem\Directory\ReadFactory;
-use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\Module\ModuleListInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,16 +42,6 @@ class ModuleMetadata implements ModuleMetadataInterface
     private $version;
 
     /**
-     * @var ComponentRegistrar
-     */
-    private $componentRegistrar;
-
-    /**
-     * @var ReadFactory
-     */
-    private $readFactory;
-
-    /**
      * ProductMetadataInterface
      */
     private $systemMetadata;
@@ -65,36 +52,31 @@ class ModuleMetadata implements ModuleMetadataInterface
     private $cache;
 
     /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
 
     /**
-     * Metadata constructor.
-     *
-     * @param ResourceInterface $resource
+     * @var ModuleListInterface
+     */
+    private $moduleList;
+
+    /**
      * @param ProductMetadataInterface $systemMetadata
      * @param CacheInterface $cache
+     * @param ModuleListInterface $moduleList
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        ComponentRegistrarInterface $componentRegistrar,
-        ReadFactory $readFactory,
-        SerializerInterface $serializer,
         ProductMetadataInterface $systemMetadata,
         CacheInterface $cache,
+        ModuleListInterface $moduleList,
         LoggerInterface $logger
     ) {
-        $this->componentRegistrar = $componentRegistrar;
-        $this->readFactory = $readFactory;
         $this->systemMetadata = $systemMetadata;
         $this->cache = $cache;
-        $this->serializer = $serializer;
         $this->logger = $logger;
+        $this->moduleList = $moduleList;
     }
 
     /**
@@ -156,22 +138,14 @@ class ModuleMetadata implements ModuleMetadataInterface
         if ($this->version) {
             return (string) $this->version;
         }
-        
+
         $this->version = (string) $this->cache->load(self::VERSION_CACHE_KEY);
         if ($this->version) {
             return $this->version;
         }
 
-        $path = $this->componentRegistrar->getPath(
-            ComponentRegistrar::MODULE,
-            'Vipps_Payment'
-        );
-
         try {
-            $directoryRead = $this->readFactory->create($path);
-            $composerJsonData = $directoryRead->readFile('composer.json');
-            $data = $this->serializer->unserialize($composerJsonData);
-            $this->version = $data['version'] ?? 'UNKNOWN';
+            $this->version = (string)$this->moduleList->getOne('Vipps_Payment')['setup_version'];
         } catch (\Throwable $t) {
             $this->logger->error($t);
             $this->version =  'UNKNOWN';

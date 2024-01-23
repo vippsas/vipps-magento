@@ -15,10 +15,12 @@
  */
 namespace Vipps\Payment\Gateway\Http;
 
+use Magento\Framework\App\ScopeResolverInterface;
 use Magento\Payment\Gateway\Http\TransferBuilder;
 use Magento\Payment\Gateway\Http\TransferFactoryInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Vipps\Payment\Gateway\Http\Client\ClientInterface;
+use Vipps\Payment\Model\OrderLocator;
 use Vipps\Payment\Model\UrlResolver;
 
 /**
@@ -61,12 +63,11 @@ class TransferFactory implements TransferFactoryInterface
         'merchantInfo',
         'transaction',
         'orderLines',
-        'bottomLine'
+        'bottomLine',
+        'shouldReleaseRemainingFunds'
     ];
 
     /**
-     * TransferFactory constructor.
-     *
      * @param TransferBuilder $transferBuilder
      * @param UrlResolver $urlResolver
      * @param string $method
@@ -101,12 +102,14 @@ class TransferFactory implements TransferFactoryInterface
             ClientInterface::HEADER_PARAM_X_REQUEST_ID => $request['requestId'] ?? $this->generateRequestId()
         ]);
 
+        $scopeId = $request['scopeId'] ?? null;
         $request = $this->filterPostFields($request);
 
         $this->transferBuilder
             ->setBody($this->getBody($request))
             ->setMethod($this->method)
-            ->setUri($this->getUrl($request));
+            ->setUri($this->getUrl($request))
+            ->setClientConfig(['scopeId' => $scopeId]);
 
         return $this->transferBuilder->build();
     }

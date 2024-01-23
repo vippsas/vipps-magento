@@ -13,64 +13,66 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Request;
 
-use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Framework\ObjectManager\TMap;
+use Magento\Framework\ObjectManager\TMapFactory;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
- * Class MerchantDataBuilder
- * @package Vipps\Payment\Gateway\Request
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * Class BuilderComposite
+ * @api
+ * @since 100.0.2
  */
-class MerchantDataBuilder implements BuilderInterface
+class BuilderComposite implements BuilderInterface
 {
     /**
-     * Merchant info block name
-     *
-     * @var string
+     * @var BuilderInterface[] | TMap
      */
-    private static $merchantInfo = 'merchantInfo';
+    private $builders;
 
     /**
-     * Identifies a merchant sales channel i.e. website, mobile app etc. Value must be less than or equal to
-     * 6 characters.
-     *
-     * @var string
-     */
-    private static $merchantSerialNumber = 'merchantSerialNumber';
-
-    /**
-     * @var ConfigInterface
-     */
-    private $config;
-
-    /**
-     * MerchantDataBuilder constructor.
-     *
-     * @param ConfigInterface $config
+     * @param TMapFactory $tmapFactory
+     * @param array $builders
      */
     public function __construct(
-        ConfigInterface $config
+        TMapFactory $tmapFactory,
+        array $builders = []
     ) {
-        $this->config = $config;
+        $this->builders = $tmapFactory->create(
+            [
+                'array' => $builders,
+                'type' => BuilderInterface::class
+            ]
+        );
     }
 
     /**
-     * Get merchant related data for request.
+     * Builds ENV request
      *
      * @param array $buildSubject
-     *
      * @return array
-     * @throws \Exception
      */
-    public function build(array $buildSubject) //@codingStandardsIgnoreLine
+    public function build(array $buildSubject)
     {
-        $scopeId = $buildSubject['scopeId'] ?? null;
-        return [
-            self::$merchantInfo => [
-                self::$merchantSerialNumber => $this->config->getValue('merchant_serial_number', $scopeId),
-            ]
-        ];
+        $result = $buildSubject;
+        foreach ($this->builders as $builder) {
+            $result = $this->merge($result, $builder->build($result));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Merge function for builders
+     *
+     * @param array $result
+     * @param array $builder
+     * @return array
+     */
+    protected function merge(array $result, array $builder)
+    {
+        return array_replace_recursive($result, $builder);
     }
 }
