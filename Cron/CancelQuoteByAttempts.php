@@ -29,62 +29,20 @@ use Vipps\Payment\Model\ResourceModel\Quote\Collection as VippsQuoteCollection;
 use Vipps\Payment\Model\ResourceModel\Quote\CollectionFactory as VippsQuoteCollectionFactory;
 
 /**
- * Class FetchOrderStatus
- * @package Vipps\Payment\Cron
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CancelQuoteByAttempts
 {
-    /**
-     * Order collection page size
-     */
-    const COLLECTION_PAGE_SIZE = 250;
-    
-    /**
-     * @var string
-     */
-    const DEFAULT_ATTEMPTS_MAX_COUNT = 3;
+    private const COLLECTION_PAGE_SIZE = 250;
+    private const DEFAULT_ATTEMPTS_MAX_COUNT = 3;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private LoggerInterface $logger;
+    private StoreManagerInterface $storeManager;
+    private ScopeCodeResolver $scopeCodeResolver;
+    private Config $cancellationConfig;
+    private VippsQuoteCollectionFactory $vippsQuoteCollectionFactory;
+    private CancelFacade $cancelFacade;
 
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var ScopeCodeResolver
-     */
-    private $scopeCodeResolver;
-
-    /**
-     * @var Config
-     */
-    private $cancellationConfig;
-
-    /**
-     * @var VippsQuoteCollectionFactory
-     */
-    private $vippsQuoteCollectionFactory;
-
-    /**
-     * @var CancelFacade
-     */
-    private $cancelFacade;
-
-    /**
-     * CancelQuoteByAttempts constructor.
-     *
-     * @param LoggerInterface $logger
-     * @param StoreManagerInterface $storeManager
-     * @param ScopeCodeResolver $scopeCodeResolver
-     * @param Config $cancellationConfig
-     * @param VippsQuoteCollectionFactory $vippsQuoteCollectionFactory
-     * @param CancelFacade $cancelFacade
-     */
     public function __construct(
         LoggerInterface $logger,
         StoreManagerInterface $storeManager,
@@ -102,11 +60,9 @@ class CancelQuoteByAttempts
     }
 
     /**
-     * Create orders from Vipps that are not created in Magento yet
-     *
      * @throws NoSuchEntityException
      */
-    public function execute()
+    public function execute(): void
     {
         try {
             $currentStore = $this->storeManager->getStore()->getId();

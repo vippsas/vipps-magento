@@ -39,7 +39,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 use function __;

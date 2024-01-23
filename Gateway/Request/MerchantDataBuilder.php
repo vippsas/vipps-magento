@@ -66,9 +66,10 @@ class MerchantDataBuilder implements BuilderInterface
      */
     public function build(array $buildSubject) //@codingStandardsIgnoreLine
     {
+        $scopeId = $buildSubject['scopeId'] ?? null;
         return [
             self::$merchantInfo => [
-                self::$merchantSerialNumber => $this->config->getValue('merchant_serial_number'),
+                self::$merchantSerialNumber => $this->config->getValue('merchant_serial_number', $scopeId),
             ]
         ];
     }

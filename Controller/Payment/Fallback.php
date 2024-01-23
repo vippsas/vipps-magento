@@ -39,8 +39,11 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\GatewayEpayment\Data\Payment;
+use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\OrderLocator;
+use Vipps\Payment\Model\Transaction\StatusVisitor;
 use Vipps\Payment\Model\TransactionProcessor;
 
 /**
@@ -119,6 +122,8 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      * @var OrderInterface|null
      */
     private $order;
+    private StatusVisitor $statusVisitor;
+    private AuthoriseProxy $authoriseProxy;
 
     /**
      * Fallback constructor.
@@ -139,18 +144,20 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        ResultFactory $resultFactory,
-        RequestInterface $request,
-        SessionManagerInterface $checkoutSession,
-        TransactionProcessor $transactionProcessor,
-        CartRepositoryInterface $cartRepository,
-        ManagerInterface $messageManager,
+        ResultFactory            $resultFactory,
+        RequestInterface         $request,
+        SessionManagerInterface  $checkoutSession,
+        TransactionProcessor     $transactionProcessor,
+        CartRepositoryInterface  $cartRepository,
+        ManagerInterface         $messageManager,
         QuoteRepositoryInterface $vippsQuoteRepository,
         OrderManagementInterface $orderManagement,
-        OrderLocator $orderLocator,
-        Compliance $compliance,
-        LoggerInterface $logger,
-        ConfigInterface $config
+        OrderLocator             $orderLocator,
+        Compliance               $compliance,
+        LoggerInterface          $logger,
+        ConfigInterface          $config,
+        StatusVisitor            $statusVisitor,
+        AuthoriseProxy           $authoriseProxy
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
@@ -164,6 +171,8 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $this->orderManagement = $orderManagement;
         $this->logger = $logger;
         $this->config = $config;
+        $this->statusVisitor = $statusVisitor;
+        $this->authoriseProxy = $authoriseProxy;
     }
 
     /**
@@ -176,9 +185,10 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
-            $this->authorize();
-
             $vippsQuote = $this->getVippsQuote();
+
+            $this->authoriseProxy->do($this->request, $vippsQuote);
+
             $transaction = $this->transactionProcessor->process($vippsQuote);
 
             $resultRedirect = $this->prepareResponse($resultRedirect, $transaction);
@@ -196,7 +206,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
 
             $quoteCouldBeRestored = $transaction
-                && ($transaction->transactionWasCancelled() || $transaction->isTransactionExpired());
+                && ($this->statusVisitor->isCanceled($transaction) || $this->statusVisitor->isExpired($transaction));
             $order = $this->getOrder();
 
             if ($quoteCouldBeRestored && $cartPersistence) {
@@ -285,7 +295,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     {
         if (null === $this->vippsQuote || $forceReload) {
             $this->vippsQuote = $this->vippsQuoteRepository
-                ->loadByOrderId($this->request->getParam('order_id'));
+                ->loadByOrderId($this->authoriseProxy->getOrderId($this->request));
         }
 
         return $this->vippsQuote;
@@ -293,12 +303,12 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
     /**
      * @param Redirect $resultRedirect
-     * @param Transaction $transaction
+     * @param Transaction|Payment $transaction
      *
      * @return Redirect
      * @throws \Exception
      */
-    private function prepareResponse(Redirect $resultRedirect, Transaction $transaction)
+    private function prepareResponse(Redirect $resultRedirect, $transaction)
     {
         $this->defineMessage($transaction);
         $this->defineRedirectPath($resultRedirect, $transaction);
@@ -344,13 +354,19 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         return $this->config->getValue('cancellation_cart_persistence');
     }
 
-    private function defineMessage(Transaction $transaction): void
+    /**
+     * @param Transaction|Payment $transaction
+     * @return void
+     */
+    private function defineMessage($transaction): void
     {
-        if ($transaction->transactionWasCancelled()) {
+        if ($this->statusVisitor->isCanceled($transaction)) {
             $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
-        } elseif ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
-            //$this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
-        } elseif ($transaction->isTransactionExpired()) {
+        } elseif (
+            $this->statusVisitor->isReserved($transaction)
+            || $this->statusVisitor->isCaptured($transaction)) {
+            $this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
+        } elseif ($this->statusVisitor->isExpired($transaction)) {
             $this->messageManager->addErrorMessage(
                 __('Transaction was expired. Please, place your order again')
             );
@@ -363,13 +379,15 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
     /**
      * @param Redirect $resultRedirect
-     * @param Transaction $transaction
+     * @param Transaction|Payment $transaction
      *
      * @throws NoSuchEntityException
      */
-    private function defineRedirectPath(Redirect $resultRedirect, Transaction $transaction): void
+    private function defineRedirectPath(Redirect $resultRedirect, $transaction): void
     {
-        if ($transaction->isTransactionReserved() || $transaction->isTransactionCaptured()) {
+        if ($this->statusVisitor->isReserved($transaction)
+            || $this->statusVisitor->isCaptured($transaction)
+        ) {
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
         } else {
             $orderId = $this->getOrder() ? $this->getOrder()->getEntityId() : null;

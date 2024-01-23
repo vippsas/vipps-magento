@@ -19,4 +19,11 @@
             <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
+    <type name="Magento\StoreGraphQl\Model\Resolver\Store\StoreConfigDataProvider">
+        <arguments>
+            <argument name="extendedConfigData" xsi:type="array">
+                <item name="vipps_version" xsi:type="string">payment/vipps/version</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

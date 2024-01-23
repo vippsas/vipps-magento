@@ -28,16 +28,20 @@ interface TokenProviderInterface
     /**
      * Method to get valid token string.
      *
+     * @param null $scopeId
+     *
      * @return string
      * @throws AuthenticationException
      */
-    public function get();
+    public function get($scopeId = null);
 
     /**
      * Method to regenerate access token from Vipps and save it to storage.
      *
+     * @param null $scopeId
+     *
      * @throws CouldNotSaveException
      * @throws AuthenticationException
      */
-    public function regenerate();
+    public function regenerate($scopeId = null);
 }

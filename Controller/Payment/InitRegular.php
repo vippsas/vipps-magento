@@ -135,7 +135,8 @@ class InitRegular implements ActionInterface
      */
     private function initiatePayment(CartInterface $quote)
     {
-        return $this->commandManager->initiatePayment(
+        return $this->commandManager
+            ->initiatePayment(
             $quote->getPayment(),
             [
                 'amount' => $quote->getGrandTotal(),

@@ -119,7 +119,7 @@ class Profiler implements ProfilerInterface
     private function parseOrderId(Response $response)
     {
         $content = $this->jsonDecoder->decode($response->getContent());
-        return $content['orderId'] ?? null;
+        return ($content['orderId'] ?? $content['reference'] ?? null);
     }
 
     /**
@@ -195,7 +195,7 @@ class Profiler implements ProfilerInterface
     {
         $recursive = function ($data, $indent = '') use (&$recursive) {
             $output = '{' . PHP_EOL;
-            foreach ($data as $key => $value) {
+            foreach ((array)$data as $key => $value) {
                 if (is_array($value)) {
                     $output .= $indent . '    ' . $key . ': ' . $recursive($value, $indent . '    ') . PHP_EOL;
                 } elseif (!is_object($value)) {

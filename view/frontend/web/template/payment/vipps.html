@@ -19,7 +19,7 @@
                class="radio"
                data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()" />
         <label data-bind="attr: {'for': getCode()}" class="label">
-            <img width="70"  data-bind="attr: {src: getVippsLogoSrc(), alt: 'Vipps'}" class="payment-icon"/>
+            <img  data-bind="attr: {src: getVippsLogoSrc(), alt: getTitle(), width: getLogoWidth()}" class="payment-icon"/>
             <span data-bind="text: getTitle()"></span>
         </label>
     </div>
@@ -28,10 +28,8 @@
         <!-- ko template: getTemplate() --><!-- /ko -->
         <!--/ko-->
         <fieldset class="fieldset" data-bind='attr: {id: "payment_form_" + getCode()}'>
-            <div class="payment-method-note">
-                <!-- ko i18n: 'Almost done! Remember, there are no fees using Vipps when shopping online.' --><!-- /ko -->
-                <div class="text-shadow">
-                    <!-- ko i18n: 'You will be redirected to the Vipps website.' --><!-- /ko -->
+            <div class="payment-method-note" data-bind="text: getNoteText()">
+                <div class="text-shadow" data-bind="text: getRedirectText()">
                 </div>
             </div>
         </fieldset>
