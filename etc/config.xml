@@ -21,7 +21,7 @@
                 <model>Vipps\Payment\Model\Method\Vipps</model>
                 <title>Vipps</title>
                 <title_vipps_payment>Vipps</title_vipps_payment>
-                <title_mobile_epayment>Vipps MobilePay</title_mobile_epayment>
+                <title_mobile_epayment>MobilePay</title_mobile_epayment>
                 <active>1</active>
                 <version>vipps_payment</version>
                 <order_status>pending</order_status>

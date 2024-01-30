@@ -873,7 +873,7 @@
         <arguments>
             <argument xsi:type="array" name="pool">
                 <item xsi:type="string" name="vipps_payment">Vipps_Payment::images/vipps_logo_rgb.png</item>
-                <item xsi:type="string" name="mobile_epayment">Vipps_Payment::images/Vipps_MobilePay_Logo_Primary_RGB_Black.png</item>
+                <item xsi:type="string" name="mobile_epayment">Vipps_Payment::images/mobilepay_logo.png</item>
             </argument>
         </arguments>
     </virtualType>
@@ -883,7 +883,7 @@
         <arguments>
             <argument xsi:type="array" name="pool">
                 <item xsi:type="string" name="vipps_payment">70</item>
-                <item xsi:type="string" name="mobile_epayment">200</item>
+                <item xsi:type="string" name="mobile_epayment">107</item>
             </argument>
         </arguments>
     </virtualType>
