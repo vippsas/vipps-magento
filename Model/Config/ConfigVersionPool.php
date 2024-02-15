@@ -22,7 +22,7 @@ class ConfigVersionPool
 
     public function get()
     {
-        $versionCode = $this->config->getValue('version');
+        $versionCode = $this->config->getVersion();
 
         return $this->pool[$versionCode] ?? $this->pool[Version::CONFIG_VIPPS];
     }

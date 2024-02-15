@@ -37,6 +37,7 @@ use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Processor;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\GatewayEpayment\Data\Payment as DataPayment;
 use Vipps\Payment\Model\QuoteUpdater;
 use Vipps\Payment\Api\Data\QuoteInterface;
@@ -69,6 +70,7 @@ class TransactionProcessor
     private Processor $processor;
     private QuoteUpdater $quoteUpdater;
     private LockManager $lockManager;
+    /** @var Config */
     private ConfigInterface $config;
     private QuoteManagement $quoteManagement;
     private OrderManagementInterface $orderManagement;
@@ -174,7 +176,7 @@ class TransactionProcessor
 
         $this->sendReceipt($order, $payment);
 
-        $paymentAction = $this->config->getValue('vipps_payment_action');
+        $paymentAction = $this->config->getPaymentAction();
         $this->processAction($paymentAction, $order, $payment);
 
         $this->notify($order);
@@ -206,13 +208,8 @@ class TransactionProcessor
      */
     private function processAction(?string $action, OrderInterface $order, DataPayment $transaction): void
     {
-        switch ($action) {
-            case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
-                $this->capture($order);
-                break;
-            default:
-                $this->authorize($order, $transaction);
-        }
+        // Only capture is supported by epayment gateway
+        $this->capture($order);
     }
 
     /**

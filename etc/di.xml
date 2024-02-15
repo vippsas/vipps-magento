@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright 2020 Vipps
+  ~ Copyright 2024 Vipps
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
   ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -666,23 +666,6 @@
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="amount" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\Payment\AmountBuilder</item>
-                <!-- paymentMethod -->
-                <!--
-  "amount": {
-    "currency": "NOK",
-    "value": 1000
-  },
-  "paymentMethod": {
-    "type": "WALLET"
-  },
-  "customer": {
-    "phoneNumber": "4791234567"
-  },
-  "reference": "acme-shop-123-order123abc",
-  "returnUrl": "https://yourwebsite.come/redirect?reference=abcc123",
-  "userFlow": "WEB_REDIRECT",
-  "paymentDescription": "One pair of socks"
-    }'                 -->
             </argument>
         </arguments>
     </virtualType>

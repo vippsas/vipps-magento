@@ -264,7 +264,7 @@ class TransactionProcessor
 
         $this->sendReceipt($order, $transaction);
 
-        $paymentAction = $this->config->getValue('vipps_payment_action');
+        $paymentAction = $this->config->getPaymentAction();
         $this->processAction($paymentAction, $order, $transaction);
 
         $this->notify($order);

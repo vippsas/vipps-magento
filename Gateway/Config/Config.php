@@ -20,6 +20,8 @@ use Magento\Payment\Gateway\Config\Config as OriginConfig;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
+use Vipps\Payment\Model\Config\Source\Version;
 use Vipps\Payment\Model\Method\Vipps;
 
 class Config extends OriginConfig
@@ -46,5 +48,20 @@ class Config extends OriginConfig
         }
 
         return OriginConfig::getValue($field, $storeId);
+    }
+
+    public function getVersion(): string
+    {
+        return $this->getValue('version');
+    }
+
+    public function getPaymentAction(): string
+    {
+        if ($this->getVersion() === Version::CONFIG_MOBILE_EPAYMENT) {
+            // epayment api supports only capture
+            return PaymentAction::ACTION_AUTHORIZE_CAPTURE;
+        }
+
+        return $this->getValue('vipps_payment_action');
     }
 }
