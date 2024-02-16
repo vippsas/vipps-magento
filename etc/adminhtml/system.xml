@@ -51,7 +51,7 @@
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\Environment</source_model>
                             <config_path>payment/vipps/environment</config_path>
                         </field>
-                        <field id="version" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <field id="version" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Api Version</label>
                             <source_model>Vipps\Payment\Model\Config\Source\Version</source_model>
                             <config_path>payment/vipps/version</config_path>
@@ -66,11 +66,15 @@
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                             <config_path>payment/vipps/profiling</config_path>
                         </field>
-                        <field id="payment_action" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <field id="payment_action" translate="label" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Payment Action</label>
                             <config_path>payment/vipps/vipps_payment_action</config_path>
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                             <attribute type="shared">1</attribute>
+                            <tooltip>For MobilePay only `Authorize and Capture` is available.</tooltip>
+                            <depends>
+                                <field id="version">vipps_payment</field>
+                            </depends>
                         </field>
                         <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Order status: order creation</label>
