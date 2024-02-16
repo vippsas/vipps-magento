@@ -115,10 +115,10 @@ class TransferFactory implements TransferFactoryInterface
     {
         $endpointUrl = $this->endpointUrl;
         /** Binding url parameters if they were specified */
-        foreach ($this->urlParams as $paramValue) {
-            if (isset($request[$paramValue])) {
-                $endpointUrl = str_replace(':' . $paramValue, $request[$paramValue], $this->endpointUrl);
-                $this->urlParams[$paramValue] = $request[$paramValue];
+        foreach ($this->urlParams as $paramKey => $paramValue) {
+            if (isset($request[$paramKey])) {
+                $endpointUrl = str_replace(':' . $paramKey, $request[$paramKey], $this->endpointUrl);
+                $this->urlParams[$paramKey] = $request[$paramKey];
             }
         }
         return $this->urlResolver->getUrl($endpointUrl);
