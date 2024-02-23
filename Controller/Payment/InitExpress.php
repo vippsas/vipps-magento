@@ -28,11 +28,11 @@ use Magento\Framework\Exception\LocalizedExceptionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
-use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 
@@ -74,7 +74,7 @@ class InitExpress implements ActionInterface
     private $frameworkExceptionFactory;
 
     /**
-     * @var ConfigInterface
+     * @var Config
      */
     private $config;
 
@@ -102,7 +102,7 @@ class InitExpress implements ActionInterface
      * @param CommandManagerInterface $commandManager
      * @param CartRepositoryInterface $cartRepository
      * @param LocalizedExceptionFactory $frameworkExceptionFactory
-     * @param ConfigInterface $config
+     * @param Config $config
      * @param ManagerInterface $messageManager
      * @param CheckoutHelper $checkoutHelper
      * @param LoggerInterface $logger
@@ -116,7 +116,7 @@ class InitExpress implements ActionInterface
         CommandManagerInterface $commandManager,
         CartRepositoryInterface $cartRepository,
         LocalizedExceptionFactory $frameworkExceptionFactory,
-        ConfigInterface $config,
+        Config $config,
         ManagerInterface $messageManager,
         CheckoutHelper $checkoutHelper,
         LoggerInterface $logger
@@ -155,7 +155,7 @@ class InitExpress implements ActionInterface
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
-                __('An error occurred during request to Vipps. Please try again later.')
+                __('An error occurred during request to %1. Please try again later.', $this->config->getTitle())
             );
             $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
         }

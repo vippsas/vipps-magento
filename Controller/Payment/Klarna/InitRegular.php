@@ -40,6 +40,7 @@ use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 use function __;
@@ -109,6 +110,7 @@ class InitRegular implements ActionInterface
      * @var ManagerInterface
      */
     private $messageManager;
+    private Config $config;
 
     /**
      * InitRegular constructor.
@@ -129,18 +131,19 @@ class InitRegular implements ActionInterface
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        ResultFactory $resultFactory,
-        CommandManagerInterface $commandManager,
-        SessionManagerInterface $checkoutSession,
-        SessionManagerInterface $customerSession,
-        CheckoutHelper $checkoutHelper,
-        CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger,
-        CartManagementInterface $cartManagement,
+        ResultFactory                              $resultFactory,
+        CommandManagerInterface                    $commandManager,
+        SessionManagerInterface                    $checkoutSession,
+        SessionManagerInterface                    $customerSession,
+        CheckoutHelper                             $checkoutHelper,
+        CartRepositoryInterface                    $cartRepository,
+        LoggerInterface                            $logger,
+        CartManagementInterface                    $cartManagement,
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
-        PaymentInformationManagementInterface $paymentInformationManagement,
-        QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId,
-        ManagerInterface $messageManager
+        PaymentInformationManagementInterface      $paymentInformationManagement,
+        QuoteIdToMaskedQuoteIdInterface            $quoteIdToMaskedQuoteId,
+        ManagerInterface                           $messageManager,
+        Config                                     $config
     ) {
         $this->resultFactory = $resultFactory;
         $this->commandManager = $commandManager;
@@ -154,6 +157,7 @@ class InitRegular implements ActionInterface
         $this->paymentInformationManagement = $paymentInformationManagement;
         $this->quoteIdToMaskedQuoteId = $quoteIdToMaskedQuoteId;
         $this->messageManager = $messageManager;
+        $this->config = $config;
     }
 
     /**
@@ -180,7 +184,7 @@ class InitRegular implements ActionInterface
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
-                __('An error occurred during request to Vipps. Please try again later.')
+                __('An error occurred during request to %1. Please try again later.', $this->config->getTitle())
             );
             $response->setPath('checkout/cart');
         }
@@ -200,9 +204,9 @@ class InitRegular implements ActionInterface
         return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
-                'amount' => $quote->getGrandTotal(),
+                'amount'                                   => $quote->getGrandTotal(),
                 InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
-                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
+                Vipps::METHOD_TYPE_KEY                     => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
             ]
         );
     }

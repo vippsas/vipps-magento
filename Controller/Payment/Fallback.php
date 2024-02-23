@@ -38,6 +38,7 @@ use Magento\Sales\Api\OrderManagementInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\GatewayEpayment\Data\Payment;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
@@ -109,7 +110,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     private $resultFactory;
 
     /**
-     * @var ConfigInterface
+     * @var Config
      */
     private $config;
 
@@ -139,7 +140,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      * @param OrderLocator $orderLocator
      * @param Compliance $compliance
      * @param LoggerInterface $logger
-     * @param ConfigInterface $config
+     * @param Config $config
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -155,7 +156,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         OrderLocator             $orderLocator,
         Compliance               $compliance,
         LoggerInterface          $logger,
-        ConfigInterface          $config,
+        Config                   $config,
         StatusVisitor            $statusVisitor,
         AuthoriseProxy           $authoriseProxy
     ) {
@@ -361,7 +362,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     private function defineMessage($transaction): void
     {
         if ($this->statusVisitor->isCanceled($transaction)) {
-            $this->messageManager->addWarningMessage(__('Your order was cancelled in Vipps.'));
+            $this->messageManager->addWarningMessage(__('Your order was cancelled in %1.', $this->config->getTitle()));
         } elseif (
             $this->statusVisitor->isReserved($transaction)
             || $this->statusVisitor->isCaptured($transaction)) {

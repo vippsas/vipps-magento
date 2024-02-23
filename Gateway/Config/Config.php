@@ -64,4 +64,11 @@ class Config extends OriginConfig
 
         return $this->getValue('vipps_payment_action');
     }
+
+    public function getTitle(): string
+    {
+        $version = $this->getValue('version');
+
+        return $this->getValue('title_' . $version);
+    }
 }
