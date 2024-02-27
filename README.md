@@ -4,6 +4,7 @@ title: Vipps Payment Module for Magento 2
 sidebar_label: Introduction
 sidebar_position: 1
 hide_table_of_contents: true
+description: Provide Vipps payment options for your Magento website.
 pagination_next: null
 pagination_prev: null
 ---
