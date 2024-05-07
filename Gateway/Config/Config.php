@@ -57,11 +57,6 @@ class Config extends OriginConfig
 
     public function getPaymentAction(): string
     {
-        if ($this->getVersion() === Version::CONFIG_MOBILE_EPAYMENT) {
-            // epayment api supports only capture
-            return PaymentAction::ACTION_AUTHORIZE_CAPTURE;
-        }
-
         return $this->getValue('vipps_payment_action');
     }
 

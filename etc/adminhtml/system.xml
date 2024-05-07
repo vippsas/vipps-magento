@@ -71,10 +71,6 @@
                             <config_path>payment/vipps/vipps_payment_action</config_path>
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                             <attribute type="shared">1</attribute>
-                            <tooltip>For MobilePay only `Authorize and Capture` is available.</tooltip>
-                            <depends>
-                                <field id="version">vipps_payment</field>
-                            </depends>
                         </field>
                         <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Order status: order creation</label>
