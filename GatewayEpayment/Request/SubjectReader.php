@@ -32,7 +32,7 @@ class SubjectReader
         return $subject['jsonData']['reference'] ?? null;
     }
 
-    public function readAmount(array $subject): ?int
+    public function readAmount(array $subject): ?float
     {
         return $subject['amount'] ?? null;
     }
