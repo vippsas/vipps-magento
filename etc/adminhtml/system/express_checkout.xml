@@ -26,6 +26,11 @@
         </field>
         <group id="settings_checkout" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="50">
             <label>Advanced Settings</label>
+            <field id="show_for_virtual" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                <label>Show On Virtual Products</label>
+                <config_path>payment/vipps/virtual_products_display</config_path>
+                <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            </field>
             <field id="checkout_cart_display" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                 <label>Display on Shopping Cart</label>
                 <config_path>payment/vipps/checkout_cart_display</config_path>

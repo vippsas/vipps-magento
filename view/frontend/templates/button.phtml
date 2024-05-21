@@ -17,10 +17,7 @@
 <?php
 /** @var $block \Vipps\Payment\Block\Express\Button */
 $size = $block->getData('size');
-$isInCatalogProduct = false;
-if ($block->getIsInCatalogProduct()) {
-    $isInCatalogProduct = $block->getIsInCatalogProduct();
-}
+$isInCatalogProduct = $block->getIsInCatalogProduct() ?: false;
 $shortcutHtmlId = $block->escapeHtml($block->getShortcutHtmlId());
 ?>
 
@@ -31,7 +28,8 @@ $shortcutHtmlId = $block->escapeHtml($block->getShortcutHtmlId());
      data-mage-init='{
      "Vipps_Payment/js/view/vipps-express-checkout": {
                 "isCatalogProduct": "<?= (bool)$isInCatalogProduct //@codingStandardsIgnoreLine ?>",
-                 "shortcutContainerClass": ".<?= $shortcutHtmlId //@codingStandardsIgnoreLine ?>"
+                "shortcutContainerClass": ".<?= $shortcutHtmlId //@codingStandardsIgnoreLine ?>",
+                "virtualProductDisplay": "<?= $block->getVirtualProductDisplay() //@codingStandardsIgnoreLine ?>"
             }
      }'>
     <svg width="253px" height="48px" viewBox="0 0 253 48" role="img"
