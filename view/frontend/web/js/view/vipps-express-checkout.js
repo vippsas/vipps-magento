@@ -13,10 +13,9 @@
  * IN THE SOFTWARE.
  */
 define([
-           'jquery',
-           'jquery/ui',
-           'mage/mage'
-       ], function ($) {
+    'jquery',
+    'mage/mage',
+], function ($, mage, storage, Element) {
     'use strict';
 
     $.widget('mage.vippsCheckout', {

@@ -13,8 +13,11 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Block\Express;
 
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Framework\View\Element\AbstractBlock;
@@ -67,14 +70,21 @@ class Button extends Template implements ShortcutInterface
      */
     public function __construct(
         Template\Context $context,
-        Random $mathRandom,
-        ConfigInterface $config,
-        array $data = []
+        Random           $mathRandom,
+        ConfigInterface  $config,
+        Registry         $registry,
+        array            $data = []
     ) {
         $this->config = $config;
         $this->assetRepo = $context->getAssetRepository();
         $this->mathRandom = $mathRandom;
+        $this->registry = $registry;
         parent::__construct($context, $data);
+    }
+
+    private function getProduct(): ?ProductInterface
+    {
+        return $this->registry->registry('product');
     }
 
     /**
@@ -96,7 +106,20 @@ class Button extends Template implements ShortcutInterface
             return '';
         }
 
+        if ($this->getIsInCatalogProduct()
+            && !$this->config->getValue('virtual_products_display')
+            && $this->getProduct()
+            && $this->getProduct()->getTypeId() === \Magento\Catalog\Model\Product\Type::TYPE_VIRTUAL
+        ) {
+            return '';
+        }
+
         return parent::_toHtml();
+    }
+
+    public function getVirtualProductDisplay(): bool
+    {
+        return (bool)$this->config->getValue('virtual_products_display');
     }
 
     /**
