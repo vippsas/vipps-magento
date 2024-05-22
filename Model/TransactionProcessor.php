@@ -152,20 +152,20 @@ class TransactionProcessor
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
-        CartRepositoryInterface $cartRepository,
-        CartManagementInterface $cartManagement,
-        QuoteLocator $quoteLocator,
-        OrderLocator $orderLocator,
-        Processor $processor,
-        QuoteUpdater $quoteUpdater,
-        LockManager $lockManager,
-        ConfigInterface $config,
-        QuoteManagement $quoteManagement,
+        CartRepositoryInterface  $cartRepository,
+        CartManagementInterface  $cartManagement,
+        QuoteLocator             $quoteLocator,
+        OrderLocator             $orderLocator,
+        Processor                $processor,
+        QuoteUpdater             $quoteUpdater,
+        LockManager              $lockManager,
+        ConfigInterface          $config,
+        QuoteManagement          $quoteManagement,
         OrderManagementInterface $orderManagement,
-        PaymentDetailsProvider $paymentDetailsProvider,
-        ReceiptSender $receiptSender,
-        LoggerInterface $logger,
-        ResourceConnection $resourceConnection
+        PaymentDetailsProvider   $paymentDetailsProvider,
+        ReceiptSender            $receiptSender,
+        LoggerInterface          $logger,
+        ResourceConnection       $resourceConnection
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -384,7 +384,8 @@ class TransactionProcessor
             );
         }
 
-        if ($transaction->isExpressCheckout()) {
+        if ($transaction->isExpressCheckout()
+            || $quote->getPayment()->getAdditionalInformation('method_type')) {
             $this->quoteUpdater->execute($quote, $transaction);
         }
 

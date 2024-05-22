@@ -64,7 +64,8 @@ class TransferFactory implements TransferFactoryInterface
         'transaction',
         'orderLines',
         'bottomLine',
-        'shouldReleaseRemainingFunds'
+        'shouldReleaseRemainingFunds',
+        'sub'
     ];
 
     /**

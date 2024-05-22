@@ -18,6 +18,7 @@ namespace Vipps\Payment\Gateway\Request\Initiate;
 use Magento\Payment\Helper\Formatter;
 use Magento\Quote\Model\Quote\Payment;
 use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\Model\Method\Vipps;
 
 /**
  * Class Transaction
@@ -48,6 +49,8 @@ class TransactionDataBuilder implements InitiateBuilderInterface
      * @var string
      */
     private static $amount = 'amount';
+
+    private static $scope = 'scope';
 
     /**
      * @var SubjectReader
@@ -81,11 +84,20 @@ class TransactionDataBuilder implements InitiateBuilderInterface
         $amount = $this->subjectReader->readAmount($buildSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
 
-        return [
+        $data = [
             self::$transaction => [
                 self::$orderId => $orderAdapter->getOrderIncrementId(),
-                self::$amount => $amount
+                self::$amount  => $amount,
             ]
         ];
+
+        if ($this->subjectReader->readPaymentTypeKey($buildSubject) === InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT
+            && $this->subjectReader->readMethodTypeKey($buildSubject) === Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
+        ) {
+            // express checkout with virtual product needs a scope
+            $data[self::$transaction][self::$scope] = 'name address email phoneNumber birthDate';
+        }
+
+        return $data;
     }
 }

@@ -76,13 +76,13 @@ class TransactionBuilder
      * @param ShippingDetailsFactory $shippingDetailsFactory
      */
     public function __construct(
-        TransactionFactory $transactionFactory,
-        TransactionInfoFactory $infoFactory,
-        TransactionSummaryFactory $summaryFactory,
+        TransactionFactory           $transactionFactory,
+        TransactionInfoFactory       $infoFactory,
+        TransactionSummaryFactory    $summaryFactory,
         TransactionLogHistoryFactory $logHistoryFactory,
-        ItemFactory $itemFactory,
-        UserDetailsFactory $userDetailsFactory,
-        ShippingDetailsFactory $shippingDetailsFactory
+        ItemFactory                  $itemFactory,
+        UserDetailsFactory           $userDetailsFactory,
+        ShippingDetailsFactory       $shippingDetailsFactory
     ) {
         $this->transactionFactory = $transactionFactory;
         $this->infoFactory = $infoFactory;
@@ -128,9 +128,9 @@ class TransactionBuilder
         $logHistory = $this->logHistoryFactory->create(['data' => ['items' => $items]]);
 
         $arguments = [
-            'orderId' => $orderId,
-            'transactionInfo' => $info,
-            'transactionSummary' => $summary,
+            'orderId'               => $orderId,
+            'transactionInfo'       => $info,
+            'transactionSummary'    => $summary,
             'transactionLogHistory' => $logHistory
         ];
 
@@ -142,6 +142,10 @@ class TransactionBuilder
             $arguments['shippingDetails'] = $this->shippingDetailsFactory->create([
                 'data' => $this->response['shippingDetails']
             ]);
+        }
+
+        if (isset($this->response['sub'])) {
+            $arguments['sub'] = $this->response['sub'];
         }
 
         return $this->transactionFactory->create($arguments);

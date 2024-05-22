@@ -13,11 +13,14 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Request;
 
 use Magento\Payment\Gateway\Data\AddressAdapterInterface;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
+use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\Model\Method\Vipps;
 
 /**
  * Class SubjectReader
@@ -36,6 +39,24 @@ class SubjectReader
             return $subject['payment'];
         }
         return null;
+    }
+
+    /**
+     * @param $subject
+     * @return string
+     */
+    public function readPaymentTypeKey($subject): string
+    {
+        return $subject[InitiateBuilderInterface::PAYMENT_TYPE_KEY] ?? '';
+    }
+
+    /**
+     * @param $subject
+     * @return string
+     */
+    public function readMethodTypeKey($subject): string
+    {
+        return $subject[Vipps::METHOD_TYPE_KEY] ?? '';
     }
 
     /**

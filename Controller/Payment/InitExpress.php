@@ -34,6 +34,7 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\Model\Controller\InitExpress\PaymentTypeKeyResolver;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -93,6 +94,8 @@ class InitExpress implements ActionInterface
      */
     private $logger;
 
+    private PaymentTypeKeyResolver $paymentTypeKeyResolver;
+
     /**
      * InitExpress constructor.
      *
@@ -110,16 +113,17 @@ class InitExpress implements ActionInterface
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        ResultFactory $resultFactory,
-        SessionManagerInterface $checkoutSession,
-        SessionManagerInterface $customerSession,
-        CommandManagerInterface $commandManager,
-        CartRepositoryInterface $cartRepository,
+        ResultFactory             $resultFactory,
+        SessionManagerInterface   $checkoutSession,
+        SessionManagerInterface   $customerSession,
+        CommandManagerInterface   $commandManager,
+        CartRepositoryInterface   $cartRepository,
         LocalizedExceptionFactory $frameworkExceptionFactory,
-        ConfigInterface $config,
-        ManagerInterface $messageManager,
-        CheckoutHelper $checkoutHelper,
-        LoggerInterface $logger
+        PaymentTypeKeyResolver    $paymentTypeKeyResolver,
+        ConfigInterface           $config,
+        ManagerInterface          $messageManager,
+        CheckoutHelper            $checkoutHelper,
+        LoggerInterface           $logger
     ) {
         $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
@@ -131,6 +135,7 @@ class InitExpress implements ActionInterface
         $this->messageManager = $messageManager;
         $this->checkoutHelper = $checkoutHelper;
         $this->logger = $logger;
+        $this->paymentTypeKeyResolver = $paymentTypeKeyResolver;
     }
 
     public function execute()
@@ -186,9 +191,9 @@ class InitExpress implements ActionInterface
         return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
-                'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
-                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
+                'amount'                                   => $quote->getGrandTotal(),
+                InitiateBuilderInterface::PAYMENT_TYPE_KEY => $this->paymentTypeKeyResolver->resolve($quote),
+                Vipps::METHOD_TYPE_KEY                     => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
             ]
         );
     }

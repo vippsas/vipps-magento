@@ -157,6 +157,8 @@ class Transaction
      */
     private $shippingDetails;
 
+    private ?string $sub;
+
     /**
      * Transaction constructor.
      *
@@ -173,7 +175,8 @@ class Transaction
         TransactionSummary $transactionSummary,
         TransactionLogHistory $transactionLogHistory,
         UserDetails $userDetails = null,
-        ShippingDetails $shippingDetails = null
+        ShippingDetails $shippingDetails = null,
+        ?string $sub = null
     ) {
         $this->orderId = $orderId;
         $this->transactionInfo = $transactionInfo;
@@ -181,6 +184,7 @@ class Transaction
         $this->transactionLogHistory = $transactionLogHistory;
         $this->userDetails = $userDetails;
         $this->shippingDetails = $shippingDetails;
+        $this->sub = $sub;
     }
 
     /**
@@ -392,5 +396,10 @@ class Transaction
     public function getTransactionLogHistory()
     {
         return $this->transactionLogHistory;
+    }
+
+    public function getSub(): ?string
+    {
+        return $this->sub;
     }
 }
