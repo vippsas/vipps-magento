@@ -91,6 +91,11 @@ class CommandManager implements CommandManagerInterface, PaymentCommandManagerIn
         return $this->executeByCode('sendReceipt', null, $arguments);
     }
 
+    public function getUserInfo(string $sub)
+    {
+        return $this->executeByCode('getUserInfo', null, ['sub' => $sub]);
+    }
+
     /**
      * {@inheritdoc}
      *

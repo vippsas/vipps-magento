@@ -24,6 +24,7 @@ use Vipps\Payment\Gateway\Exception\VippsException;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
 use Vipps\Payment\Model\Helper\Utility;
+use Vipps\Payment\Model\QuoteUpdater\BillingAddressUpdater;
 
 /**
  * Class QuoteUpdater
@@ -49,6 +50,7 @@ class QuoteUpdater
      * @var Utility
      */
     private $utility;
+    private BillingAddressUpdater $billingAddressUpdater;
 
     /**
      * QuoteUpdater constructor.
@@ -62,12 +64,14 @@ class QuoteUpdater
         CartRepositoryInterface $cartRepository,
         PaymentDetailsProvider $paymentDetailsProvider,
         TransactionBuilder $transactionBuilder,
+        BillingAddressUpdater $billingAddressUpdater,
         Utility $utility
     ) {
         $this->cartRepository = $cartRepository;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->transactionBuilder = $transactionBuilder;
         $this->utility = $utility;
+        $this->billingAddressUpdater = $billingAddressUpdater;
     }
 
     /**
@@ -102,7 +106,7 @@ class QuoteUpdater
      */
     private function updateQuoteAddresses(Quote $quote, Transaction $transaction)
     {
-        $this->updateBillingAddress($quote, $transaction);
+        $this->billingAddressUpdater->update($quote, $transaction);
         if (!$quote->getIsVirtual()) {
             $this->updateShippingAddress($quote, $transaction);
         }
@@ -134,32 +138,5 @@ class QuoteUpdater
         //We do not save user address from vipps in Magento
         $shippingAddress->setSaveInAddressBook(false);
         $shippingAddress->setCustomerAddressId(null);
-    }
-
-    /**
-     * @param Quote $quote
-     * @param Transaction $transaction
-     */
-    private function updateBillingAddress(Quote $quote, Transaction $transaction)
-    {
-        $userDetails = $transaction->getUserDetails();
-        $billingAddress = $quote->getBillingAddress();
-        $shippingDetails = $transaction->getShippingDetails();
-
-        $billingAddress->setLastname($userDetails->getLastName());
-        $billingAddress->setFirstname($userDetails->getFirstName());
-        $billingAddress->setEmail($userDetails->getEmail());
-        $billingAddress->setTelephone($userDetails->getMobileNumber());
-
-        // try to obtain postCode one more time if it is not done before
-        if (!$billingAddress->getPostcode() && $shippingDetails->getPostcode()) {
-            $billingAddress->setPostcode($shippingDetails->getPostcode());
-        }
-
-        $billingAddress->setSameAsBilling(false);
-
-        //We do not save user address from vipps in Magento
-        $billingAddress->setSaveInAddressBook(false);
-        $billingAddress->setCustomerAddressId(null);
     }
 }
