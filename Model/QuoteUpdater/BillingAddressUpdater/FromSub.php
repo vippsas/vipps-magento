@@ -33,6 +33,7 @@ class FromSub
                 ->setPostcode($userDetails['address']['postal_code'] ?? '')
                 ->setCountryId($userDetails['address']['country'] ?? '')
                 ->setRegionCode($userDetails['address']['region'] ?? '')
+                ->setCity($userDetails['address']['region'] ?? '')
                 ->setEmail($userDetails['email'] ?? '')
                 ->setTelephone($userDetails['phone_number'] ?? '')
                 ->setLastname($userDetails['family_name'] ?? '')
@@ -42,8 +43,5 @@ class FromSub
                 ->setCustomerAddressId(null);
 
         }
-
-        var_dump($userDetails);
-        die;
     }
 }
