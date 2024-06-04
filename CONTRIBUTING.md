@@ -9,7 +9,7 @@ pagination_prev: null
 ---
 END_METADATA -->
 
-# Contributing to Checkout with Vipps for Magento
+# Contributing to Vipps/MobilePay Payment Module for Adobe Commerce
 
 If you want to contribute: Great! No issue or pull request is too small!
 
@@ -44,4 +44,4 @@ Creating an issue in GitHub is easy, and whatever issue you're having, you're li
 
 The LICENSE file defines the license for the project. An open source project's license informs users what they can and can't do (e.g., use, modify, redistribute), and contributors, what they are allowing others to do.
 
-The Vipps Payment Module for Magento 2 is licensed under the MIT license: https://choosealicense.com/licenses/mit/
+The *Vipps/MobilePay Payment Module for Adobe Commerce* is licensed under the MIT license: https://choosealicense.com/licenses/mit/

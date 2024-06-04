@@ -1,6 +1,6 @@
 <!-- START_METADATA
 ---
-title: Vipps Payment Module for Magento 2 User Guide
+title: Vipps/MobilePay Payment Module for Adobe Commerce User Guide
 sidebar_label: User Guide
 sidebar_position: 10
 pagination_next: null
@@ -15,7 +15,7 @@ END_METADATA -->
 * Magento 2 installed ([Magento 2.2.x](https://devdocs.magento.com/guides/v2.2/release-notes/bk-release-notes.html), [Magento 2.3.x](https://devdocs.magento.com/guides/v2.3/release-notes/bk-release-notes.html), [Magento 2.4.x](https://devdocs.magento.com/guides/v2.4/release-notes/bk-release-notes.html))
   * [Magento 2 System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
 * SSL must be installed on your site and active on your Checkout pages.
-* You must have a Vipps merchant account. [Sign up here](https://vippsbedrift.no/signup/vippspanett/).
+* You must have a Vipps MobilePay merchant account in the country . [Apply for services](https://developer.vippsmobilepay.com/docs/knowledge-base/applying-for-services/).
 * As with *all* Magento extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
 * Supported protocols HTTP1/HTTP1.1
   * Magento relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.

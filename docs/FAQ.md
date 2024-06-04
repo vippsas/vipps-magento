@@ -1,6 +1,6 @@
 <!-- START_METADATA
 ---
-title: Vipps Payment Module for Magento 2 FAQ
+title: Vipps/MobilePay Payment Module for Adobe Commerce FAQ
 sidebar_label: FAQ
 sidebar_position: 50
 pagination_next: null
@@ -34,9 +34,9 @@ Credit Memo allows you to make a refund for captured transaction.
 
 You can partially refund an order by specifying *Items to Refund* on the *Credit Memo* page and updating the *Qty to Refund* field.
 
-## How can I get help with Vipps for Magento?
+## How can I get help with the plugin?
 
-Vipps for Magento is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
+*Vipps/MobilePay Payment Module for Adobe Commerce* is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
 the plugin also help with improvements, maintenance and developer assistance.
 
 If you are having a problem, please make sure that you are using the latest version:
@@ -45,9 +45,9 @@ If you are having a problem, please make sure that you are using the latest vers
 The best way to report a problem (or ask a question) is to use GitHub's built-in "issue" functionality:
 [Issues](https://github.com/vippsas/vipps-magento/issues).
 
-### How can I get help with Vipps (unrelated to Magento)?
+### How can I get help with Vipps or MobilePay (unrelated to Magento)?
 
-See: [How to contact Vipps](https://developer.vippsmobilepay.com/docs/contact/).
+See: [How to contact Vipps MobilePay](https://developer.vippsmobilepay.com/docs/contact/).
 
 ## Why does it take so long after purchase before orders are created in Magento?
 
