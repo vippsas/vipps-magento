@@ -212,13 +212,13 @@ Otherwise, an issue with calculating delivery cost might occur.
 
 ## Customization
 
-The Magento platform provides various ways to create custom flows that are difficult and unnecessary to describe in one page. Here we provide a guide and references that can help you to understand the general idea of where to start.
+The Adobe Commerce platform provides various ways to create custom flows that are difficult and unnecessary to describe in one page. Here, we provide a guide and references that can help you to understand the general idea of where to start.
 
 For example, to customize the *Order Success* page, you can:
 
-* Use an existing 3rd party module or by doing the customization yourself. Visit [Magento Marketplace](https://marketplace.magento.com/) to see which 3rd party solutions are available.
+* Use an existing 3rd party module or by doing the customization yourself. Visit [Adobe Marketplace](https://commercemarketplace.adobe.com/) to see which 3rd party solutions are available.
 
-* Do the customization yourself. Refer to [Magento Frontend Developer Guide](https://devdocs.magento.com/guides/v2.4/frontend-dev-guide/bk-frontend-dev-guide.html).
+* Do the customization yourself. Refer to [Adobe Commerce Frontend Developer Guide](https://developer.adobe.com/commerce/frontend-core/guide/).
 
    The following code is related to the *Order Success* page:
 
