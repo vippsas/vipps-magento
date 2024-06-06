@@ -13,7 +13,7 @@ END_METADATA -->
 ## How do I capture an order?
 
 When *Payment Action* is set to *Authorize* and *Capture*, the invoice is created automatically in Adobe Commerce. In such a case, the *Invoice* button does not appear, and the order is ready to ship.
-For more details about capturing orders, refer to [Creating an Invoice documentation](https://docs.magento.com/user-guide/sales/invoice-create.html).
+For more details about capturing orders, refer to [Creating an Invoice](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/invoices#create-an-invoice).
 
 ## How do I partially capture an order?
 
@@ -22,12 +22,12 @@ Then, click *Update Qty’s* and submit *Invoice*.
 
 ## How do I cancel an order?
 
-In Adobe Commerce, an order can be canceled in the case where all invoices and shipments have been returned and the Vipps Payment transaction has not been captured.
-Otherwise, the refund should be finished first. The Vipps Payment module supports offline partial cancellation. It is used to cancel separate order items.
+In Adobe Commerce, an order can be canceled in the case where all invoices and shipments have been returned, and the Vipps MobilePay payment transaction has not been captured.
+Otherwise, the refund should be finished first. This plugin supports offline partial cancellation. It is used to cancel separate order items.
 
 ## How do I refund an order?
 
-For orders refunding Adobe Commerce propose [Credit Memo](https://docs.magento.com/user-guide/sales/credit-memos.html) functionality.
+For orders refunding Adobe Commerce propose [Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
 Credit Memo allows you to make a refund for captured transaction.
 
 ## How do I partially refund an order?
@@ -60,11 +60,11 @@ This scenario is possible for express payment flow. Unlike of regular payment, o
 Vipps Landing page. If the transaction was successfully initiated by client, a new record
 with a quote ID and reserved order ID will be created in DB table `vipps_quote`. This can be helpful to find a status of a transaction.
 
-## How do I enable Vipps Payment for Klarna Checkout
+## How do I enable Vipps/MobilePay Payment for Klarna Checkout
 
-To enable Vipps Payment method for Klarna Checkout, it should be chosen in the list of external payment methods in the appropriate Klarna Checkout settings section.
+To enable the Vipps payment method for Klarna Checkout, it should be chosen in the list of external payment methods in the appropriate Klarna checkout settings section.
 
-![Screenshot of Klarna Checkout settings](images/klarna_checkout.png)
+![Screenshot of Klarna checkout settings](images/klarna_checkout.png)
 
 ### Why am I seeing a strange page with URL printed?
 
@@ -75,16 +75,16 @@ Right after pressing *Place Order*, the client may see the page with message
 
 ## How to enable debug mode / requests profiling
 
-If you have experienced any issue with Vipps/MobilePay, try to enable *Request Profiling* and *Debug* features under the Vipps payment configuration area:
+If you have experienced any issue with Vipps MobilePay, try to enable *Request Profiling* and *Debug* features under the Vipps payment configuration area:
 
-*Stores -> Configuration -> Sales -> Payment Methods -> Vipps*
+*Stores -> Configuration -> Sales -> Payment Methods -> Vipps MobilePay*
 
 ![Screenshot of Configuration Area](images/vipps_basic_v2.png)
 
-After that, all information related to the Vipps payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
+After that, all information related to the Vipps/MobilePay payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
 
-*Requests Profiling* is a page in Adobe Commerce admin panel that helps you to track a communication between Vipps and Adobe Commerce.
-You can find the page under `System -> Vipps`
+*Requests Profiling* is a page in the Adobe Commerce admin panel that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
+You can find the page under `System -> Vipps Payment -> Requests Profiling`
 
 ![Screenshot of Request Profiling Grid](images/request_profiling.png)
 
