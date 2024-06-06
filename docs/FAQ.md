@@ -22,8 +22,8 @@ Then, click *Update Qty’s* and submit *Invoice*.
 
 ## How do I cancel an order?
 
-In Adobe Commerce, an order can be canceled in the case where all invoices and shipments have been returned, and the Vipps MobilePay payment transaction has not been captured.
-Otherwise, the refund should be finished first. This plugin supports offline partial cancellation. It is used to cancel separate order items.
+In Adobe Commerce, an order can be cancelled in the case where all invoices and shipments have been returned, and the Vipps MobilePay payment transaction has not been captured.
+Otherwise, the refund should be finished first. This Vipps/MobilePay Payment module supports offline partial cancellation. It is used to cancel separate order items.
 
 ## How do I refund an order?
 
@@ -34,10 +34,10 @@ Credit Memo allows you to make a refund for captured transaction.
 
 You can partially refund an order by specifying *Items to Refund* on the *Credit Memo* page and updating the *Qty to Refund* field.
 
-## How can I get help with the plugin?
+## How can I get help with the Vipps/MobilePay Payment module?
 
 *Vipps/MobilePay Payment Module for Adobe Commerce* is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
-the plugin also help with improvements, maintenance and developer assistance.
+the Vipps/MobilePay Payment module also help with improvements, maintenance and developer assistance.
 
 If you are having a problem, please make sure that you are using the latest version:
 [https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases)
@@ -62,7 +62,7 @@ with a quote ID and reserved order ID will be created in DB table `vipps_quote`.
 
 ## How do I enable Vipps/MobilePay Payment for Klarna Checkout
 
-To enable the Vipps payment method for Klarna Checkout, it should be chosen in the list of external payment methods in the appropriate Klarna checkout settings section.
+Select Vipps MobilePay from the list of external payment methods in the appropriate Klarna checkout settings section.
 
 ![Screenshot of Klarna checkout settings](images/klarna_checkout.png)
 
@@ -71,7 +71,7 @@ To enable the Vipps payment method for Klarna Checkout, it should be chosen in t
 Right after pressing *Place Order*, the client may see the page with message
 `{"url":"https:\/\/apitest.vipps.no\/dwo-api-application\/v1\/****"}`
 
-**Solution:** Update your Vipps module to the latest version.
+**Solution:** Update your Vipps/MobilePay Payment module to the latest version.
 
 ## How to enable debug mode / requests profiling
 
