@@ -60,9 +60,9 @@ This scenario is possible for express payment flow. Unlike of regular payment, o
 Vipps Landing page. If the transaction was successfully initiated by client, a new record
 with a quote ID and reserved order ID will be created in DB table `vipps_quote`. This can be helpful to find a status of a transaction.
 
-## How do I enable Vipps/MobilePay Payment for Klarna Checkout
+## How do I enable Vipps Payment for Klarna Checkout
 
-Select Vipps MobilePay from the list of external payment methods in the appropriate Klarna checkout settings section.
+Select Vipps from the list of external payment methods in the appropriate Klarna checkout settings section.
 
 ![Screenshot of Klarna checkout settings](images/klarna_checkout.png)
 
@@ -75,7 +75,7 @@ Right after pressing *Place Order*, the client may see the page with message
 
 ## How to enable debug mode / requests profiling
 
-If you have experienced any issue with Vipps MobilePay, try to enable *Request Profiling* and *Debug* features under the Vipps payment configuration area:
+If you have experienced any issue with Vipps MobilePay, try to enable *Request Profiling* and *Debug* features under the payment configuration area:
 
 *Stores -> Configuration -> Sales -> Payment Methods -> Vipps MobilePay*
 
