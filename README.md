@@ -1,6 +1,6 @@
 <!-- START_METADATA
 ---
-title: Vipps/MobilePay Payment Module for Adobe Commerce
+title: Vipps/MobilePay Payment Module for Adobe Commerce / Magento
 sidebar_label: Introduction
 sidebar_position: 1
 hide_table_of_contents: true
@@ -10,7 +10,7 @@ pagination_prev: null
 ---
 END_METADATA -->
 
-# Vipps/MobilePay Payment Module for Adobe Commerce
+# Payment module for Adobe Commerce / Magento
 
 ![Support and development by Vaimo ](./docs/images/vaimo.svg#gh-light-mode-only)![Support and development by Vaimo](./docs/images/vaimo_dark.svg#gh-dark-mode-only)
 
@@ -26,8 +26,11 @@ Vipps MobilePay offers a familiar and convenient buying experience that can help
 
 Vipps and MobilePay are used by large and small companies. From years of shopping safely with Vipps/MobilePay, customers trust their personal information will remain secure. Businesses have the reassurance of our advanced fraud protection and payment protection policy.
 
+About [Adobe Commerce](https://experienceleague.adobe.com/en/browse/commerce).
+
 This plugin is available for download at
 [https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases).
+
 
 ## Documentation
 
@@ -38,4 +41,4 @@ The [user guide](./docs/documentation.md) contains:
 * [Debugging](./docs/documentation.md#enable-debug-mode--requests-profiling)
 * [Customization](./docs/documentation.md#customization)
 
-See also the [Frequently asked questions](./docs/FAQ.md) page.
+See also [Frequently asked questions](./docs/FAQ.md).

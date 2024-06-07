@@ -8,15 +8,17 @@ pagination_prev: null
 ---
 END_METADATA -->
 
-# User Guide
+# Payment Module User Guide
+
+This is the guide for installing and configuring *Vipps/MobilePay Payment Module for Adobe Commerce* (the *Payment module*).
 
 ## Prerequisites
 
-* Adobe Commerce installed ([Adobe Commerce 2.4.*](https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/adobe-commerce/2-4-0))
+* Adobe Commerce installed ([Adobe Commerce 2.4.0](https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/adobe-commerce/2-4-0)) or later.
   * [Adobe Commerce System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
 * SSL must be installed on your site and active on your checkout pages.
-* You must have a Vipps MobilePay merchant account in the country . [Apply for services](https://developer.vippsmobilepay.com/docs/knowledge-base/applying-for-services/).
-* As with *all* Adobe Commerce extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
+* You must have a Vipps MobilePay merchant account in the country (see [Apply for services](/docs/knowledge-base/applying-for-services/)).
+* As with all Adobe Commerce extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
 * Supported protocols HTTP1/HTTP1.1
   * Adobe Commerce relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://api.docs.cpanel.net/) or similar.
@@ -33,7 +35,7 @@ END_METADATA -->
 
 ## Configuration
 
-The Vipps/MobilePay Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via the Adobe Commerce Admin Panel.
+The Payment module can be easily configured to meet business expectations of your web store. This section will show you how to configure the extension via the Adobe Commerce Admin Panel.
 
 1. From Adobe Commerce, navigate to *Stores* > *Configuration* > *Sales* > *Payment Methods* section.
 1. On the *Payments Methods* page, the *Vipps MobilePay* method should be listed together with other installed payment methods in a system.
@@ -41,33 +43,33 @@ The Vipps/MobilePay Payment module can be easily configured to meet business exp
 1. Once you have finished the configuration, click *Close* and *Save* button.
 1. [Clear Adobe Commerce Cache](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/manage-cache).
 
-
 ### Add a separate connection for Vipps MobilePay resources
 
 These settings are required to prevent the loss of profiles when Adobe Commerce reverts invoice or refund transactions.
 
-* Duplicate the `default_connection` in `app/etc/env.php` and name it 'vipps'. It should look like:
+1. Duplicate the `default_connection` in `app/etc/env.php` and name it 'vipps'.
 
-```php
-'vipps' => [
-    'host' => 'your_DB_host',
-    'dbname' => 'your_DB_name',
-    'username' => 'your_user',
-    'password' => 'your_password',
-    'model' => 'mysql4',
-    'engine' => 'innodb',
-    'initStatements' => 'SET NAMES utf8;',
-    'active' => '1',
-],
-```
+   It should look like:
 
-* Then, add the following configuration to the `resource` array in the same file:
+   ```php
+   'vipps' => [
+      'host' => 'your_DB_host',
+      'dbname' => 'your_DB_name',
+      'username' => 'your_user',
+      'password' => 'your_password',
+      'model' => 'mysql4',
+      'engine' => 'innodb',
+      'initStatements' => 'SET NAMES utf8;',
+      'active' => '1',
+   ],
+   ```
 
-```php
-'vipps' => [
-    'connection' => 'vipps',
-],
-```
+2. Then, add the following configuration to the `resource` array in the same file:
+
+   ```php
+   'vipps' => [
+      'connection' => 'vipps',
+   ],
 
 ## Settings
 
@@ -86,7 +88,7 @@ Basic Settings include:
 
 * *Environment* - Vipps MobilePay API mode, which can be *Production* or *Develop*.
 * *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
-* *Debug* - Log all actions with this Vipps/MobilePay Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
+* *Debug* - Log all actions with this Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
 * *Order Status* - Default order status before redirecting back to Adobe Commerce. Can be *Pending* or *Payment Review*.
 * *Request/Response Profiling* - Log all requests/responses to Vipps MobilePay API into `vipps_profiling` table.
 * *Merchant Serial Number* - ID number for the sales unit.
@@ -101,7 +103,7 @@ see [API keys](https://developer.vippsmobilepay.com/docs/knowledge-base/api-keys
 
 ### Checkout Settings
 
-The Vipps/MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the Express Checkout page.
+The Vipps MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the *Express Checkout* page.
 
 ![Screenshot of Checkout Settings](images/checkout_settings.png)
 
@@ -158,10 +160,7 @@ Here is a diagram of the process:
 
 ![Screenshot of Quote Processing Flow](images/quote-monitoring-flow.png)
 
-
 ## Quote Monitoring Tool
-
-From version 1.2.1, we released *Quote Monitoring*.
 
 Quote Monitoring simplifies detection of failed order placement and identifies the root causes of failures.
 
@@ -186,12 +185,12 @@ If you have experienced any issue with Vipps MobilePay, try to enable *Request P
 
 ![Screenshot of Vipps MobilePay Configuration Area](images/vipps_basic.png)
 
-After that, all information related to the Vipps/MobilePay payment module will be stored into two files:
+After that, all information related to the Payment module will be stored into two files:
 
 * `{project_root}/var/log/vipps_exception.log`
 * `{project_root}/var/log/vipps_debug.log`
 
-*Requests Profiling* is a page in the Adobe Commerce *Admin panel* that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
+*Requests Profiling* is a page in the Adobe Commerce that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
 You can find the page under *System* > *Vipps*.
 
 ![Screenshot of Request Profiling Grid](images/request_profiling.png)
@@ -203,10 +202,12 @@ By using the built-in Adobe Commerce grid filter, you can find all requests per 
 
 ## Tax Calculation for Express Checkout
 
-When enabling the Express checkout payment in the configuration area, you may see a notification at the top of admin panel saying:
+When enabling the Express checkout payment in the configuration area, you may see a notification at the top of the Adobe Commerce admin panel such as:
+
 ![Express Checkout notice](images/express-checkout-notice.png)
 
-This means that you should change Tax Calculation Settings to be based on **Shipping Origin**:
+This means that you should change *Tax Calculation Settings* to be based on *Shipping Origin*.
+
 ![Tax Calculation Settings](images/tax-origin-settings.png)
 
 Otherwise, an issue with calculating delivery cost might occur.
