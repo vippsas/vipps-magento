@@ -13,7 +13,7 @@ END_METADATA -->
 ## How do I capture an order?
 
 When *Payment Action* is set to *Authorize* and *Capture*, the invoice is created automatically in Adobe Commerce. In such a case, the *Invoice* button does not appear, and the order is ready to ship.
-For more details about capturing orders, refer to [Creating an Invoice](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/invoices#create-an-invoice).
+For more details about capturing orders, refer to [Adobe Commerce: Creating an Invoice](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/invoices#create-an-invoice).
 
 ## How do I partially capture an order?
 
@@ -27,7 +27,7 @@ Otherwise, the refund should be finished first. This Vipps/MobilePay Payment mod
 
 ## How do I refund an order?
 
-For orders refunding Adobe Commerce propose [Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
+For orders refunding Adobe Commerce propose [Adobe Commerce: Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
 Credit Memo allows you to make a refund for captured transaction.
 
 ## How do I partially refund an order?
