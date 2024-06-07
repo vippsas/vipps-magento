@@ -26,7 +26,7 @@ Vipps MobilePay offers a familiar and convenient buying experience that can help
 
 Vipps and MobilePay are used by large and small companies. From years of shopping safely with Vipps/MobilePay, customers trust their personal information will remain secure. Businesses have the reassurance of our advanced fraud protection and payment protection policy.
 
-The *Vipps/MobilePay Payment Module for Adobe Commerce* plugin is available for download at
+This plugin is available for download at
 [https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases).
 
 ## Documentation
