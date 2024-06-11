@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProvider;
 use Vipps\Payment\Model\UrlResolver;
-use Zend_Http_Response;
+use Laminas\Http\Response;
 
 /**
  * Class TokenProvider
@@ -51,17 +51,17 @@ class TokenProviderTest extends TestCase
     private $connection;
 
     /**
-     * @var ZendClient|MockObject
+     * @var \Magento\Framework\HTTP\Adapter\Curl|MockObject
      */
     private $httpClient;
 
     /**
-     * @var ZendClientFactory|MockObject
+     * @var \Magento\Framework\HTTP\Adapter\CurlFactory|MockObject
      */
-    private $httpClientFactory;
+    private $adapterFactory;
 
     /**
-     * @var Zend_Http_Response|MockObject
+     * @var Laminas\Http\Response|MockObject
      */
     private $httpClientResponse;
 
@@ -118,24 +118,25 @@ class TokenProviderTest extends TestCase
         $this->select = $this->getMockBuilder(Select::class)
             ->disableOriginalConstructor()
             ->getMock();
+
         $this->select->expects($this->any())->method('from')->will($this->returnSelf());
         $this->select->expects($this->any())->method('where')->will($this->returnSelf());
         $this->select->expects($this->any())->method('limit')->will($this->returnSelf());
         $this->select->expects($this->any())->method('order')->will($this->returnSelf());
 
-        $this->httpClientFactory = $this->getMockBuilder(ZendClientFactory::class)
+        $this->adapterFactory = $this->getMockBuilder(\Magento\Framework\HTTP\Adapter\CurlFactory::class)
             ->disableOriginalConstructor()
             ->setMethods(['create'])
             ->getMock();
-        $this->httpClient = $this->getMockBuilder(ZendClient::class)
+
+        $this->httpClient = $this->getMockBuilder(\Magento\Framework\HTTP\Adapter\Curl::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->httpClient->expects($this->any())->method('setConfig')->will($this->returnSelf());
-        $this->httpClient->expects($this->any())->method('setUri')->will($this->returnSelf());
-        $this->httpClient->expects($this->any())->method('setMethod')->will($this->returnSelf());
-        $this->httpClient->expects($this->any())->method('setHeaders')->will($this->returnSelf());
 
-        $this->httpClientResponse = $this->getMockBuilder(Zend_Http_Response::class)
+        $this->httpClient->expects($this->any())->method('write')->willReturnSelf();
+        $this->httpClient->expects($this->any())->method('read')->willReturnSelf();
+
+        $this->httpClientResponse = $this->getMockBuilder(Response::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -170,7 +171,7 @@ class TokenProviderTest extends TestCase
         $managerHelper = new ObjectManager($this);
         $this->action = $managerHelper->getObject(TokenProvider::class, [
             'resourceConnection' => $this->resourceConnection,
-            'httpClientFactory' => $this->httpClientFactory,
+            'adapterFactory' => $this->adapterFactory,
             'config' => $this->config,
             'serializer' => $this->serializer,
             'logger' => $this->logger,
@@ -230,7 +231,7 @@ class TokenProviderTest extends TestCase
             "access_token" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImlCakwxUmNx"
         ];
 
-        $this->httpClientFactory->expects(self::once())
+        $this->adapterFactory->expects(self::once())
             ->method('create')
             ->willReturn($this->httpClient);
 
@@ -259,15 +260,15 @@ class TokenProviderTest extends TestCase
             ->willReturnSelf();
 
         $this->httpClient->expects($this->once())
-            ->method('request')
-            ->willReturn($this->httpClientResponse);
+            ->method('read')
+            ->willReturn($this->httpClientResponse->toString());
 
         $this->httpClientResponse->expects($this->once())
             ->method('getBody')
             ->willReturn('');
 
         $this->httpClientResponse->expects($this->once())
-            ->method('isSuccessful')
+            ->method('isSuccess')
             ->willReturn(true);
 
         $this->serializer->expects($this->once())
@@ -280,10 +281,10 @@ class TokenProviderTest extends TestCase
     public function testGetCouldNotSaveException()
     {
         $exception = new \Exception();
-        $this->httpClient->method('request')
+        $this->httpClient->method('read')
             ->willThrowException($exception);
 
-        $this->httpClientFactory->expects(self::once())
+        $this->adapterFactory->expects(self::once())
             ->method('create')
             ->willReturn($this->httpClient);
 

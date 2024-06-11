@@ -13,28 +13,27 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Model\Method;
 
 use Magento\Payment\Model\Method\Adapter;
 
-/**
- * Class Vipps
- * @package Vipps\Payment\Model\Method
- */
 class Vipps extends Adapter
 {
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_KEY = 'method_type';
+    public const METHOD_CODE = 'vipps';
 
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_EXPRESS_CHECKOUT = 'express_checkout';
+    public const METHOD_TYPE_KEY = 'method_type';
 
-    /**
-     * @var string
-     */
-    const METHOD_TYPE_REGULAR_CHECKOUT = 'regular_checkout';
+    public const METHOD_TYPE_EXPRESS_CHECKOUT = 'express_checkout';
+
+    public const METHOD_TYPE_REGULAR_CHECKOUT = 'regular_checkout';
+
+    public const METHOD_TYPE_EPAYMENT_CHECKOUT = 'checkout';
+
+    public function getTitle()
+    {
+        $version = $this->getConfigData('version');
+
+        return $this->getConfigData('title_' . $version);
+    }
 }

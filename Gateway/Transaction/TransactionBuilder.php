@@ -113,7 +113,7 @@ class TransactionBuilder
      */
     public function build()
     {
-        $orderId = $this->response['orderId'];
+        $orderId = $this->response['orderId'] ?? $this->response['reference'];
         $infoData = $this->response['transactionInfo'] ?? $this->response['transaction'] ?? [];
         $info = $this->infoFactory->create(['data' => $infoData]);
 
