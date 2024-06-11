@@ -196,7 +196,7 @@ class TokenProvider implements TokenProviderInterface
             }
         } catch (\Exception $e) {    //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage());
-            throw new AuthenticationException(__('Can\'t retrieve access token from %1.', $this->config->getTitle()), $e);
+            throw new AuthenticationException((string)__('Can\'t retrieve access token from %1.', $this->config->getTitle()), $e);
         } finally {
             $adapter ? $adapter->close() : null;
         }

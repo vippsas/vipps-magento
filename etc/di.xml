@@ -21,10 +21,8 @@
     <preference for="Vipps\Payment\Api\CommandManagerInterface"
                 type="Vipps\Payment\Gateway\Command\CommandManager" />
 
-    <!-- new -->
     <preference for="Vipps\Payment\Api\Payment\CommandManagerInterface"
                 type="Vipps\Payment\GatewayEpayment\Command\PaymentCommandManager" />
-    <!-- end new -->
 
     <virtualType name="ProxyVippsCommandManager" type="Vipps\Payment\Gateway\Command\CommandManager">
         <arguments>
@@ -416,16 +414,6 @@
             <argument name="endpointUrl" xsi:type="string">/ecomm/v2/payments/:orderId/cancel</argument>
             <argument name="urlParams" xsi:type="array">
                 <item name="orderId" xsi:type="string">orderId</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="VippsPaymentCancelTransferFty" type="Vipps\Payment\Gateway\Http\TransferFactory">
-        <arguments>
-            <argument name="method" xsi:type="string">PUT</argument>
-            <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:reference/cancel</argument>
-            <argument name="urlParams" xsi:type="array">
-                <item name="reference" xsi:type="string">reference</item>
             </argument>
         </arguments>
     </virtualType>
