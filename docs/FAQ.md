@@ -10,6 +10,25 @@ END_METADATA -->
 
 # Frequently asked questions
 
+
+## In which countries can I use Vipps MobilePay?
+
+You can get paid by users who have Vipps in Norway, or who have MobilePay in Denmark or Finland.
+
+## For how long is an order reserved?
+
+:::note
+Payments initiated in Finland and Denmark have only 14 days to be captured; while
+payments in Norway have 180 days.
+If the payments aren't captured within this time, they will be automatically cancelled.
+
+Payments can only be captured up to 14 days (MobilePay) or 180 days (Vipps) after reservation.
+See [Reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/).
+:::
+
+
+When a payment is completed with Vipps MobilePay, the money will be reserved, but only transferred to the merchant when the order is set to “Complete” or the money is captured manually. For MobilePay, this reservation period is 14 days, so you will need to ship and fulfill orders before this; or to make an agreement with the customer to capture the money before this period is over. For Vipps, the period is 180 days. For payments made by credit card in Vipps/MobilePay Checkout, the period can again be as short as 7 days.
+
 ## How do I capture an order?
 
 When *Payment Action* is set to *Authorize* and *Capture*, the invoice is created automatically in Adobe Commerce. In such a case, the *Invoice* button does not appear, and the order is ready to ship.
