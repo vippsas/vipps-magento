@@ -18,6 +18,7 @@ namespace Vipps\Payment\Model\Checkout;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Framework\UrlInterface;
+use Vipps\Payment\Model\Config\ConfigVersionPool;
 
 /**
  * Class ConfigProvider
@@ -35,6 +36,9 @@ class ConfigProvider implements ConfigProviderInterface
      */
     private $assertRepository;
 
+    private ConfigVersionPool $logoVersion;
+    private ConfigVersionPool $logoWidth;
+
     /**
      * ConfigProvider constructor.
      *
@@ -43,10 +47,14 @@ class ConfigProvider implements ConfigProviderInterface
      */
     public function __construct(
         UrlInterface $urlBuilder,
-        AssetRepository $assertRepository
+        AssetRepository $assertRepository,
+        ConfigVersionPool $logoVersion,
+        ConfigVersionPool $logoWidth
     ) {
         $this->urlBuilder = $urlBuilder;
         $this->assertRepository = $assertRepository;
+        $this->logoVersion = $logoVersion;
+        $this->logoWidth = $logoWidth;
     }
 
     public function getConfig()
@@ -55,7 +63,8 @@ class ConfigProvider implements ConfigProviderInterface
             'payment' => [
                 'vipps' => [
                     'initiateUrl' => $this->urlBuilder->getUrl('vipps/payment/initRegular', ['_secure' => true]),
-                    'logoSrc' => $this->assertRepository->getUrl('Vipps_Payment::images/vipps_logo_rgb.png'),
+                    'logoSrc' => $this->assertRepository->getUrl($this->logoVersion->get()),
+                    'logoWidth' => $this->logoWidth->get(),
                     'continueImgSrc' =>
                         $this->assertRepository->getUrl('Vipps_Payment::images/vipps_knapp_fortsett.png'),
                 ]

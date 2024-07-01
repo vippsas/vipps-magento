@@ -132,8 +132,13 @@ class GatewayCommandTest extends TestCase
             ->disableOriginalConstructor()
             ->setMethods(['handle'])
             ->getMockForAbstractClass();
+
         $this->objectManagerHelper = new ObjectManager($this);
-        $this->jsonDecoder = $this->objectManagerHelper->getObject(\Magento\Framework\Json\Decoder::class, []);
+        $this->jsonDecoder = $this->objectManagerHelper->getObject(
+            \Magento\Framework\Json\Decoder::class, [
+                'jsonSerializer' => $this->objectManagerHelper->getObject(\Magento\Framework\Serialize\Serializer\Json::class)
+            ]
+        );
         $localizedExceptionFactory = $this
             ->getMockBuilder(\Magento\Framework\Exception\LocalizedExceptionFactory::class)
             ->disableOriginalConstructor()

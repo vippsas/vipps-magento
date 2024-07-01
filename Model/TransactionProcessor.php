@@ -45,6 +45,7 @@ use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Exception\WrongAmountException;
 use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
 use Vipps\Payment\Model\Exception\AcquireLockException;
+use Vipps\Payment\Model\Transaction\StatusVisitor;
 
 /**
  * Class TransactionProcessor
@@ -128,6 +129,8 @@ class TransactionProcessor
      * @var ResourceConnection
      */
     private $resourceConnection;
+    private \Vipps\Payment\Model\Transaction\PaymentDetailsProxy $paymentDetailsProxy;
+    private StatusVisitor $statusVisitor;
 
     /**
      * TransactionProcessor constructor.
@@ -151,21 +154,23 @@ class TransactionProcessor
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        CartRepositoryInterface $cartRepository,
-        CartManagementInterface $cartManagement,
-        QuoteLocator $quoteLocator,
-        OrderLocator $orderLocator,
-        Processor $processor,
-        QuoteUpdater $quoteUpdater,
-        LockManager $lockManager,
-        ConfigInterface $config,
-        QuoteManagement $quoteManagement,
-        OrderManagementInterface $orderManagement,
-        PaymentDetailsProvider $paymentDetailsProvider,
-        ReceiptSender $receiptSender,
-        LoggerInterface $logger,
-        ResourceConnection $resourceConnection
+        OrderRepositoryInterface                            $orderRepository,
+        CartRepositoryInterface                             $cartRepository,
+        CartManagementInterface                             $cartManagement,
+        QuoteLocator                                        $quoteLocator,
+        OrderLocator                                        $orderLocator,
+        Processor                                           $processor,
+        QuoteUpdater                                        $quoteUpdater,
+        LockManager                                         $lockManager,
+        ConfigInterface                                     $config,
+        QuoteManagement                                     $quoteManagement,
+        OrderManagementInterface                            $orderManagement,
+        PaymentDetailsProvider                              $paymentDetailsProvider,
+        ReceiptSender                                       $receiptSender,
+        LoggerInterface                                     $logger,
+        ResourceConnection                                  $resourceConnection,
+        \Vipps\Payment\Model\Transaction\PaymentDetailsProxy $paymentDetailsProxy,
+        StatusVisitor                                       $statusVisitor
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -182,6 +187,8 @@ class TransactionProcessor
         $this->receiptSender = $receiptSender;
         $this->logger = $logger;
         $this->resourceConnection = $resourceConnection;
+        $this->paymentDetailsProxy = $paymentDetailsProxy;
+        $this->statusVisitor = $statusVisitor;
     }
 
     /**
@@ -202,15 +209,13 @@ class TransactionProcessor
         try {
             $lockName = $this->acquireLock($vippsQuote->getReservedOrderId());
 
-            $transaction = $this->paymentDetailsProvider->get(
-                $vippsQuote->getReservedOrderId()
-            );
+            $transaction = $this->paymentDetailsProxy->get($vippsQuote->getReservedOrderId());
 
-            if ($transaction->transactionWasCancelled() || $transaction->transactionWasVoided()) {
+            if ($this->statusVisitor->isCanceled($transaction) || $this->statusVisitor->isVoided($transaction)) {
                 $this->processCancelledTransaction($vippsQuote);
-            } elseif ($transaction->isTransactionReserved()) {
+            } elseif ($this->statusVisitor->isReserved($transaction)) {
                 $this->processReservedTransaction($vippsQuote, $transaction);
-            } elseif ($transaction->isTransactionExpired()) {
+            } elseif ($this->statusVisitor->isExpired($transaction)) {
                 $this->processExpiredTransaction($vippsQuote);
             }
 
@@ -241,7 +246,7 @@ class TransactionProcessor
 
     /**
      * @param QuoteInterface $vippsQuote
-     * @param Transaction $transaction
+     * @param $transaction
      *
      * @return OrderInterface|null
      * @throws CouldNotSaveException
@@ -250,7 +255,7 @@ class TransactionProcessor
      * @throws VippsException
      * @throws WrongAmountException
      */
-    private function processReservedTransaction(QuoteInterface $vippsQuote, Transaction $transaction)
+    private function processReservedTransaction(QuoteInterface $vippsQuote, $transaction)
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if (!$order) {
@@ -259,7 +264,7 @@ class TransactionProcessor
 
         $this->sendReceipt($order, $transaction);
 
-        $paymentAction = $this->config->getValue('vipps_payment_action');
+        $paymentAction = $this->config->getPaymentAction();
         $this->processAction($paymentAction, $order, $transaction);
 
         $this->notify($order);
@@ -291,11 +296,11 @@ class TransactionProcessor
     /**
      * @param string|null $action
      * @param OrderInterface $order
-     * @param Transaction $transaction
+     * @param $transaction
      *
      * @throws LocalizedException
      */
-    private function processAction($action, OrderInterface $order, Transaction $transaction)
+    private function processAction($action, OrderInterface $order, $transaction)
     {
         switch ($action) {
             case PaymentAction::ACTION_AUTHORIZE_CAPTURE:
@@ -308,9 +313,8 @@ class TransactionProcessor
 
     /**
      * @param OrderInterface $order
-     * @param Transaction $transaction
      */
-    private function sendReceipt(OrderInterface $order, Transaction $transaction)
+    private function sendReceipt(OrderInterface $order)
     {
         if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
@@ -362,7 +366,7 @@ class TransactionProcessor
      * @throws WrongAmountException
      * @throws \Exception
      */
-    private function placeOrder(QuoteInterface $vippsQuote, Transaction $transaction)
+    private function placeOrder(QuoteInterface $vippsQuote, $transaction)
     {
         $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
         if (!$quote) {
@@ -432,10 +436,15 @@ class TransactionProcessor
      * @return void
      * @throws WrongAmountException
      */
-    private function validateAmount(CartInterface $quote, Transaction $transaction)
+    private function validateAmount(CartInterface $quote, $transaction)
     {
         $quoteAmount = (int)round($this->formatPrice($quote->getGrandTotal()) * 100);
-        $vippsAmount = (int)$transaction->getTransactionSummary()->getRemainingAmountToCapture();
+
+        if($transaction instanceof Transaction) {
+            $vippsAmount = (int)$transaction->getTransactionSummary()->getRemainingAmountToCapture();
+        } elseif ($transaction instanceof \Vipps\Payment\GatewayEpayment\Data\Payment) {
+            $vippsAmount = (int)$transaction->getAggregate()->getData();
+        }
 
         if ($quoteAmount != $vippsAmount) {
             throw new WrongAmountException(
@@ -477,9 +486,9 @@ class TransactionProcessor
      * Authorize action
      *
      * @param OrderInterface $order
-     * @param Transaction $transaction
+     * @param Transaction|\Vipps\Payment\GatewayEpayment\Data\Payment $transaction
      */
-    private function authorize(OrderInterface $order, Transaction $transaction)
+    private function authorize(OrderInterface $order, $transaction)
     {
         if (!in_array($order->getState(), [Order::STATE_NEW, Order::STATE_PAYMENT_REVIEW])) {
             return;
@@ -491,12 +500,12 @@ class TransactionProcessor
 
         $payment = $order->getPayment();
         if ($payment instanceof Payment) {
-            $transactionId = $transaction->getTransactionId();
+            $transactionId = ($transaction instanceof Transaction) ? $transaction->getTransactionId() : $transaction->getPspReference();
             $payment->setIsTransactionClosed(false);
             $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(
                 PaymentTransaction::RAW_DETAILS,
-                $transaction->getTransactionSummary()->getData()
+                ($transaction instanceof Transaction) ? $transaction->getTransactionSummary()->getData() : $transaction->getRawData()
             );
         }
 

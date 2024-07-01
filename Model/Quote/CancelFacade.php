@@ -18,16 +18,13 @@ namespace Vipps\Payment\Model\Quote;
 
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderManagementInterface;
-use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;
 use Vipps\Payment\Model\OrderLocator;
-use Vipps\Payment\Model\Quote;
 use Vipps\Payment\Model\QuoteRepository;
 
 /**
@@ -36,65 +33,20 @@ use Vipps\Payment\Model\QuoteRepository;
  */
 class CancelFacade implements CancelFacadeInterface
 {
-    /**
-     * @var CommandManagerInterface
-     */
-    private $commandManager;
+    private CommandManagerInterface $commandManager;
+    private OrderManagementInterface $orderManagement;
+    private QuoteRepository $quoteRepository;
+    private AttemptManagement $attemptManagement;
+    private CartRepositoryInterface $cartRepository;
+    private OrderLocator $orderLocator;
+    private LoggerInterface $logger;
 
-    /**
-     * @var OrderManagementInterface
-     */
-    private $orderManagement;
-
-    /**
-     * @var QuoteRepository
-     */
-    private $quoteRepository;
-
-    /**
-     * @var AttemptManagement
-     */
-    private $attemptManagement;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
-
-    /**
-     * @var OrderLocator
-     */
-    private $orderLocator;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * CancelFacade constructor.
-     *
-     * @param CommandManagerInterface $commandManager
-     * @param OrderManagementInterface $orderManagement
-     * @param QuoteRepository $quoteRepository
-     * @param AttemptManagement $attemptManagement
-     * @param CartRepositoryInterface $cartRepository
-     * @param OrderRepositoryInterface $orderRepository
-     * @param OrderLocator $orderLocator
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         CommandManagerInterface $commandManager,
         OrderManagementInterface $orderManagement,
         QuoteRepository $quoteRepository,
         AttemptManagement $attemptManagement,
         CartRepositoryInterface $cartRepository,
-        OrderRepositoryInterface $orderRepository,
         OrderLocator $orderLocator,
         LoggerInterface $logger
     ) {
@@ -103,17 +55,14 @@ class CancelFacade implements CancelFacadeInterface
         $this->quoteRepository = $quoteRepository;
         $this->attemptManagement = $attemptManagement;
         $this->cartRepository = $cartRepository;
-        $this->orderRepository = $orderRepository;
         $this->orderLocator = $orderLocator;
         $this->logger = $logger;
     }
 
     /**
-     * @param QuoteInterface|Quote $vippsQuote
-     *
      * @throws CouldNotSaveException
      */
-    public function cancel(QuoteInterface $vippsQuote)
+    public function cancel(QuoteInterface $vippsQuote): void
     {
         try {
             $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());

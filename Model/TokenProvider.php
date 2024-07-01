@@ -22,9 +22,9 @@ use Magento\Framework\App\ScopeResolverInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Gateway\Exception\AuthenticationException;
 use Vipps\Payment\Gateway\Http\Client\Curl;
 
@@ -52,7 +52,7 @@ class TokenProvider implements TokenProviderInterface
     private $resourceConnection;
 
     /**
-     * @var ConfigInterface
+     * @var Config
      */
     private $config;
 
@@ -89,7 +89,7 @@ class TokenProvider implements TokenProviderInterface
     /**
      * @param ResourceConnection $resourceConnection
      * @param CurlFactory $adapterFactory
-     * @param ConfigInterface $config
+     * @param Config $config
      * @param Json $serializer
      * @param LoggerInterface $logger
      * @param UrlResolver $urlResolver
@@ -98,7 +98,7 @@ class TokenProvider implements TokenProviderInterface
     public function __construct(
         ResourceConnection $resourceConnection,
         CurlFactory $adapterFactory,
-        ConfigInterface $config,
+        Config $config,
         Json $serializer,
         LoggerInterface $logger,
         UrlResolver $urlResolver,
@@ -192,11 +192,11 @@ class TokenProvider implements TokenProviderInterface
                 throw new \Exception($response->getBody()); //@codingStandardsIgnoreLine
             }
             if (!$this->isJwtValid($jwt)) {
-                throw new \Exception('Not valid JWT data returned from Vipps. Response: '. $response->toString()); //@codingStandardsIgnoreLine
+                throw new \Exception((string)__('Not valid JWT data returned from %1. Response: '. $response->toString(), $this->config->getTitle())); //@codingStandardsIgnoreLine
             }
         } catch (\Exception $e) {    //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage());
-            throw new AuthenticationException(__('Can\'t retrieve access token from Vipps.'), $e);
+            throw new AuthenticationException((string)__('Can\'t retrieve access token from %1.', $this->config->getTitle()), $e);
         } finally {
             $adapter ? $adapter->close() : null;
         }

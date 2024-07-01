@@ -32,6 +32,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Gateway\Config\Config;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 
@@ -71,6 +72,7 @@ class InitRegular implements ActionInterface
      * @var LoggerInterface
      */
     private $logger;
+    private Config $config;
 
     /**
      * InitRegular constructor.
@@ -83,12 +85,13 @@ class InitRegular implements ActionInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        ResultFactory $resultFactory,
+        ResultFactory           $resultFactory,
         SessionManagerInterface $checkoutSession,
         SessionManagerInterface $customerSession,
         CommandManagerInterface $commandManager,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger
+        Config                  $config,
+        LoggerInterface         $logger
     ) {
         $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
@@ -96,6 +99,7 @@ class InitRegular implements ActionInterface
         $this->commandManager = $commandManager;
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
+        $this->config = $config;
     }
 
     /**
@@ -119,7 +123,7 @@ class InitRegular implements ActionInterface
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $response->setData([
-                'message' => __('An error occurred during request to Vipps. Please try again later.')
+                'message' => __('An error occurred during request to %1. Please try again later.', $this->config->getTitle())
             ]);
         }
 
@@ -135,14 +139,15 @@ class InitRegular implements ActionInterface
      */
     private function initiatePayment(CartInterface $quote)
     {
-        return $this->commandManager->initiatePayment(
-            $quote->getPayment(),
-            [
-                'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
-                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
-            ]
-        );
+        return $this->commandManager
+            ->initiatePayment(
+                $quote->getPayment(),
+                [
+                    'amount'                                   => $quote->getGrandTotal(),
+                    InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_REGULAR_PAYMENT,
+                    Vipps::METHOD_TYPE_KEY                     => Vipps::METHOD_TYPE_REGULAR_CHECKOUT
+                ]
+            );
     }
 
     /**
@@ -150,7 +155,7 @@ class InitRegular implements ActionInterface
      *
      * @return string
      */
-    private function enlargeMessage($e): string
+    private function enlargeMessage(\Exception $e): string
     {
         $quoteId = $this->checkoutSession->getQuoteId();
         $trace = $e->getTraceAsString();

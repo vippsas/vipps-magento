@@ -27,7 +27,7 @@ use Magento\Store\Model\StoreManagerInterface;
  */
 class CurrencyValidator
 {
-    const NORWEGIAN_CURRENCY = 'NOK';
+    private const NORWEGIAN_CURRENCY = 'NOK';
 
     /**
      * @var StoreManagerInterface

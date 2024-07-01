@@ -15,9 +15,9 @@
   -->
 <ruleset name="Vipps_Payment">
     <description>Code Sniffer Configuration for Vipps Payment </description>
-    <config name="installed_paths" value="../../../vendor/magento/marketplace-eqp/"/>
     <arg name="extensions" value="php"/>
-    <rule ref="MEQP2" />
+    <arg name="severity" value="10"/>
+    <rule ref="Magento2" />
     <file>Api/</file>
     <file>Controller/</file>
     <file>Cron/</file>

@@ -25,12 +25,12 @@ class PaymentAction implements ArrayInterface
     /**
      * @var string
      */
-    const ACTION_AUTHORIZE = 'authorize';
+    public const ACTION_AUTHORIZE = 'authorize';
 
     /**
      * @var string
      */
-    const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
+    public const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
 
     /**
      * Possible actions on order place

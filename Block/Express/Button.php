@@ -13,6 +13,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Block\Express;
 
 use Magento\Framework\View\Element\Template;
@@ -21,6 +22,7 @@ use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\Math\Random;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Catalog\Block\ShortcutInterface;
+use Vipps\Payment\Model\Config\Source\Version;
 
 /**
  * Class Button
@@ -67,9 +69,9 @@ class Button extends Template implements ShortcutInterface
      */
     public function __construct(
         Template\Context $context,
-        Random $mathRandom,
-        ConfigInterface $config,
-        array $data = []
+        Random           $mathRandom,
+        ConfigInterface  $config,
+        array            $data = []
     ) {
         $this->config = $config;
         $this->assetRepo = $context->getAssetRepository();
@@ -87,7 +89,9 @@ class Button extends Template implements ShortcutInterface
     protected function _toHtml() //@codingStandardsIgnoreLine
     {
         if (!$this->config->getValue('active')
-            || !$this->config->getValue('express_checkout')) {
+            || !$this->config->getValue('express_checkout')
+            || $this->config->getValue('version') !== Version::CONFIG_VIPPS
+        ) {
             return '';
         }
         if (!$this->getIsInCatalogProduct() &&
