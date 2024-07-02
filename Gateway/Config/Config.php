@@ -13,46 +13,31 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Config;
 
 use Magento\Payment\Gateway\Config\Config as OriginConfig;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Vipps\Payment\Model\Adminhtml\Source\PaymentAction;
+use Vipps\Payment\Model\Config\Source\Version;
+use Vipps\Payment\Model\Method\Vipps;
 
-/**
- * Class Config
- * @package Vipps\Payment\Gateway\Config
- */
 class Config extends OriginConfig
 {
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
+    private StoreManagerInterface $storeManager;
 
-    /**
-     * Config constructor.
-     *
-     * @param ScopeConfigInterface $scopeConfig
-     * @param StoreManagerInterface $storeManager
-     * @param string $methodCode
-     * @param string $pathPattern
-     */
     public function __construct(
-        ScopeConfigInterface $scopeConfig,
+        ScopeConfigInterface  $scopeConfig,
         StoreManagerInterface $storeManager,
-        $methodCode = 'vipps',
-        $pathPattern = OriginConfig::DEFAULT_PATH_PATTERN
     ) {
-        parent::__construct($scopeConfig, $methodCode, $pathPattern);
+        parent::__construct($scopeConfig, Vipps::METHOD_CODE);
+
         $this->storeManager = $storeManager;
     }
 
     /**
-     * @param string $field
-     * @param null $storeId
-     *
      * @return mixed
      * @throws NoSuchEntityException
      */
@@ -63,5 +48,22 @@ class Config extends OriginConfig
         }
 
         return OriginConfig::getValue($field, $storeId);
+    }
+
+    public function getVersion(): string
+    {
+        return $this->getValue('version');
+    }
+
+    public function getPaymentAction(): string
+    {
+        return $this->getValue('vipps_payment_action');
+    }
+
+    public function getTitle(): string
+    {
+        $version = $this->getValue('version');
+
+        return $this->getValue('title_' . $version);
     }
 }

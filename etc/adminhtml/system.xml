@@ -17,10 +17,10 @@
     <system>
         <section id="payment">
             <group id="vipps_section" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Vipps</label>
+                <label>Vipps MobilePay</label>
                 <group id="vipps" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label></label>
-                    <comment><![CDATA[Accept payments with Vipps in your Magento store. Make it easier for your customers to pay, and increase your conversion rates with Vipps. No setup fee or monthly fees.]]></comment>
+                    <comment><![CDATA[Accept payments with Vipps or MobilePay in your Magento store. Make it easier for your customers to pay, and increase your conversion rates. No setup fee or monthly fees.]]></comment>
                     <fieldset_css>complex vipps-section</fieldset_css>
                     <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
                     <attribute type="activity_path">payment/vipps/active</attribute>
@@ -33,13 +33,13 @@
                         </requires>
                     </field>
                     <group id="vipps_hint1" translate="text" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
-                        <comment>https://www.vipps.no/</comment>
-                        <label>Vipps.no</label>
+                        <comment>https://vippsmobilepay.com/</comment>
+                        <label>Vipps MobilePay website</label>
                         <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
                     </group>
                     <group id="vipps_hint2" translate="text" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
-                        <comment>https://github.com/vippsas/vipps-magento</comment>
-                        <label>Github</label>
+                        <comment>https://developer.vippsmobilepay.com/docs/plugins/magento/</comment>
+                        <label>Technical documentation</label>
                         <frontend_model>Vipps\Payment\Block\Adminhtml\System\Config\Fieldset\Hint</frontend_model>
                     </group>
                     <group id="vipps_required" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
@@ -51,6 +51,11 @@
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\Environment</source_model>
                             <config_path>payment/vipps/environment</config_path>
                         </field>
+                        <field id="version" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Api Version</label>
+                            <source_model>Vipps\Payment\Model\Config\Source\Version</source_model>
+                            <config_path>payment/vipps/version</config_path>
+                        </field>
                         <field id="debug" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Debug</label>
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -61,7 +66,7 @@
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                             <config_path>payment/vipps/profiling</config_path>
                         </field>
-                        <field id="payment_action" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <field id="payment_action" translate="label" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Payment Action</label>
                             <config_path>payment/vipps/vipps_payment_action</config_path>
                             <source_model>Vipps\Payment\Model\Adminhtml\Source\PaymentAction</source_model>

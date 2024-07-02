@@ -20,6 +20,9 @@
             <label>Enable Express Checkout</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>payment/vipps/express_checkout</config_path>
+            <comment>
+                <![CDATA[Express checkout is only available in Norway for Vipps and not for MobilePay in Denmark and Finland.]]>
+            </comment>
             <requires>
                 <group id="vipps_required"/>
             </requires>

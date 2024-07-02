@@ -8,7 +8,8 @@ type Mutation {
 
 input vippsInitPaymentInput {
     cart_id: String!
-    fallback_url: String
+    fallback_url: String,
+    deactivate_cart: Boolean
 }
 
 type vippsInitPaymentOutput {
@@ -20,4 +21,9 @@ type VippsPaymentDetails {
     cancelled: Boolean,
     reserved: Boolean
     restore_cart: Boolean
+}
+
+type StoreConfig {
+    vipps_version: String @doc(description: "Vipps api version (vipps, mobilepay).")
+    vipps_label: String @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\GetPaymentLabel") @doc(description: "Vipps payment label.")
 }

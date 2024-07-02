@@ -83,7 +83,7 @@ class CheckoutSubmitAllAfter implements ObserverInterface
             return;
         }
 
-        if ('vipps' == $payment->getMethod()) {
+        if ('vipps' === $payment->getMethod()) {
             try {
                 // updated vipps quote
                 $vippsQuote = $this->quoteRepository->loadByOrderId($order->getIncrementId());
