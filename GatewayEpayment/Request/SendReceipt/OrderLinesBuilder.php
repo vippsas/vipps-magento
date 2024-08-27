@@ -50,6 +50,9 @@ class OrderLinesBuilder implements BuilderInterface
             $monitaryTotalAmount = (int)($totalAmount * 100);
             $monitaryTotalAmountExcludingTax = (int)($totalAmountExcludingTax * 100);
             $monitaryTaxAmount = $monitaryTotalAmount - $monitaryTotalAmountExcludingTax;
+            $taxRate = $monitaryTotalAmountExcludingTax > 0
+                ? round($monitaryTaxAmount * 100 / $monitaryTotalAmountExcludingTax, 2)
+                : $item->getTaxPercent();
 
             $orderLines[] = [
                 'name' => $item->getName(),
@@ -57,9 +60,7 @@ class OrderLinesBuilder implements BuilderInterface
                 'totalAmount' => $monitaryTotalAmount,
                 'totalAmountExcludingTax' => $monitaryTotalAmountExcludingTax,
                 'totalTaxAmount' => $monitaryTaxAmount,
-                'taxPercentage' => $monitaryTotalAmountExcludingTax > 0
-                    ? (int)round($monitaryTaxAmount * 100 / $monitaryTotalAmountExcludingTax)
-                    : $item->getTaxPercent(),
+                'taxRate' => (int)(100 * $taxRate),
                 'unitInfo' => [
                     'unitPrice' => (int)($item->getPrice() * 100),
                     'quantity' => (string)$item->getQtyOrdered()
@@ -74,6 +75,9 @@ class OrderLinesBuilder implements BuilderInterface
         $monitaryShippingTotalAmount = (int)($order->getShippingInclTax() * 100);
         $monitaryShippingTotalAmountExcludingTax = (int)($order->getShippingAmount() * 100);
         $monitaryShippingTaxAmount = $monitaryShippingTotalAmount - $monitaryShippingTotalAmountExcludingTax;
+        $taxRate = $monitaryShippingTotalAmountExcludingTax > 0
+            ? round($monitaryShippingTaxAmount * 100 / $monitaryShippingTotalAmountExcludingTax, 2)
+            : 0;
 
         $orderLines[] = [
             'name' => $order->getShippingDescription(),
@@ -81,9 +85,7 @@ class OrderLinesBuilder implements BuilderInterface
             'totalAmount' => (int)($order->getShippingInclTax() * 100),
             'totalAmountExcludingTax' => (int)($order->getShippingAmount() * 100),
             'totalTaxAmount' => (int)($order->getShippingTaxAmount() * 100),
-            'taxPercentage' => $monitaryShippingTotalAmountExcludingTax > 0
-                ? (int)round($monitaryShippingTaxAmount * 100 / $monitaryShippingTotalAmountExcludingTax)
-                : 0,
+            'taxRate' => (int)(100 * $taxRate),
             'discount' => (int)($order->getShippingDiscountAmount() * 100),
             'isReturn' => false,
             'isShipping' => true
