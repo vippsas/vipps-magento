@@ -8,7 +8,7 @@
         "magento/module-sales": "101.0.*|103.0.*",
         "magento/module-payment": "100.2.*|100.4.*",
         "magento/module-checkout": "100.2.*|100.4.*",
-        "psr/log": "^1.0||^3.0"
+        "psr/log": "^1.0||^2.0||^3.0"
     },
     "require-dev": {
         "phpmd/phpmd": "@stable",
