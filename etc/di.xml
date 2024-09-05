@@ -36,6 +36,12 @@
         </arguments>
     </type>
 
+    <type name="Vipps\Payment\Controller\Payment\Klarna\InitRegular">
+        <arguments>
+            <argument xsi:type="object" name="commandManager">ProxyVippsCommandManager</argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Model\CommandPoolProxy">
         <arguments>
             <argument xsi:type="object" name="configVersionPool">versionedCommandPool</argument>

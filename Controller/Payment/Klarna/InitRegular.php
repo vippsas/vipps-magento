@@ -33,14 +33,11 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Payment\Gateway\Command\ResultInterface as PaymentResultInterface;
-use Magento\Quote\Api\CartManagementInterface;
-use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
-use Vipps\Payment\Gateway\Config\Config;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 use function __;
@@ -51,10 +48,7 @@ use function __;
  */
 class InitRegular implements ActionInterface
 {
-    /**
-     * @var CommandManagerInterface
-     */
-    private $commandManager;
+    private CommandManagerInterface $commandManager;
 
     /**
      * @var CheckoutSession|SessionManagerInterface
@@ -66,68 +60,23 @@ class InitRegular implements ActionInterface
      */
     private $customerSession;
 
-    /**
-     * @var CheckoutHelper
-     */
-    private $checkoutHelper;
+    private CheckoutHelper $checkoutHelper;
+
+    private LoggerInterface $logger;
+
+    private GuestPaymentInformationManagementInterface $guestPaymentInformationManagement;
+
+    private PaymentInformationManagementInterface $paymentInformationManagement;
+
+    private QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId;
+
+    private ResultFactory $resultFactory;
+
+    private ManagerInterface $messageManager;
+
+    private Vipps $payment;
 
     /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var CartManagementInterface
-     */
-    private $cartManagement;
-
-    /**
-     * @var GuestPaymentInformationManagementInterface
-     */
-    private $guestPaymentInformationManagement;
-
-    /**
-     * @var PaymentInformationManagementInterface
-     */
-    private $paymentInformationManagement;
-
-    /**
-     * @var QuoteIdToMaskedQuoteIdInterface
-     */
-    private $quoteIdToMaskedQuoteId;
-
-    /**
-     * @var ResultFactory
-     */
-    private $resultFactory;
-
-    /**
-     * @var ManagerInterface
-     */
-    private $messageManager;
-    private Config $config;
-
-    /**
-     * InitRegular constructor.
-     *
-     * @param ResultFactory $resultFactory
-     * @param CommandManagerInterface $commandManager
-     * @param SessionManagerInterface $checkoutSession
-     * @param SessionManagerInterface $customerSession
-     * @param CheckoutHelper $checkoutHelper
-     * @param CartRepositoryInterface $cartRepository
-     * @param LoggerInterface $logger
-     * @param CartManagementInterface $cartManagement
-     * @param GuestPaymentInformationManagementInterface $guestPaymentInformationManagement
-     * @param PaymentInformationManagementInterface $paymentInformationManagement
-     * @param QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId
-     * @param ManagerInterface $messageManager
-     *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -136,28 +85,24 @@ class InitRegular implements ActionInterface
         SessionManagerInterface                    $checkoutSession,
         SessionManagerInterface                    $customerSession,
         CheckoutHelper                             $checkoutHelper,
-        CartRepositoryInterface                    $cartRepository,
         LoggerInterface                            $logger,
-        CartManagementInterface                    $cartManagement,
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
         PaymentInformationManagementInterface      $paymentInformationManagement,
         QuoteIdToMaskedQuoteIdInterface            $quoteIdToMaskedQuoteId,
         ManagerInterface                           $messageManager,
-        Config                                     $config
+        Vipps                                      $payment
     ) {
         $this->resultFactory = $resultFactory;
         $this->commandManager = $commandManager;
         $this->checkoutSession = $checkoutSession;
         $this->customerSession = $customerSession;
         $this->checkoutHelper = $checkoutHelper;
-        $this->cartRepository = $cartRepository;
         $this->logger = $logger;
-        $this->cartManagement = $cartManagement;
         $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
         $this->paymentInformationManagement = $paymentInformationManagement;
         $this->quoteIdToMaskedQuoteId = $quoteIdToMaskedQuoteId;
         $this->messageManager = $messageManager;
-        $this->config = $config;
+        $this->payment = $payment;
     }
 
     /**
@@ -184,7 +129,7 @@ class InitRegular implements ActionInterface
         } catch (\Exception $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage(
-                __('An error occurred during request to %1. Please try again later.', $this->config->getTitle())
+                __('An error occurred during request to %1. Please try again later.', $this->payment->getTitle())
             );
             $response->setPath('checkout/cart');
         }
@@ -194,12 +139,8 @@ class InitRegular implements ActionInterface
 
     /**
      * Initiate payment on Vipps side
-     *
-     * @param CartInterface|Quote $quote
-     *
-     * @return PaymentResultInterface|null
      */
-    private function initiatePayment(CartInterface $quote)
+    private function initiatePayment(CartInterface $quote): ?PaymentResultInterface
     {
         return $this->commandManager->initiatePayment(
             $quote->getPayment(),
