@@ -121,7 +121,7 @@ class InitRegular implements ActionInterface
             $this->placeOrder($quote);
 
             $this->checkoutSession->clearStorage();
-            $response->setUrl($responseData['url']);
+            $response->setUrl($responseData['url'] ?? $responseData['redirectUrl'] ?? null);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
             $this->messageManager->addErrorMessage($e->getMessage());
@@ -140,7 +140,7 @@ class InitRegular implements ActionInterface
     /**
      * Initiate payment on Vipps side
      */
-    private function initiatePayment(CartInterface $quote): ?PaymentResultInterface
+    private function initiatePayment(CartInterface $quote)
     {
         return $this->commandManager->initiatePayment(
             $quote->getPayment(),
