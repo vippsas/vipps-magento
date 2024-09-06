@@ -872,4 +872,15 @@
             <argument xsi:type="object" name="logoWidth">versionedPaymentLogoWidth</argument>
         </arguments>
     </type>
+
+    <!-- payment logo on klarna checkout -->
+    <type name="Klarna\Base\Config\Converter\Dom">
+        <plugin sortOrder="1" name="vippsPaymentDom" type="Vipps\Payment\Plugin\Config\Converter\DomPlugin"/>
+    </type>
+    <type name="Vipps\Payment\Plugin\Config\Converter\DomPlugin">
+        <arguments>
+            <argument xsi:type="object" name="logoVersion">versionedPaymentLogo</argument>
+        </arguments>
+    </type>
+
 </config>
