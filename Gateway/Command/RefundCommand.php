@@ -13,6 +13,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Gateway\Command;
 
 use Magento\Payment\Helper\Formatter;
@@ -124,18 +125,18 @@ class RefundCommand extends GatewayCommand
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        BuilderInterface $requestBuilder,
+        BuilderInterface         $requestBuilder,
         TransferFactoryInterface $transferFactory,
-        ClientInterface $client,
-        LoggerInterface $logger,
-        ExceptionFactory $exceptionFactory,
-        DecoderInterface $jsonDecoder,
-        ProfilerInterface $profiler,
-        PaymentDetailsProvider $paymentDetailsProvider,
-        SubjectReader $subjectReader,
+        ClientInterface          $client,
+        LoggerInterface          $logger,
+        ExceptionFactory         $exceptionFactory,
+        DecoderInterface         $jsonDecoder,
+        ProfilerInterface        $profiler,
+        PaymentDetailsProvider   $paymentDetailsProvider,
+        SubjectReader            $subjectReader,
         OrderRepositoryInterface $orderRepository,
-        HandlerInterface $handler = null,
-        ValidatorInterface $validator = null
+        HandlerInterface         $handler = null,
+        ValidatorInterface       $validator = null
     ) {
         parent::__construct(
             $requestBuilder,
@@ -178,6 +179,10 @@ class RefundCommand extends GatewayCommand
     {
         $amount = $this->subjectReader->readAmount($commandSubject);
         $amount = (int)round($this->formatPrice($amount) * 100);
+
+        if ($amount === 0) {
+            return true;
+        }
 
         $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
         $transaction = $this->paymentDetailsProvider->get($orderId);
@@ -274,12 +279,12 @@ class RefundCommand extends GatewayCommand
         $item = $this->findLatestSuccessHistoryItem($transaction, $amount);
         if ($item) {
             return [
-                'orderId' => $orderId,
-                'transaction' => [
-                    'amount' => $item->getAmount(),
-                    'status' => Transaction::TRANSACTION_STATUS_REFUND,
-                    "timeStamp" => $item->getTimeStamp(),
-                    "transactionId" => $item->getTransactionId(),
+                'orderId'            => $orderId,
+                'transaction'        => [
+                    'amount'          => $item->getAmount(),
+                    'status'          => Transaction::TRANSACTION_STATUS_REFUND,
+                    "timeStamp"       => $item->getTimeStamp(),
+                    "transactionId"   => $item->getTransactionId(),
                     "transactionText" => $item->getTransactionText()
                 ],
                 'transactionSummary' => $transaction->getTransactionSummary()->toArray(
