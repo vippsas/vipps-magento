@@ -16,7 +16,8 @@ END_METADATA -->
 
 ![Vipps](./docs/images/vipps.png) ![MobilePay](./docs/images/mp.png) *Available for Vipps and MobilePay.*
 
-*This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).*
+*This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
+For support, [submit an issue](https://github.com/vippsas/vipps-magento/issues) on GitHub.*
 
 <!-- START_COMMENT -->
 💥 Please use the plugin pages on [https://developer.vippsmobilepay.com](https://developer.vippsmobilepay.com/docs/plugins-ext/magento/). 💥
@@ -42,3 +43,14 @@ The [user guide](./docs/documentation.md) contains:
 * [Customization](./docs/documentation.md#customization)
 
 See also [Frequently asked questions](./docs/FAQ.md).
+
+## Support
+
+*Vipps/MobilePay Payment Module for Adobe Commerce* is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
+the Vipps/MobilePay Payment module also help with improvements, maintenance and developer assistance.
+
+If you are having a problem, please make sure that you are using the latest version:
+[https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases)
+
+The best way to report a problem (or ask a question) is to use GitHub's built-in "issue" functionality:
+[Issues](https://github.com/vippsas/vipps-magento/issues).
