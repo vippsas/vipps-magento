@@ -50,7 +50,7 @@ class ReferenceValidator extends AbstractValidator
         SubjectReader $subjectReader,
         QuoteFactory $quoteFactory,
         Quote $quoteResource,
-        OrderFactory $orderFactory,
+        OrderFactory $orderFactory
     ) {
         parent::__construct($resultFactory);
         $this->subjectReader = $subjectReader;
