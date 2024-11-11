@@ -30,7 +30,7 @@ class Config extends OriginConfig
 
     public function __construct(
         ScopeConfigInterface  $scopeConfig,
-        StoreManagerInterface $storeManager,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct($scopeConfig, Vipps::METHOD_CODE);
 
