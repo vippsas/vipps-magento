@@ -14,7 +14,7 @@ END_METADATA -->
 
 ![Support and development by Vaimo ](./docs/images/vaimo.svg#gh-light-mode-only)![Support and development by Vaimo](./docs/images/vaimo_dark.svg#gh-dark-mode-only)
 
-![Vipps](./docs/images/vipps.png) ![MobilePay](./docs/images/mp.png) *Available for Vipps and MobilePay.*
+![null](./docs/images/vipps.png) ![null](./docs/images/mp.png) *Available for Vipps and MobilePay.*
 
 *This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
 For support, [submit an issue](https://github.com/vippsas/vipps-magento/issues) on GitHub.*
