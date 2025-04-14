@@ -11,13 +11,11 @@ use Vipps\Payment\Api\Fallback\AuthoriseInterface;
 
 class Commerce implements AuthoriseInterface
 {
-    /**
-     * @inheritDoc
-     */
     public function do(RequestInterface $request, QuoteInterface $vippsQuote): void
     {
-        $orderId = $this->getOrderId($request);
-        if (!$orderId || !$request->getParam('auth_token')) {
+        if (!$request->getParam('order_id') ||
+            !$request->getParam('auth_token')
+        ) {
             throw new LocalizedException(__('Invalid request parameters'));
         }
 
@@ -26,16 +24,8 @@ class Commerce implements AuthoriseInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getOrderId(RequestInterface $request): string
     {
-        $orderId = (string) $request->getParam('order_id');
-        if (!$orderId) {
-            $orderId = (string) $request->getParam('reference');
-        }
-
-        return $orderId;
+        return $request->getParam('order_id');
     }
 }
