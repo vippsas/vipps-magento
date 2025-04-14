@@ -25,14 +25,15 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Magento\Quote\Model\Quote;
-use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
+use Magento\Quote\Model\QuoteManagement;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\TestFramework\TestCase\AbstractController;
 use PHPUnit\Framework\MockObject\MockObject;
 use Vipps\Payment\Gateway\Http\Client\Curl as VippsCurl;
 use Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl;
 use Vipps\Payment\Model\TokenProvider;
 
-class InitRegularTest extends AbstractController
+class FallbackTest extends AbstractController
 {
     /**
      * @var Curl|MockObject
@@ -55,9 +56,9 @@ class InitRegularTest extends AbstractController
     private $checkoutSession;
 
     /**
-     * @var QuoteResource
+     * @var QuoteManagement
      */
-    private $quoteResource;
+    private $quoteManagement;
 
     /**
      * @var ProductRepositoryInterface
@@ -97,7 +98,7 @@ class InitRegularTest extends AbstractController
 
         $this->checkoutSession = $this->_objectManager->get(Session::class);
         $this->_objectManager->addSharedInstance($this->checkoutSession, Session::class);
-        $this->quoteResource = $this->_objectManager->create(QuoteResource::class);
+        $this->quoteManagement = $this->_objectManager->create(QuoteManagement::class);
         $this->productRepository = $this->_objectManager->create(ProductRepositoryInterface::class);
     }
 
@@ -114,15 +115,9 @@ class InitRegularTest extends AbstractController
      * @magentoConfigFixture default/currency/options/default NOK
      * @magentoDataFixture Magento/Catalog/_files/products.php
      */
-    public function testExecuteShouldSuccessfullyExecuteWithoutErrorsWithVippsPaymentApi()
+    public function testExecuteShouldSuccessfullyRestoreQuoteWithVippsPaymentApiAndKlarna()
     {
-        $quote = $this->prepareQuote();
-
-        /** @var Quote\Payment $payment */
-        $payment = $this->_objectManager->create(Quote\Payment::class);
-        $payment->setMethod('klarna_kco');
-        $payment->setQuote($quote);
-        $payment->save();
+        $order = $this->prepareOrder('klarna_kco');
 
         $this->tokenProviderCurlMock->expects($this->any())->method('read')->willReturn(
             "HTTP/1.1 200 Success\n\n"
@@ -137,22 +132,32 @@ class InitRegularTest extends AbstractController
             ])
         );
 
-        $orderId = $this->quoteResource->getReservedOrderId($quote) + 1;
-        $orderId = \str_pad($orderId, 9, '0', STR_PAD_LEFT);
-
         $this->vippsCurlMock->expects($this->any())->method('read')->willReturn(
             "HTTP/1.1 200 Success\n\n"
             . \json_encode([
-                'orderId' => $orderId,
-                'url' => 'url/to/redirect/to',
+                'orderId' => $order->getIncrementId(),
+                'transactionLogHistory' => [
+                    [
+                        'operation' => 'CANCEL',
+                        'operationSuccess' => true,
+                    ],
+                ],
             ])
         );
 
-        $this->checkoutSession->replaceQuote($quote);
+        $this->getRequest()->setParams([
+            'order_id' => $order->getIncrementId(),
+            'auth_token' => 'authToken1234',
+        ]);
+        $this->dispatch('vipps/payment/fallback');
+        $this->assertSessionMessages($this->equalTo([
+            __('Your order was cancelled in Vipps.'),
+        ]));
+        $this->assertRedirect($this->stringContains('checkout/cart'));
 
-        $this->dispatch('vipps/payment/klarna_initRegular');
-        $this->assertSessionMessages($this->equalTo([]));
-        $this->assertRedirect($this->stringContains('url/to/redirect/to'));
+        $quote = $this->checkoutSession->getQuote();
+        $this->assertNull($quote->getReservedOrderId());
+        $this->assertEquals(1, $quote->getItemsCollection()->count());
     }
 
     /**
@@ -168,15 +173,9 @@ class InitRegularTest extends AbstractController
      * @magentoConfigFixture default/currency/options/default NOK
      * @magentoDataFixture Magento/Catalog/_files/products.php
      */
-    public function testExecuteShouldSuccessfullyExecuteWithoutErrorsWithMobilePayApi()
+    public function testExecuteShouldSuccessfullyRestoreQuoteWithMobilePayApiAndKlarna()
     {
-        $quote = $this->prepareQuote();
-
-        /** @var Quote\Payment $payment */
-        $payment = $this->_objectManager->create(Quote\Payment::class);
-        $payment->setMethod('klarna_kco');
-        $payment->setQuote($quote);
-        $payment->save();
+        $order = $this->prepareOrder('klarna_kco');
 
         $this->tokenProviderCurlMock->expects($this->any())->method('read')->willReturn(
             "HTTP/1.1 200 Success\n\n"
@@ -191,35 +190,42 @@ class InitRegularTest extends AbstractController
             ])
         );
 
-        $orderId = $this->quoteResource->getReservedOrderId($quote) + 1;
-        $orderId = \str_pad($orderId, 9, '0', STR_PAD_LEFT);
-
         $this->paymentCurlMock->expects($this->any())->method('read')->willReturn(
             "HTTP/1.1 200 Success\n\n"
             . \json_encode([
-                'reference' => $orderId,
-                'redirectUrl' => 'url/to/redirect/to',
+                'reference' => $order->getIncrementId(),
+                'state' => 'ABORTED',
             ])
         );
 
-        $this->checkoutSession->replaceQuote($quote);
+        $this->getRequest()->setParams([
+            'reference' => $order->getIncrementId(),
+        ]);
+        $this->dispatch('vipps/payment/fallback');
+        $this->assertSessionMessages($this->equalTo([
+            __('Your order was cancelled in MobilePay.'),
+        ]));
+        $this->assertRedirect($this->stringContains('checkout/cart'));
 
-        $this->dispatch('vipps/payment/klarna_initRegular');
-        $this->assertSessionMessages($this->equalTo([]));
-        $this->assertRedirect($this->stringContains('url/to/redirect/to'));
+        $quote = $this->checkoutSession->getQuote();
+        $this->assertNull($quote->getReservedOrderId());
+        $this->assertEquals(1, $quote->getItemsCollection()->count());
     }
 
     /**
-     * @return Quote
+     * @param string $paymentMethod
+     *
+     * @return OrderInterface|null
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    private function prepareQuote(): Quote
+    private function prepareOrder(string $paymentMethod): ?OrderInterface
     {
         $product = $this->productRepository->get('simple');
 
         /** @var Quote $quote */
         $quote = $this->_objectManager->create(Quote::class);
+        $quote->setCustomerIsGuest(1);
         $quote->setCustomerEmail('customer@example.com');
         $quote->setStoreId(1);
         $quote->setBaseCurrencyCode('NOK');
@@ -249,8 +255,26 @@ class InitRegularTest extends AbstractController
         $billingAddress->setTelephone('04012345');
         $quote->setBillingAddress($billingAddress);
 
+        $quote->getShippingAddress()->setCollectShippingRates(true);
+        $quote->collectTotals();
         $quote->save();
 
-        return $quote;
+        /** @var Quote\Payment $payment */
+        $payment = $this->_objectManager->create(Quote\Payment::class);
+        $payment->setMethod($paymentMethod);
+        $payment->setQuote($quote);
+        $payment->save();
+
+        $order = $this->quoteManagement->submit($quote);
+
+        /** @var \Vipps\Payment\Model\Quote $vippsQuote */
+        $vippsQuote = $this->_objectManager->create(\Vipps\Payment\Model\Quote::class);
+        $vippsQuote->setQuoteId($quote->getId());
+        $vippsQuote->setOrderId($order->getEntityId());
+        $vippsQuote->setReservedOrderId($order->getIncrementId());
+        $vippsQuote->setAuthToken('authToken1234');
+        $vippsQuote->save();
+
+        return $order;
     }
 }

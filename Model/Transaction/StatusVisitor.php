@@ -44,6 +44,8 @@ class StatusVisitor
         if ($transaction instanceof Payment) {
             return $transaction->isAborter();
         }
+
+        return false;
     }
 
     public function isAuthorised($transaction): bool

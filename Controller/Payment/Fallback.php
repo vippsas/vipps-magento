@@ -206,10 +206,14 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
             $vippsQuote = $this->getVippsQuote(true);
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
 
-            $quoteCouldBeRestored = $transaction
-                && ($this->statusVisitor->isCanceled($transaction) || $this->statusVisitor->isExpired($transaction));
-            $order = $this->getOrder();
+            $quoteCouldBeRestored = false;
+            if ($transaction) {
+                $quoteCouldBeRestored = $this->statusVisitor->isCanceled($transaction)
+                    || $this->statusVisitor->isExpired($transaction)
+                    || $this->statusVisitor->isVoided($transaction);
+            }
 
+            $order = $this->getOrder();
             if ($quoteCouldBeRestored && $cartPersistence) {
                 $this->restoreQuote($vippsQuote);
             } elseif ($order) {
@@ -361,7 +365,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      */
     private function defineMessage($transaction): void
     {
-        if ($this->statusVisitor->isCanceled($transaction)) {
+        if ($this->statusVisitor->isCanceled($transaction) || $this->statusVisitor->isVoided($transaction)) {
             $this->messageManager->addWarningMessage(__('Your order was cancelled in %1.', $this->config->getTitle()));
         } elseif (
             $this->statusVisitor->isReserved($transaction)
