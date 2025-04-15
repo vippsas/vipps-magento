@@ -69,7 +69,7 @@ class ActivateCart implements ResolverInterface
         $this->cartRepository = $cartRepository;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $maskedId = null;
         $orderNumber = $args['order_number'] ?? '';

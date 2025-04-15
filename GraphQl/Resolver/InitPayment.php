@@ -56,7 +56,7 @@ class InitPayment implements ResolverInterface
         $this->maskedCartId = $maskedCartId;
         $this->cartRepository = $cartRepository;
     }
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $redirectUrl = null;
 

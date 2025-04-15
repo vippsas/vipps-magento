@@ -39,7 +39,7 @@ class GetPaymentLabel implements ResolverInterface
         $this->vipps = $vipps;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null): string
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null): string
     {
         return (string)$this->vipps->getTitle();
     }

@@ -134,8 +134,8 @@ class CancelCommand extends GatewayCommand
         ProfilerInterface $profiler,
         PaymentDetailsProvider $paymentDetailsProvider,
         SubjectReader $subjectReader,
-        HandlerInterface $handler = null,
-        ValidatorInterface $validator = null
+        ?HandlerInterface $handler = null,
+        ?ValidatorInterface $validator = null
     ) {
         parent::__construct(
             $requestBuilder,

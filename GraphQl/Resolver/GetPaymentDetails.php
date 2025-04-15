@@ -48,7 +48,7 @@ class GetPaymentDetails implements ResolverInterface
         $this->config = $config;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $result = [];
         $incrementId = $args['order_number'] ?? null;

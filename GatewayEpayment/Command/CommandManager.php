@@ -55,7 +55,7 @@ abstract class CommandManager implements PaymentCommandManagerInterface
      * @return ResultInterface|null
      * @throws CommandException
      */
-    public function execute(CommandInterface $command, InfoInterface $payment = null, array $arguments = [])
+    public function execute(CommandInterface $command, ?InfoInterface $payment = null, array $arguments = [])
     {
         return $this->commandManager->execute($command, $payment, $arguments);
     }
@@ -69,7 +69,7 @@ abstract class CommandManager implements PaymentCommandManagerInterface
      * @throws CommandException
      * @throws NotFoundException
      */
-    public function executeByCode($commandCode, InfoInterface $payment = null, array $arguments = [])
+    public function executeByCode($commandCode, ?InfoInterface $payment = null, array $arguments = [])
     {
         return $this->commandManager->executeByCode($commandCode, $payment, $arguments);
     }

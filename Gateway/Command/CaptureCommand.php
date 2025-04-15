@@ -134,8 +134,8 @@ class CaptureCommand extends GatewayCommand
         PaymentDetailsProvider $paymentDetailsProvider,
         SubjectReader $subjectReader,
         OrderRepositoryInterface $orderRepository,
-        HandlerInterface $handler = null,
-        ValidatorInterface $validator = null
+        ?HandlerInterface $handler = null,
+        ?ValidatorInterface $validator = null
     ) {
         parent::__construct(
             $requestBuilder,

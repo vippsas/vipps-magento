@@ -172,8 +172,8 @@ class Transaction
         TransactionInfo $transactionInfo,
         TransactionSummary $transactionSummary,
         TransactionLogHistory $transactionLogHistory,
-        UserDetails $userDetails = null,
-        ShippingDetails $shippingDetails = null
+        ?UserDetails $userDetails = null,
+        ?ShippingDetails $shippingDetails = null
     ) {
         $this->orderId = $orderId;
         $this->transactionInfo = $transactionInfo;

@@ -61,7 +61,7 @@ class LockManager implements LockManagerInterface
     public function __construct(
         ResourceConnection $resource,
         DeploymentConfig $deploymentConfig,
-        string $prefix = null
+        ?string $prefix = null
     ) {
         $this->resource = $resource;
         $this->deploymentConfig = $deploymentConfig;

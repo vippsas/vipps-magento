@@ -50,8 +50,8 @@ class Debug extends Base
      */
     public function __construct(
         DriverInterface $filesystem,
-        ConfigInterface $config = null,
-        string $filePath = null
+        ?ConfigInterface $config = null,
+        ?string $filePath = null
     ) {
         parent::__construct($filesystem, $filePath);
         $this->config = $config;
