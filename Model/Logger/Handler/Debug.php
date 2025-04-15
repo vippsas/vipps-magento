@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright 2020 Vipps
  *
@@ -13,17 +14,15 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Model\Logger\Handler;
 
 use Magento\Framework\Filesystem\DriverInterface;
 use Magento\Framework\Logger\Handler\Base;
 use Magento\Payment\Gateway\ConfigInterface;
 use Monolog\Logger;
+use Monolog\LogRecord;
 
-/**
- * Class Debug
- * @package Vipps\Payment\Model\Logger\Handler
- */
 class Debug extends Base
 {
     /**
@@ -42,8 +41,6 @@ class Debug extends Base
     private $config;
 
     /**
-     * Debug constructor.
-     *
      * @param DriverInterface $filesystem
      * @param ConfigInterface|null $config
      * @param string|null $filePath
@@ -58,17 +55,14 @@ class Debug extends Base
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @param array $record
-     *
-     * @return bool
+     * @inheritDoc
      */
-    public function isHandling(array $record): bool
+    public function isHandling(LogRecord $record): bool
     {
-        if ($this->config && (bool)$this->config->getValue('debug')) {
+        if ($this->config && (bool) $this->config->getValue('debug')) {
             return parent::isHandling($record);
         }
+
         return false;
     }
 }
