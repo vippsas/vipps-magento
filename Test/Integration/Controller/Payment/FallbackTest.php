@@ -16,7 +16,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Vipps\Payment\Test\Integration\Model;
+namespace Vipps\Payment\Test\Integration\Controller\Payment;
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Checkout\Model\Session;
