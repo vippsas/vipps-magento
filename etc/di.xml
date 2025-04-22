@@ -518,20 +518,15 @@
     </virtualType>
 
     <!-- Defining Vipps logger object to process logs into vipps files -->
-    <virtualType name="Vipps\Payment\Model\Logger" type="Monolog\Logger">
+
+    <type name="Vipps\Payment\Model\Logger">
         <arguments>
             <argument name="name" xsi:type="string">vipps</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
             <argument name="handlers"  xsi:type="array">
                 <item name="error" xsi:type="object">Vipps\Payment\Model\Logger\Handler\Error</item>
                 <item name="debug" xsi:type="object">Vipps\Payment\Model\Logger\Handler\Debug</item>
             </argument>
-        </arguments>
-    </virtualType>
-
-    <!-- Passing Vipps Config to log data when debug mode is enabled -->
-    <type name="Vipps\Payment\Model\Logger\Handler\Debug">
-        <arguments>
-            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
         </arguments>
     </type>
 

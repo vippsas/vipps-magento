@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright 2020 Vipps
  *
@@ -13,24 +14,21 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 namespace Vipps\Payment\Model\Logger\Handler;
 
 use Magento\Framework\Logger\Handler\Base;
 use Monolog\Logger;
 
-/**
- * Class Error
- * @package Vipps\Payment\Model\Logger\Handler
- */
 class Error extends Base
 {
     /**
      * @var string
      */
-    protected $fileName = '/var/log/vipps_exception.log'; //@codingStandardsIgnoreLine
+    protected $fileName = '/var/log/vipps_exception.log';
 
     /**
      * @var int
      */
-    protected $loggerType = Logger::INFO; //@codingStandardsIgnoreLine
+    protected $loggerType = Logger::INFO;
 }
