@@ -24,6 +24,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
+use Magento\Framework\Module\Manager;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteManagement;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -66,6 +67,11 @@ class FallbackTest extends AbstractController
     private $productRepository;
 
     /**
+     * @var Manager
+     */
+    private $moduleManager;
+
+    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -100,6 +106,64 @@ class FallbackTest extends AbstractController
         $this->_objectManager->addSharedInstance($this->checkoutSession, Session::class);
         $this->quoteManagement = $this->_objectManager->create(QuoteManagement::class);
         $this->productRepository = $this->_objectManager->create(ProductRepositoryInterface::class);
+        $this->moduleManager = $this->_objectManager->create(Manager::class);
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation enabled
+     * @magentoConfigFixture current_store payment/vipps/active 1
+     * @magentoConfigFixture current_store payment/vipps/version vipps_payment
+     * @magentoConfigFixture current_store catalog/price/scope 0
+     * @magentoConfigFixture current_store currency/options/allow NOK
+     * @magentoConfigFixture default/currency/options/base NOK
+     * @magentoConfigFixture default/currency/options/default NOK
+     * @magentoDataFixture Magento/Catalog/_files/products.php
+     */
+    public function testExecuteShouldSuccessfullyRestoreQuoteWithVippsPaymentApiAndDefaultCheckout()
+    {
+        $order = $this->prepareOrder('vipps');
+
+        $this->tokenProviderCurlMock->expects($this->any())->method('read')->willReturn(
+            "HTTP/1.1 200 Success\n\n"
+            . \json_encode([
+                'token_type' => 'Bearer',
+                'expires_in' => '3599',
+                'expires_on' => \time() + 10000,
+                'ext_expires_in' => 0,
+                'not_before' => \time() + 10000,
+                'resource' => '00000003-0000-0000-c000-000000000000',
+                'access_token' => 'token1234',
+            ])
+        );
+
+        $this->vippsCurlMock->expects($this->any())->method('read')->willReturn(
+            "HTTP/1.1 200 Success\n\n"
+            . \json_encode([
+                'orderId' => $order->getIncrementId(),
+                'transactionLogHistory' => [
+                    [
+                        'operation' => 'CANCEL',
+                        'operationSuccess' => true,
+                    ],
+                ],
+            ])
+        );
+
+        $this->getRequest()->setParams([
+            'order_id' => $order->getIncrementId(),
+            'auth_token' => 'authToken1234',
+        ]);
+        $this->dispatch('vipps/payment/fallback');
+        $this->assertSessionMessages($this->equalTo([
+            __('Your order was cancelled in Vipps.'),
+        ]));
+        $this->assertRedirect($this->stringContains('checkout/cart'));
+
+        $quote = $this->checkoutSession->getQuote();
+        $this->assertNull($quote->getReservedOrderId());
+        $this->assertEquals(1, $quote->getItemsCollection()->count());
     }
 
     /**
@@ -117,6 +181,10 @@ class FallbackTest extends AbstractController
      */
     public function testExecuteShouldSuccessfullyRestoreQuoteWithVippsPaymentApiAndKlarna()
     {
+        if (!$this->moduleManager->isEnabled('Klarna_Kco')) {
+            $this->markTestSkipped('Skipping test due to Klarna not being available/installed');
+        }
+
         $order = $this->prepareOrder('klarna_kco');
 
         $this->tokenProviderCurlMock->expects($this->any())->method('read')->willReturn(
@@ -175,6 +243,10 @@ class FallbackTest extends AbstractController
      */
     public function testExecuteShouldSuccessfullyRestoreQuoteWithMobilePayApiAndKlarna()
     {
+        if (!$this->moduleManager->isEnabled('Klarna_Kco')) {
+            $this->markTestSkipped('Skipping test due to Klarna not being available/installed');
+        }
+
         $order = $this->prepareOrder('klarna_kco');
 
         $this->tokenProviderCurlMock->expects($this->any())->method('read')->willReturn(

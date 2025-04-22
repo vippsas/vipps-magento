@@ -24,6 +24,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
+use Magento\Framework\Module\Manager;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Magento\TestFramework\TestCase\AbstractController;
@@ -65,6 +66,11 @@ class InitRegularTest extends AbstractController
     private $productRepository;
 
     /**
+     * @var Manager
+     */
+    private $moduleManager;
+
+    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -99,6 +105,7 @@ class InitRegularTest extends AbstractController
         $this->_objectManager->addSharedInstance($this->checkoutSession, Session::class);
         $this->quoteResource = $this->_objectManager->create(QuoteResource::class);
         $this->productRepository = $this->_objectManager->create(ProductRepositoryInterface::class);
+        $this->moduleManager = $this->_objectManager->create(Manager::class);
     }
 
     /**
@@ -116,6 +123,10 @@ class InitRegularTest extends AbstractController
      */
     public function testExecuteShouldSuccessfullyExecuteWithoutErrorsWithVippsPaymentApi()
     {
+        if (!$this->moduleManager->isEnabled('Klarna_Kco')) {
+            $this->markTestSkipped('Skipping test due to Klarna not being available/installed');
+        }
+
         $quote = $this->prepareQuote();
 
         /** @var Quote\Payment $payment */
@@ -170,6 +181,10 @@ class InitRegularTest extends AbstractController
      */
     public function testExecuteShouldSuccessfullyExecuteWithoutErrorsWithMobilePayApi()
     {
+        if (!$this->moduleManager->isEnabled('Klarna_Kco')) {
+            $this->markTestSkipped('Skipping test due to Klarna not being available/installed');
+        }
+
         $quote = $this->prepareQuote();
 
         /** @var Quote\Payment $payment */
