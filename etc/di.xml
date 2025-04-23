@@ -36,6 +36,18 @@
         </arguments>
     </type>
 
+    <virtualType name="ProxyEpaymentCommandManager" type="Vipps\Payment\GatewayEpayment\Command\PaymentCommandManager">
+        <arguments>
+            <argument xsi:type="object" name="commandManager">ProxyCommandManager</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Vipps\Payment\Controller\Payment\Klarna\InitRegular">
+        <arguments>
+            <argument xsi:type="object" name="commandManager">ProxyEpaymentCommandManager</argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Model\CommandPoolProxy">
         <arguments>
             <argument xsi:type="object" name="configVersionPool">versionedCommandPool</argument>

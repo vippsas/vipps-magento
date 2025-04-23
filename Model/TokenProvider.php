@@ -184,6 +184,7 @@ class TokenProvider implements TokenProviderInterface
                 'Content-Type: application/json',
                 'Content-Length: 0'
             ];
+
             // send request
             $adapter->write('POST', $this->urlResolver->getUrl(self::$endpointUrl), '1.1', $headers);
             $response = Response::fromString($adapter->read());
@@ -196,7 +197,7 @@ class TokenProvider implements TokenProviderInterface
             }
         } catch (\Exception $e) {    //@codingStandardsIgnoreLine
             $this->logger->critical($e->getMessage());
-            throw new AuthenticationException((string)__('Can\'t retrieve access token from %1.', $this->config->getTitle()), $e);
+            throw new AuthenticationException(__('Can\'t retrieve access token from %1.', $this->config->getTitle()), $e);
         } finally {
             $adapter ? $adapter->close() : null;
         }
