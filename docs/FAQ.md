@@ -10,7 +10,6 @@ END_METADATA -->
 
 # Frequently asked questions
 
-
 ## In which countries can I use Vipps MobilePay?
 
 You can get paid by users who have Vipps in Norway, or who have MobilePay in Denmark or Finland.
@@ -25,7 +24,6 @@ If the payments aren't captured within this time, they will be automatically can
 Payments can only be captured up to 14 days (MobilePay) or 180 days (Vipps) after reservation.
 See [Reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/).
 :::
-
 
 When a payment is completed with Vipps MobilePay, the money will be reserved, but only transferred to the merchant when the order is set to “Complete” or the money is captured manually. For MobilePay, this reservation period is 14 days, so you will need to ship and fulfill orders before this; or to make an agreement with the customer to capture the money before this period is over. For Vipps, the period is 180 days. For payments made by credit card in Vipps/MobilePay Checkout, the period can again be as short as 7 days.
 
@@ -96,7 +94,7 @@ Right after pressing *Place Order*, the client may see the page with message
 
 If you have experienced any issue with Vipps MobilePay, try to enable *Request Profiling* and *Debug* features under the payment configuration area:
 
-*Stores -> Configuration -> Sales -> Payment Methods -> Vipps MobilePay*
+*Stores* → *Configuration* → *Sales* → *Payment Methods* → *Vipps MobilePay*
 
 ![Screenshot of Configuration Area](images/vipps_basic_v2.png)
 
@@ -111,4 +109,3 @@ On the page, you can see the list of all requests for all orders that Adobe Comm
 By clicking *Show* in an *Action* column of grid, you can find appropriate response from Vipps MobilePay.
 
 Using the built-in Adobe Commerce grid filter, you can find all the requests for an order you're interested in.
-

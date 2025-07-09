@@ -123,7 +123,6 @@ The Cancellation Settings include:
 
 ![Screenshot of Checkout Settings](images/cancellation_settings.png)
 
-
 ## Order processing
 
 Please refer to the Adobe Commerce official documentation to learn more about [order processing](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/orders/order-processing#process-an-order) and [order management](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/introduction#order-management-and-operations).
