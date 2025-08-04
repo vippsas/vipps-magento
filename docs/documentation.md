@@ -8,7 +8,7 @@ pagination_prev: null
 ---
 END_METADATA -->
 
-# Payment Module User Guide
+# Payment Module user guide
 
 This is the guide for installing and configuring *Vipps/MobilePay Payment Module for Adobe Commerce* (the *Payment module*).
 
@@ -75,16 +75,16 @@ These settings are required to prevent the loss of profiles when Adobe Commerce 
 
 The module configuration is divided by sections. It helps to quickly find and manage settings of each module feature:
 
-* [Basic Settings](#basic-settings)
+* [Basic settings](#basic-settings)
 * [Checkout settings](#checkout-settings)
-* [Express Checkout Settings](#express-checkout-settings)
-* [Cancellation Settings](#cancellation-settings)
+* [Express Checkout settings](#express-checkout-settings)
+* [Cancellation settings](#cancellation-settings)
 
-Ensure that you check all configuration settings before using the module. Pay special attention to the [Basic Settings](#basic-settings) section.
+Ensure that you check all configuration settings before using the module. Pay special attention to the [Basic settings](#basic-settings) section.
 
-### Basic Settings
+### Basic settings
 
-Basic Settings include:
+Basic settings include:
 
 * *Environment* - Vipps MobilePay API mode, which can be *Production* or *Develop*.
 * *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
@@ -99,21 +99,21 @@ Basic Settings include:
 For help finding the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*,
 see [API keys](https://developer.vippsmobilepay.com/docs/knowledge-base/api-keys/).
 
-![Screenshot of Basic Vipps MobilePay Settings](images/vipps_basic_v2.png)
+![Screenshot of Basic Vipps MobilePay settings](images/vipps_basic_v2.png)
 
-### Checkout Settings
+### Checkout settings
 
 The Vipps MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the *Express Checkout* page.
 
-![Screenshot of Checkout Settings](images/checkout_settings.png)
+![Screenshot of Checkout settings](images/checkout_settings.png)
 
-### Express Checkout Settings
+### Express Checkout settings
 
-![Screenshot of Express Vipps MobilePay Settings](images/express_vipps_settings.png)
+![Screenshot of Express Vipps MobilePay settings](images/express_vipps_settings.png)
 
-### Cancellation Settings
+### Cancellation settings
 
-The Cancellation Settings include:
+The Cancellation settings include:
 
 * *Cart Persistence* - If set to *Yes* and client cancels an order on the Vipps MobilePay side, the cart will still contain the recently added products.
 * *Number of Attempts* - The number of failed order placement attempts allowed before the order will be cancelled.
@@ -121,13 +121,13 @@ The Cancellation Settings include:
 * *Inactivity Time* - (Developers only) The number of minutes that customer is idle before the Vipps MobilePay order will be cancelled in Adobe Commerce.
 * *Processing Type* - Deprecated setting that will be removed in future releases. (Should be set to "Automatic").
 
-![Screenshot of Checkout Settings](images/cancellation_settings.png)
+![Screenshot of Checkout settings](images/cancellation_settings.png)
 
 ## Order processing
 
 Please refer to the Adobe Commerce official documentation to learn more about [order processing](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/orders/order-processing#process-an-order) and [order management](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/introduction#order-management-and-operations).
 
-### Quote Processing Flow
+### Quote processing flow
 
 The quote is an offer. The user accepts the offer when checking out, and it is converted to an order.
 
@@ -139,7 +139,7 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
 1. When a payment is initiated, a new record is created on the *Quote Monitoring* page with status `New`.
    * For a "Regular Payment", the order is immediately placed on the Adobe Commerce side with status *new*, *pending*, or *payment review*, depending on the configuration.
 
-1. Adobe Commerce regularly (by cron) polls Vipps MobilePay for orders that need processing.
+1. Adobe Commerce regularly (by `cron`) polls Vipps MobilePay for orders that need processing.
 1. When an order is accepted on Vipps MobilePay side, Adobe Commerce tries to place the order and marks a record as `Placed`
    * For a "Regular Payment", the Adobe Commerce order is moved to status `Processing`.
 
@@ -157,9 +157,9 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
 
 Here is a diagram of the process:
 
-![Screenshot of Quote Processing Flow](images/quote-monitoring-flow.png)
+![Screenshot of quote processing flow](images/quote-monitoring-flow.png)
 
-## Quote Monitoring Tool
+## Quote Monitoring tool
 
 Quote Monitoring simplifies detection of failed order placement and identifies the root causes of failures.
 
@@ -199,7 +199,7 @@ By clicking on *Show* in the *Action* column of the grid, you can find the appro
 
 By using the built-in Adobe Commerce grid filter, you can find all requests per order that you are interested in.
 
-## Tax Calculation for Express Checkout
+## Tax calculation for Express Checkout
 
 When enabling the Express checkout payment in the configuration area, you may see a notification at the top of the Adobe Commerce admin panel such as:
 
@@ -207,7 +207,7 @@ When enabling the Express checkout payment in the configuration area, you may se
 
 This means that you should change *Tax Calculation Settings* to be based on *Shipping Origin*.
 
-![Tax Calculation Settings](images/tax-origin-settings.png)
+![Tax calculation settings](images/tax-origin-settings.png)
 
 Otherwise, an issue with calculating delivery cost might occur.
 
