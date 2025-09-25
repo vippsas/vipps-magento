@@ -62,9 +62,9 @@ If you are having a problem, please make sure that you are using the latest vers
 The best way to report a problem (or ask a question) is to use GitHub's built-in "issue" functionality:
 [Issues](https://github.com/vippsas/vipps-magento/issues).
 
-### How can I get help with Vipps or MobilePay (unrelated to Adobe Commerce / Magento)?
+### How can I get help with Vipps MobilePay (unrelated to Adobe Commerce / Magento)?
 
-For business-related issues, such as a deactivated sales unit, contact [Vipps MobilePay business support](https://vippsmobilepay.com/info/help).
+For business-related issues, such as a deactivated sales unit, contact [Vipps MobilePay business support](https://help.vippsmobilepay.com/).
 
 ## Why does it take so long after purchase before orders are created in Adobe Commerce?
 
