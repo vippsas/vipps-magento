@@ -14,7 +14,6 @@ END_METADATA -->
 
 ![Support and development by Vaimo ](./docs/images/vaimo.svg#gh-light-mode-only)![Support and development by Vaimo](./docs/images/vaimo_dark.svg#gh-dark-mode-only)
 
-
 *This plugin is built and maintained by [Vaimo](https://www.vaimo.com/) and is hosted on [GitHub](https://github.com/vippsas/vipps-magento).
 For support, [submit an issue](https://github.com/vippsas/vipps-magento/issues) on GitHub.*
 
@@ -30,7 +29,6 @@ About [Adobe Commerce (*previously called Magento*)](https://experienceleague.ad
 
 This plugin is available for download at
 [https://github.com/vippsas/vipps-magento/releases](https://github.com/vippsas/vipps-magento/releases).
-
 
 ## Documentation
 
