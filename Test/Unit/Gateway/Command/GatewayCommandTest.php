@@ -16,8 +16,8 @@
 namespace Vipps\Payment\Test\Unit\Gateway\Command;
 
 use Vipps\Payment\Gateway\Command\GatewayCommand;
-use Vipps\Payment\Gateway\Exception\ExceptionFactory;
-use Vipps\Payment\Gateway\Exception\MerchantException;
+use Vipps\Payment\GatewayEpayment\Exception\ExceptionFactory;
+use Vipps\Payment\GatewayEpayment\Exception\MerchantException;
 use Vipps\Payment\Model\Profiling\ProfilerInterface;
 use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\CommandInterface;
@@ -183,7 +183,7 @@ class GatewayCommandTest extends TestCase
      * @throws ClientException
      * @throws ConverterException
      * @throws LocalizedException
-     * @throws \Vipps\Payment\Gateway\Exception\VippsException
+     * @throws \Vipps\Payment\GatewayEpayment\Exception\VippsException
      */
     public function testExecute($result, $isExceptionExpected, $exception, $validationResult = null)
     {

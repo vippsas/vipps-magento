@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Vipps\Payment\Model\Quote;
 
-use Vipps\Payment\Gateway\Config\Config;
+use Vipps\Payment\GatewayEpayment\Config\Config;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 /**

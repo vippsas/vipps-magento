@@ -29,7 +29,7 @@ use Magento\Quote\Model\QuoteManagement;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\TestFramework\TestCase\AbstractController;
 use PHPUnit\Framework\MockObject\MockObject;
-use Vipps\Payment\Gateway\Http\Client\Curl as VippsCurl;
+use Vipps\Payment\GatewayEpayment\Http\Client\Curl as VippsCurl;
 use Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl;
 use Vipps\Payment\Model\TokenProvider;
 

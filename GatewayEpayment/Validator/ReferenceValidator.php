@@ -26,7 +26,7 @@ use Vipps\Payment\GatewayEpayment\Request\SubjectReader;
 
 /**
  * Class OrderValidator
- * @package Vipps\Payment\Gateway\Validator
+ * @package Vipps\Payment\GatewayEpayment\Validator
  */
 class ReferenceValidator extends AbstractValidator
 {

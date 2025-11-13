@@ -38,8 +38,7 @@ use Magento\Sales\Api\OrderManagementInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\Gateway\Config\Config;
-use Vipps\Payment\Gateway\Transaction\Transaction;
+use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Data\Payment;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
@@ -308,7 +307,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
     /**
      * @param Redirect $resultRedirect
-     * @param Transaction|Payment $transaction
+     * @param Payment $transaction
      *
      * @return Redirect
      * @throws \Exception
@@ -360,7 +359,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     }
 
     /**
-     * @param Transaction|Payment $transaction
+     * @param Payment $transaction
      * @return void
      */
     private function defineMessage($transaction): void
@@ -384,7 +383,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
     /**
      * @param Redirect $resultRedirect
-     * @param Transaction|Payment $transaction
+     * @param Payment $transaction
      *
      * @throws NoSuchEntityException
      */

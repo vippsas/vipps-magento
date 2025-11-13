@@ -57,16 +57,50 @@ class AmountBuilder implements BuilderInterface
         }
         $reference = $quote->getReservedOrderId();
 
-        return [
+        $storeName = $this->storeManager->getStore()->getName();
+
+        $paymentDescription = __(
+            'Thank you for shopping at %1.',
+            $storeName
+        );
+
+        if ($paymentDO) {
+            $paymentDescription .= ' ' . __('Order Id: %1', $paymentDO->getOrder()->getOrderIncrementId());
+        }
+
+        $paymentData = [
             'amount'             => [
                 'currency' => $quote->getStoreCurrencyCode(),
                 'value'    => $quote->getGrandTotal() * 100
             ],
             'reference'          => $reference,
-            'paymentDescription' => $this->storeManager->getStore()->getName(),
+            'paymentDescription' => $paymentDescription,
             'paymentMethod'      => ["type" => "WALLET"],
             "userFlow"           => "WEB_REDIRECT",
             'returnUrl'          => $this->urlBuilder->getUrl('vipps/payment/fallback', ['reference' => $reference])
         ];
+
+        // Express Required data
+        if ($buildSubject['paymentType'] == 'ePayment Express Payment') {
+            $callbackAuthorizationToken = $this->generateAuthToken();
+
+            $paymentData['shipping']['dynamicOptions']['callbackUrl'] = $this->urlBuilder->getUrl(
+                'vipps/payment/shippingDetails'
+            );
+            $paymentData['shipping']['dynamicOptions']['callbackAuthorizationToken'] = $callbackAuthorizationToken;
+            $paymentData['profile']['scope'] = "name address email phoneNumber";
+        }
+
+        return $paymentData;
+    }
+
+    private function generateAuthToken()
+    {
+        try {
+            $randomStr = random_bytes(16);
+        } catch (\Exception $e) {
+            $randomStr = uniqid('', true);
+        }
+        return bin2hex($randomStr);
     }
 }

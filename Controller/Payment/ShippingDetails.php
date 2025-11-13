@@ -34,7 +34,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails as TransactionShippingDetails;
+use Vipps\Payment\GatewayEpayment\Data\ShippingDetails as TransactionShippingDetails;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\Quote\AddressUpdater;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
@@ -161,37 +161,48 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
                 'city' => $vippsAddress['city'],
                 'country_id' => TransactionShippingDetails::NORWEGIAN_COUNTRY_ID
             ]);
+            $reservedOrderId = $vippsAddress['reference'];
 
-            $reservedOrderId = $this->getReservedOrderId();
             $this->logger->critical($reservedOrderId);
             $quote = $this->getQuote($reservedOrderId);
+
             /**
              * As Quote is deactivated, so we need to activate it for estimating shipping methods
              */
+
             $this->addressUpdater->fromSourceAddress($quote, $address);
             $quote->setIsActive(true);
             $this->cartRepository->save($quote);
             $shippingMethods = $this->shipmentEstimation->estimateByExtendedAddress($quote->getId(), $address);
-            $responseData = [
-                'addressId' => $vippsAddress['addressId'],
-                'orderId' => $reservedOrderId,
-                'shippingDetails' => []
-            ];
 
+            $responseData = [];
+            $counter = 0;
             foreach ($shippingMethods as $key => $shippingMethod) {
                 $methodFullCode = $shippingMethod->getCarrierCode() . '_' . $shippingMethod->getMethodCode();
                 if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
                     continue;
                 }
+                $counter++;
 
-                $responseData['shippingDetails'][] = [
-                    'isDefault' => 'N',
+                $responseData['groups'][] = [
+                    'isDefault' => $counter == 1 ? true : false,
                     'priority' => $key,
-                    'shippingCost' => $shippingMethod->getAmount(),
-                    'shippingMethod' => $shippingMethod->getMethodTitle(),
-                    'shippingMethodId' => $methodFullCode,
+                    'type' => 'OTHER',
+                    'brand' => 'OTHER',
+                    'options' => [
+                        [
+                            'id' => $methodFullCode,
+                            'amount' => [
+                                'value' => $shippingMethod->getAmount() > 0 ? (int)($shippingMethod->getAmount() * 100) : 0,
+                                'currency' => $quote->getStoreCurrencyCode()
+                            ],
+                            'name' => $shippingMethod->getMethodTitle(),
+                        ],
+                    ]
                 ];
             }
+
+            $this->logger->debug($this->serializer->serialize($responseData));
 
             $result->setHttpResponseCode(Response::STATUS_CODE_200);
             $result->setData($responseData);

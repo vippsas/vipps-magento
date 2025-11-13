@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2022 Vipps
+ * Copyright 2020 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -18,56 +18,58 @@ namespace Vipps\Payment\GatewayEpayment\Data;
 use Magento\Framework\DataObject;
 
 /**
- * Class ShippingDetails
+ * Class UserDetails
  * @package Vipps\Payment\GatewayEpayment\Data
  */
-class ShippingDetails extends DataObject
+class UserDetails extends DataObject
 {
     /**
      * @var string
      */
-    const NORWEGIAN_COUNTRY_ID = 'NO';
+    const EMAIL = 'email';
 
     /**
      * @var string
      */
     const FIRST_NAME = 'firstName';
+
     /**
      * @var string
      */
     const LAST_NAME = 'lastName';
+
     /**
      * @var string
      */
-    const EMAIL = 'email';
+    const MOBILE_NUMBER = 'mobileNumber';
+
     /**
      * @var string
      */
-    const PHONE_NUMBER = 'phoneNumber';
+    const SSN = 'ssn';
+
     /**
      * @var string
      */
-    const STREET_ADDRESS = 'streetAddress';
+    const BANK_ID_VERIFIED = 'bankIdVerified';
+
     /**
      * @var string
      */
-    const POSTAL_CODE = 'postalCode';
+    const DATE_OF_BIRTH = 'dateOfBirth';
+
     /**
      * @var string
      */
-    const CITY = 'city';
+    const USER_ID = 'userId';
+
     /**
-     * @var string
+     * @return string
      */
-    const COUNTRY = 'country';
-    /**
-     * @var string
-     */
-    const SHIPPING_OPTION_ID = 'shippingOptionId';
-    /**
-     * @var string
-     */
-    const SHIPPING_COST = 'shippingCost';
+    public function getEmail()
+    {
+        return $this->getData(self::EMAIL);
+    }
 
     /**
      * @return string
@@ -88,64 +90,40 @@ class ShippingDetails extends DataObject
     /**
      * @return string
      */
-    public function getEmail()
+    public function getMobileNumber()
     {
-        return $this->getData(self::EMAIL);
+        return $this->getData(self::MOBILE_NUMBER);
     }
 
     /**
      * @return string
      */
-    public function getPhoneNumber()
+    public function getSsn()
     {
-        return $this->getData(self::PHONE_NUMBER);
+        return $this->hasData(self::SSN);
     }
 
     /**
      * @return string
      */
-    public function getStreetAddress()
+    public function getBankIdVerified()
     {
-        return $this->getData(self::STREET_ADDRESS);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getPostalCode()
-    {
-        return $this->getData(self::POSTAL_CODE);
+        return $this->hasData(self::BANK_ID_VERIFIED);
     }
 
     /**
      * @return string
      */
-    public function getCity()
+    public function getDateOfBirth()
     {
-        return $this->getData(self::CITY);
+        return $this->hasData(self::DATE_OF_BIRTH);
     }
 
     /**
      * @return string
      */
-    public function getCountry()
+    public function getUserId()
     {
-        return $this->getData(self::COUNTRY);
-    }
-
-    /**
-     * @return string
-     */
-    public function getShippingOptionId()
-    {
-        return $this->getData(self::SHIPPING_OPTION_ID);
-    }
-
-    /**
-     * @return string
-     */
-    public function getShippingCost()
-    {
-        return $this->getData(self::SHIPPING_COST);
+        return $this->hasData(self::USER_ID);
     }
 }

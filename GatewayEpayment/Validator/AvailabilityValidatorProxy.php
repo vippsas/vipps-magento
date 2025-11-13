@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Copyright 2020 Vipps
+ * Copyright 2023 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,24 +13,27 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Model\Logger\Handler;
+namespace Vipps\Payment\GatewayEpayment\Validator;
 
-use Magento\Framework\Logger\Handler\Base;
-use Monolog\Logger;
+use Magento\Payment\Gateway\Validator\ValidatorInterface;
+use Vipps\Payment\Model\Config\ConfigVersionPool;
 
-/**
- * Class Error
- * @package Vipps\Payment\Model\Logger\Handler
- */
-class Error extends Base
+class AvailabilityValidatorProxy implements ValidatorInterface
 {
-    /**
-     * @var string
-     */
-    protected $fileName = '/var/log/vipps_exception.log'; //@codingStandardsIgnoreLine
+    private ConfigVersionPool $configVersionPool;
 
-    /**
-     * @var int
-     */
-    protected $loggerType = Logger::INFO; //@codingStandardsIgnoreLine
+    public function __construct(ConfigVersionPool $configVersionPool)
+    {
+        $this->configVersionPool = $configVersionPool;
+    }
+
+    private function get(): ValidatorInterface
+    {
+        return $this->configVersionPool->get();
+    }
+
+    public function validate(array $validationSubject)
+    {
+        return $this->get()->validate($validationSubject);
+    }
 }

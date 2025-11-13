@@ -24,9 +24,9 @@ use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Model\ScopeInterface;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Gateway\Config\Config;
-use Vipps\Payment\Gateway\Exception\AuthenticationException;
-use Vipps\Payment\Gateway\Http\Client\Curl;
+use Vipps\Payment\GatewayEpayment\Config\Config;
+use Vipps\Payment\GatewayEpayment\Exception\AuthenticationException;
+use Vipps\Payment\GatewayEpayment\Http\Client\Curl;
 
 /**
  * Class TokenProvider

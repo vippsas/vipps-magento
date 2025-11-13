@@ -15,7 +15,7 @@
  */
 namespace Vipps\Payment\Model;
 
-use Vipps\Payment\Gateway\Exception\AuthenticationException;
+use Vipps\Payment\GatewayEpayment\Exception\AuthenticationException;
 use Magento\Framework\Exception\CouldNotSaveException;
 
 /**

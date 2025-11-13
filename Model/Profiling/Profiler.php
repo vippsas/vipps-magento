@@ -21,6 +21,9 @@ use Magento\Store\Model\ScopeInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterface;
 use Vipps\Payment\Api\Profiling\Data\ItemInterfaceFactory;
 use Vipps\Payment\Api\Profiling\ItemRepositoryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SortOrderBuilder;
+use Magento\Framework\Api\SortOrder;
 
 use Laminas\Http\Response;
 use Magento\Framework\Json\DecoderInterface;
@@ -54,6 +57,15 @@ class Profiler implements ProfilerInterface
     private $gdprCompliance;
 
     /**
+     * @var SearchCriteriaBuilder
+     */
+    private $searchCriteriaBuilder;
+    /**
+     * @var SortOrderBuilder
+     */
+    private $sortOrderBuilder;
+
+    /**
      * Profiler constructor.
      *
      * @param ScopeConfigInterface $config
@@ -61,19 +73,25 @@ class Profiler implements ProfilerInterface
      * @param ItemRepositoryInterface $itemRepository
      * @param DecoderInterface $jsonDecoder
      * @param Compliance $gdprCompliance
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param SortOrderBuilder $sortOrderBuilder
      */
     public function __construct(
         ScopeConfigInterface $config,
         ItemInterfaceFactory $dataItemFactory,
         ItemRepositoryInterface $itemRepository,
         DecoderInterface $jsonDecoder,
-        Compliance $gdprCompliance
+        Compliance $gdprCompliance,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        SortOrderBuilder $sortOrderBuilder
     ) {
         $this->config = $config;
         $this->dataItemFactory = $dataItemFactory;
         $this->itemRepository = $itemRepository;
         $this->jsonDecoder = $jsonDecoder;
         $this->gdprCompliance = $gdprCompliance;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->sortOrderBuilder = $sortOrderBuilder;
     }
 
     /**
@@ -95,6 +113,15 @@ class Profiler implements ProfilerInterface
         $requestType = $data['type'] ?? 'undefined';
         $orderId = $data['order_id'] ?? $this->parseOrderId($response);
 
+        $responseData = $this->parseResponse($response);
+
+        if ($requestType === 'details' && $orderId) {
+            $logDetails = $this->addNewPaymentDetailsRequest($orderId, $responseData);
+            if (!$logDetails) {
+                return null;
+            }
+        }
+
         $itemDO->setRequestType($requestType);
         $itemDO->setRequest($this->packArray(
             array_merge(['headers' => $transfer->getHeaders()], ['body' => $transfer->getBody()])
@@ -102,7 +129,7 @@ class Profiler implements ProfilerInterface
 
         $itemDO->setStatusCode($response->getStatusCode());
         $itemDO->setIncrementId($orderId);
-        $itemDO->setResponse($this->packArray($this->parseResponse($response)));
+        $itemDO->setResponse($this->packArray($responseData));
         $itemDO->setCreatedAt(gmdate(\Magento\Framework\Stdlib\DateTime::DATETIME_PHP_FORMAT));
 
         $item = $this->itemRepository->save($itemDO);
@@ -132,11 +159,20 @@ class Profiler implements ProfilerInterface
     private function parseDataFromTransferObject(TransferInterface $transfer)
     {
         $result = [];
+
+        // Details
+        if (preg_match('/payments(?:\/([A-Za-z0-9]+))?$/', $transfer->getUri(), $matches)) {
+            $result['order_id'] = $matches[1] ?? ($transfer->getUrlParameters()['reference'] ?? null);
+            $result['type'] = TypeInterface::GET_PAYMENT_DETAILS;
+        }
+
+        // Initiate
         if (preg_match('/payments(\/([^\/]+)\/([a-z]+))?$/', $transfer->getUri(), $matches)) {
             $result['order_id'] = $matches[2] ?? ($transfer->getBody()['transaction']['orderId'] ?? null);
             $result['type'] = $matches[3] ?? TypeInterface::INITIATE_PAYMENT;
         }
 
+        // Send receipt
         if (preg_match('/order-management\/v2\/ecom\/receipts\/(.+)/i', $transfer->getUri(), $matches)) {
             $result['order_id'] = $matches[1] ?? null;
             $result['type'] = TypeInterface::SEND_RECEIPT;
@@ -171,7 +207,9 @@ class Profiler implements ProfilerInterface
      */
     private function depersonalizedResponse($response)
     {
-        unset($response['url']);
+        if (isset($response['url'])) {
+            unset($response['url']);
+        }
 
         return $this->gdprCompliance->process($response);
     }
@@ -208,5 +246,33 @@ class Profiler implements ProfilerInterface
 
         $output = $recursive($data);
         return $output;
+    }
+
+    private function addNewPaymentDetailsRequest($orderId, $responseData) {
+        $sort = $this->sortOrderBuilder
+            ->setField('created_at')
+            ->setDirection(SortOrder::SORT_DESC)
+            ->create();
+
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('increment_id', $orderId, 'eq')
+            ->addFilter('request_type', 'details', 'eq')
+            ->addSortOrder($sort)
+            ->setPageSize(1)
+            ->setCurrentPage(1)
+            ->create();
+
+        $searchResults = $this->itemRepository->getList($searchCriteria);
+        $items = $searchResults->getItems();
+        if (!empty($items)) {
+            if (preg_match('/\bstate\s*:\s*(?:"([^"]+)"|\'([^\']+)\'|([^\s\}\n\r]+))/i', $items[0]['response'], $m)) {
+                // capture group 1 or 2 or 3
+                $oldState = trim($m[1] ?: $m[2] ?: $m[3]);
+                if (isset($responseData['state']) && $responseData['state'] === $oldState) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

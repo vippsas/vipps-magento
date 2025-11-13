@@ -24,7 +24,7 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
 use Magento\Quote\Model\QuoteIdMask;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Vipps\Payment\Model\QuoteRepository;
@@ -69,7 +69,7 @@ class ActivateCart implements ResolverInterface
         $this->cartRepository = $cartRepository;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $maskedId = null;
         $orderNumber = $args['order_number'] ?? '';

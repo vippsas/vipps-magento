@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Controller\Payment\Fallback;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionBuilder;

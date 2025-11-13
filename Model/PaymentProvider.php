@@ -16,8 +16,8 @@
 
 namespace Vipps\Payment\Model;
 
-use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Gateway\Exception\VippsException;
+use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Vipps\Payment\GatewayEpayment\Exception\VippsException;
 use Vipps\Payment\GatewayEpayment\Data\Payment;
 use Vipps\Payment\GatewayEpayment\Data\PaymentBuilder;
 

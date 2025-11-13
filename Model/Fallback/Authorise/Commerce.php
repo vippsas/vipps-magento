@@ -13,19 +13,17 @@ class Commerce implements AuthoriseInterface
 {
     public function do(RequestInterface $request, QuoteInterface $vippsQuote): void
     {
-        if (!$request->getParam('order_id') ||
-            !$request->getParam('auth_token')
-        ) {
+        if (!$request->getParam('reference')) {
             throw new LocalizedException(__('Invalid request parameters'));
         }
 
-        if ($vippsQuote->getAuthToken() !== $request->getParam('auth_token', '')) {
+        if ($vippsQuote->getReservedOrderId() !== $request->getParam('reference', '')) {
             throw new LocalizedException(__('Invalid request'));
         }
     }
 
     public function getOrderId(RequestInterface $request): string
     {
-        return $request->getParam('order_id');
+        return $request->getParam('reference');
     }
 }

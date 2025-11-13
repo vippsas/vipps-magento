@@ -18,6 +18,7 @@ namespace Vipps\Payment\GatewayEpayment\Response\Payment;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
+use Vipps\Payment\GatewayEpayment\Data\PaymentBuilder;
 use Vipps\Payment\GatewayEpayment\Request\SubjectReader;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
@@ -29,28 +30,45 @@ use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
  */
 class TransactionHandler implements HandlerInterface
 {
+
+    /**
+     * @var string
+     */
+    const TRANSACTION_STATUS_RESERVE = 'reserve';
+
+    /**
+     * @var string
+     */
+    const TRANSACTION_STATUS_RESERVED = 'reserved';
+
+    /**
+     * @var string
+     */
+    const TRANSACTION_STATUS_CANCELLED = 'cancelled';
+
+
     /**
      * @var SubjectReader
      */
     private $subjectReader;
 
     /**
-     * @var TransactionBuilder
+     * @var PaymentBuilder
      */
-    private $transactionBuilder;
+    private $paymentBuilder;
 
     /**
      * CaptureHandler constructor.
      *
      * @param SubjectReader $subjectReader
-     * @param TransactionBuilder $transactionBuilder
+     * @param PaymentBuilder $paymentBuilder
      */
     public function __construct(
         SubjectReader $subjectReader,
-        TransactionBuilder $transactionBuilder
+        PaymentBuilder $paymentBuilder
     ) {
         $this->subjectReader = $subjectReader;
-        $this->transactionBuilder = $transactionBuilder;
+        $this->paymentBuilder = $paymentBuilder;
     }
 
     /**
@@ -64,28 +82,23 @@ class TransactionHandler implements HandlerInterface
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
         $payment = $paymentDO->getPayment();
 
-        $transaction = $this->transactionBuilder
+        $transaction = $this->paymentBuilder
             ->setData($response)
             ->build();
 
-        if ($payment instanceof \Vipps\Payment\GatewayEpayment\Data\Payment) {
-            $status = $transaction->getTransactionInfo()->getStatus();
-            $transactionId = $transaction->getPspReference();
+        if ($payment instanceof Payment) {
 
-            switch ($status) {
-                case Transaction::TRANSACTION_STATUS_CANCELLED:
-                    $transactionId .= '-void';
-                    break;
-                case Transaction::TRANSACTION_STATUS_RESERVE:
-                case Transaction::TRANSACTION_STATUS_RESERVED:
-                    $payment->setIsTransactionClosed(false);
-                    break;
-            }
+            $transactionSummary = [
+                'cancelledAmount'  => $transaction->getAggregate()->getCancelledAmount()->getValue(),
+                'capturedAmount'   => $transaction->getAggregate()->getCapturedAmount()->getValue(),
+                'refundedAmount'   => $transaction->getAggregate()->getRefundedAmount()->getValue(),
+                'authorizedAmount' => $transaction->getAggregate()->getAuthorizedAmount()->getValue(),
+                'currency'         => (string) $transaction->getAmount()->getCurrency(),
+            ];
 
-            $payment->setTransactionId($transactionId);
             $payment->setTransactionAdditionalInfo(
                 PaymentTransaction::RAW_DETAILS,
-                $transaction->getTransactionSummary()->getData()
+                $transactionSummary
             );
         }
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2020 Vipps
+ * Copyright 2022 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,22 +13,19 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 namespace Vipps\Payment\GatewayEpayment\Command;
 
-use Vipps\Payment\GatewayEpayment\Data\Payment;
-use Vipps\Payment\GatewayEpayment\Data\PaymentBuilder;
-use Vipps\Payment\GatewayEpayment\Data\Session;
-use Vipps\Payment\Api\Payment\CommandManagerInterface;
+use Magento\Sales\Api\Data\OrderInterface;
+use Psr\Log\LoggerInterface;
+use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\GatewayEpayment\Exception\VippsException;
-use Vipps\Payment\GatewayEpayment\Data\SessionBuilder;
 
 /**
- * Class PaymentDetailsProvider
+ * Class ReceiptSender
  * @package Vipps\Payment\GatewayEpayment\Command
  * @spi
  */
-class PaymentDetailsProvider implements  \Vipps\Payment\Api\Transaction\PaymentDetailsInterface
+class ReceiptSender
 {
     /**
      * @var CommandManagerInterface
@@ -36,45 +33,36 @@ class PaymentDetailsProvider implements  \Vipps\Payment\Api\Transaction\PaymentD
     private $commandManager;
 
     /**
-     * @var PaymentBuilder
+     * @var LoggerInterface
      */
-    private $paymentBuilder;
+    private $logger;
 
     /**
-     * @var array
-     */
-    private $cache = [];
-
-    /**
-     * PaymentDetailsProvider constructor.
+     * ReceiptSender constructor.
      *
      * @param CommandManagerInterface $commandManager
-     * @param SessionBuilder $paymentBuilder
+     * @param LoggerInterface $logger
      */
     public function __construct(
         CommandManagerInterface $commandManager,
-        PaymentBuilder          $paymentBuilder
+        LoggerInterface $logger
     ) {
         $this->commandManager = $commandManager;
-        $this->paymentBuilder = $paymentBuilder;
+        $this->logger = $logger;
     }
 
     /**
-     * @param string $orderId
+     * @param OrderInterface $order
      *
-     * @return Payment
+     * @return void
      * @throws VippsException
      */
-    public function get(string $orderId): ?Payment
+    public function send(OrderInterface $order): void
     {
-        if (!isset($this->cache[$orderId])) {
-
-            $response = $this->commandManager->getPayment($orderId);
-            $transaction = $this->paymentBuilder->setData($response)->build();
-
-            $this->cache[$orderId] = $transaction;
+        try {
+            $this->commandManager->sendReceipt($order);
+        } catch (\Exception $e) {
+            $this->logger->critical($e->getMessage());
         }
-
-        return $this->cache[$orderId];
     }
 }

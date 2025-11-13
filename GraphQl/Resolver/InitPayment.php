@@ -21,7 +21,7 @@ use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
 
 class InitPayment implements ResolverInterface
 {
@@ -56,7 +56,7 @@ class InitPayment implements ResolverInterface
         $this->maskedCartId = $maskedCartId;
         $this->cartRepository = $cartRepository;
     }
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $redirectUrl = null;
 

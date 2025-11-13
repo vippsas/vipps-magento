@@ -129,6 +129,26 @@ class ItemRepository implements ItemRepositoryInterface
         $collection = $this->itemFactory->create()->getCollection();
 
         $searchResults->setTotalCount($collection->getSize());
+
+        // Apply filters from SearchCriteria
+        $filterGroups = $searchCriteria->getFilterGroups();
+        if ($filterGroups) {
+            foreach ($filterGroups as $group) {
+                $fields = [];
+                $conditions = [];
+                foreach ($group->getFilters() as $filter) {
+                    $conditionType = $filter->getConditionType() ?: 'eq';
+                    $fields[] = $filter->getField();
+                    $conditions[] = [$conditionType => $filter->getValue()];
+                }
+                if (count($fields) > 1) {
+                    $collection->addFieldToFilter($fields, $conditions);
+                } else {
+                    $collection->addFieldToFilter($fields[0], $conditions[0]);
+                }
+            }
+        }
+
         $sortOrders = $searchCriteria->getSortOrders();
         if ($sortOrders) {
             /** @var SortOrder $sortOrder */

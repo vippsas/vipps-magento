@@ -16,7 +16,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <type name="Vipps\Payment\GraphQl\Resolver\GetPaymentDetails">
         <arguments>
-            <argument name="config" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
         </arguments>
     </type>
     <type name="Magento\StoreGraphQl\Model\Resolver\Store\StoreConfigDataProvider">

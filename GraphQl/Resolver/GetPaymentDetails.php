@@ -20,7 +20,7 @@ use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
 use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
 use Magento\Payment\Gateway\ConfigInterface;
 
 class GetPaymentDetails implements ResolverInterface
@@ -48,7 +48,7 @@ class GetPaymentDetails implements ResolverInterface
         $this->config = $config;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         $result = [];
         $incrementId = $args['order_number'] ?? null;

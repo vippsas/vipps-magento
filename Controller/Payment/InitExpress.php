@@ -32,8 +32,8 @@ use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Gateway\Config\Config;
-use Vipps\Payment\Gateway\Request\Initiate\InitiateBuilderInterface;
+use Vipps\Payment\GatewayEpayment\Config\Config;
+use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -146,7 +146,7 @@ class InitExpress implements ActionInterface
             $responseData = $this->initiatePayment();
 
             $this->checkoutSession->clearStorage();
-            $resultRedirect->setPath($responseData['url'], ['_secure' => true]);
+            $resultRedirect->setPath($responseData['redirectUrl'], ['_secure' => true]);
 
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));

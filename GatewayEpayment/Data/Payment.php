@@ -47,6 +47,8 @@ class Payment extends DataObject
     const USER_FLOW = 'userFlow';
     const PAYMENT_DESCRIPTION = 'paymentDescription';
     const CALLBACK_URL = 'callbackUrl';
+    const USER_DETAILS = 'userDetails';
+    const SHIPPING_DETAILS = 'shippingDetails';
 
     /**
      * User has not yet acted upon the payment
@@ -221,5 +223,20 @@ class Payment extends DataObject
     public function getRawData(): string
     {
         return (string)$this->getData('raw_data');
+    }
+
+    public function getUserDetails(): ?UserDetails
+    {
+        return $this->getData(self::USER_DETAILS);
+    }
+
+    public function getShippingDetails(): ?ShippingDetails
+    {
+        return $this->getData(self::SHIPPING_DETAILS);
+    }
+
+    public function isExpressCheckout(): bool
+    {
+        return $this->getUserDetails() === null ? false : true;
     }
 }
