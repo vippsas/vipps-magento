@@ -202,8 +202,6 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
                 ];
             }
 
-            $this->logger->debug($this->serializer->serialize($responseData));
-
             $result->setHttpResponseCode(Response::STATUS_CODE_200);
             $result->setData($responseData);
         } catch (LocalizedException $e) {
