@@ -171,7 +171,9 @@ class Profiler implements ProfilerInterface
      */
     private function depersonalizedResponse($response)
     {
-        unset($response['url']);
+        if (isset($response['url'])) {
+            unset($response['url']);
+        }
 
         return $this->gdprCompliance->process($response);
     }
