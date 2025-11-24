@@ -153,7 +153,6 @@ class GatewayCommand implements CommandInterface
                 $errorMessage
             );
             $this->logger->critical($message);
-            $this->logger->critical($this->jsonDecoder->decode($response->getContent()));
             throw new \Exception($errorMessage, $errorCode);
         }
 

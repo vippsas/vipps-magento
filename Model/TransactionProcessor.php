@@ -94,8 +94,9 @@ class TransactionProcessor
         QuoteManagement                                     $quoteManagement,
         OrderManagementInterface                            $orderManagement,
         ReceiptSender                                       $receiptSender,
-        PaymentProvider          $paymentProvider,
-        ResourceConnection       $resourceConnection
+        LoggerInterface                                     $logger,
+        PaymentProvider                                     $paymentProvider,
+        ResourceConnection                                  $resourceConnection
     ) {
         $this->orderRepository = $orderRepository;
         $this->cartRepository = $cartRepository;
@@ -109,6 +110,7 @@ class TransactionProcessor
         $this->quoteManagement = $quoteManagement;
         $this->orderManagement = $orderManagement;
         $this->receiptSender = $receiptSender;
+        $this->logger = $logger;
         $this->resourceConnection = $resourceConnection;
         $this->paymentProvider = $paymentProvider;
     }
@@ -134,7 +136,7 @@ class TransactionProcessor
 
             return $payment;
         } catch (\Throwable $exception) {
-            echo $exception->getMessage();
+            $this->logger->critical($exception->getMessage());
         } finally {
             if (isset($lockName)) {
                 $this->releaseLock($lockName);
