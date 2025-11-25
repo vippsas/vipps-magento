@@ -153,6 +153,7 @@ class GatewayCommand implements CommandInterface
                 $errorMessage
             );
             $this->logger->critical($message);
+            $this->logger->critical('Request error:', ['response' => $responseBody]);
             throw new \Exception($errorMessage, $errorCode);
         }
 
