@@ -202,6 +202,7 @@ class InitRegular implements ActionInterface
      */
     private function initiatePayment(CartInterface $quote)
     {
+        $quote->getPayment()->setMethod(Vipps::METHOD_CODE);
         return $this->commandManager->initiatePayment(
             $quote->getPayment(),
             [
