@@ -182,6 +182,12 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
                 if (!$this->shippingMethodValidator->isValid($methodFullCode)) {
                     continue;
                 }
+
+                // Prevent adding shipping methods with null titles
+                if ($shippingMethod->getMethodTitle() === null) {
+                    continue;
+                }
+                
                 $counter++;
 
                 $responseData['groups'][] = [
