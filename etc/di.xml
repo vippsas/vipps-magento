@@ -86,16 +86,16 @@
     <!-- Epayment Initiate command -->
     <virtualType name="VippsEpaymentInitCommand" type="Vipps\Payment\GatewayEpayment\Command\GatewayCommand">
         <arguments>
-            <argument name="requestBuilder" xsi:type="object">VippsPaymentPostRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsPaymentPostTransferFty</argument>
+            <argument name="requestBuilder" xsi:type="object">VippsEpaymentPostRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsEpaymentPostTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEpayment\Response\Payment\PostHandler</argument>
             <argument name="validator" xsi:type="object">VippsEpaymentInitiateValidator</argument>
-            <argument name="profiler" xsi:type="object">VippsPaymentInitProfiler</argument>
+            <argument name="profiler" xsi:type="object">VippsEpaymentInitProfiler</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentPostRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsEpaymentPostRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="amount" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\Payment\AmountBuilder</item>
@@ -103,7 +103,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentPostTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
+    <virtualType name="VippsEpaymentPostTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments</argument>
@@ -130,7 +130,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentInitProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+    <virtualType name="VippsEpaymentInitProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
         <arguments>
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::INITIATE_PAYMENT</argument>
         </arguments>
@@ -140,15 +140,15 @@
     <!-- Epayment Capture command -->
     <virtualType name="VippsEpaymentCaptureCommand" type="Vipps\Payment\GatewayEpayment\Command\CaptureCommand">
         <arguments>
-            <argument name="requestBuilder" xsi:type="object">VippsPaymentCaptureRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsPaymentCaptureTransferFty</argument>
+            <argument name="requestBuilder" xsi:type="object">VippsEpaymentCaptureRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsEpaymentCaptureTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEpayment\Response\Payment\TransactionHandler</argument>
-            <argument name="profiler" xsi:type="object">VippsPaymentCaptureProfiler</argument>
+            <argument name="profiler" xsi:type="object">VippsEpaymentCaptureProfiler</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentCaptureRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsEpaymentCaptureRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="reference" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\ReferenceDataBuilder</item>
@@ -157,7 +157,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentCaptureTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
+    <virtualType name="VippsEpaymentCaptureTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:reference/capture</argument>
@@ -171,7 +171,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentCaptureProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+    <virtualType name="VippsEpaymentCaptureProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
         <arguments>
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::CAPTURE</argument>
         </arguments>
@@ -181,15 +181,15 @@
     <!-- Epayment Refund command -->
     <virtualType name="VippsEpaymentRefundCommand" type="Vipps\Payment\GatewayEpayment\Command\RefundCommand">
         <arguments>
-            <argument name="requestBuilder" xsi:type="object">VippsPaymentRefundRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsPaymentRefundTransferFty</argument>
+            <argument name="requestBuilder" xsi:type="object">VippsEpaymentRefundRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsEpaymentRefundTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEpayment\Response\Payment\TransactionHandler</argument>
-            <argument name="profiler" xsi:type="object">VippsPaymentRefundProfiler</argument>
+            <argument name="profiler" xsi:type="object">VippsEpaymentRefundProfiler</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsEpaymentRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="reference" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\ReferenceDataBuilder</item>
@@ -198,7 +198,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentRefundTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
+    <virtualType name="VippsEpaymentRefundTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:reference/refund</argument>
@@ -212,7 +212,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentRefundProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+    <virtualType name="VippsEpaymentRefundProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
         <arguments>
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::REFUND</argument>
         </arguments>
@@ -222,17 +222,17 @@
     <!-- Epayment Cancel command -->
     <virtualType name="VippsEpaymentCancelCommand" type="Vipps\Payment\GatewayEpayment\Command\CancelCommand">
         <arguments>
-            <argument name="requestBuilder" xsi:type="object">VippsPaymentCancelRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsPaymentCancelTransferFty</argument>
+            <argument name="requestBuilder" xsi:type="object">VippsEpaymentCancelRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsEpaymentCancelTransferFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl</argument>
             <argument name="handler" xsi:type="object">Vipps\Payment\GatewayEpayment\Response\Payment\TransactionHandler</argument>
             <argument name="config" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
-            <argument name="profiler" xsi:type="object">VippsPaymentCancelProfiler</argument>
+            <argument name="profiler" xsi:type="object">VippsEpaymentCancelProfiler</argument>
         </arguments>
     </virtualType>
 
 
-    <virtualType name="VippsPaymentCancelRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsEpaymentCancelRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="reference" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\ReferenceDataBuilder</item>
@@ -241,7 +241,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentCancelTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
+    <virtualType name="VippsEpaymentCancelTransferFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/epayment/v1/payments/:reference/cancel</argument>
@@ -254,7 +254,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentCancelProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+    <virtualType name="VippsEpaymentCancelProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
         <arguments>
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::CANCEL</argument>
         </arguments>
@@ -294,7 +294,6 @@
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::GET_PAYMENT_DETAILS</argument>
         </arguments>
     </virtualType>
-
     <!-- Epayment Get Payment command end -->
 
     <!-- Epayment Get Payment Event Log command -->
@@ -325,17 +324,17 @@
     </virtualType>
     <!-- Epayment Get Payment Event Log command end -->
 
-    <!-- Epayment Send Receipt command declaration -->
+    <!-- Epayment Send Receipt command -->
     <virtualType name="VippsEpaymentSendReceiptCommand" type="Vipps\Payment\GatewayEpayment\Command\GatewayCommand">
         <arguments>
-            <argument name="requestBuilder" xsi:type="object">VippsPaymentSendReceiptRequest</argument>
-            <argument name="transferFactory" xsi:type="object">VippsPaymentSendReceiptTransportFty</argument>
+            <argument name="requestBuilder" xsi:type="object">VippsEpaymentSendReceiptRequest</argument>
+            <argument name="transferFactory" xsi:type="object">VippsEpaymentSendReceiptTransportFty</argument>
             <argument name="client" xsi:type="object">Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl</argument>
-            <argument name="profiler" xsi:type="object">VippsPaymentSendReceiptProfiler</argument>
+            <argument name="profiler" xsi:type="object">VippsEpaymentSendReceiptProfiler</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentSendReceiptRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <virtualType name="VippsEpaymentSendReceiptRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
                 <item name="generic" xsi:type="string">Vipps\Payment\GatewayEpayment\Request\SendReceipt\GenericDataBuilder</item>
@@ -345,7 +344,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentSendReceiptTransportFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
+    <virtualType name="VippsEpaymentSendReceiptTransportFty" type="Vipps\Payment\GatewayEpayment\Http\TransferFactory">
         <arguments>
             <argument name="method" xsi:type="string">POST</argument>
             <argument name="endpointUrl" xsi:type="string">/order-management/v2/ecom/receipts/:order_id</argument>
@@ -359,50 +358,44 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="VippsPaymentSendReceiptProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
+    <virtualType name="VippsEpaymentSendReceiptProfiler" type="Vipps\Payment\Model\Profiling\Profiler">
         <arguments>
             <argument name="type" xsi:type="const">Vipps\Payment\Model\Profiling\TypeInterface::SEND_RECEIPT</argument>
         </arguments>
     </virtualType>
-    <!-- Epayment Send Receipt command declaration-->
+    <!-- Epayment Send Receipt command end -->
 
     <!-- Epayment end -->
 
-    <!-- Checkout payment -->
-
+    <!-- Checkout payment (used when vipps payment method is selected in checkout) -->
     <type name="Vipps\Payment\Controller\Payment\InitRegular">
         <arguments>
             <argument xsi:type="object" name="commandManager">ProxyEpaymentCommandManager</argument>
         </arguments>
     </type>
-
     <!-- Checkout payment end -->
 
-    <!-- Express checkout -->
-
+    <!-- Express checkout (used when vipps express button is used in PDP or Cart page) -->
     <type name="Vipps\Payment\Controller\Payment\InitExpress">
         <arguments>
             <argument xsi:type="object" name="commandManager">ProxyEpaymentCommandManager</argument>
         </arguments>
     </type>
-
     <!-- Express checkout -->
+
+    <!-- Klarna epayment (used for Vipps payment method in Klarna checkout) -->
+    <type name="Vipps\Payment\Controller\Payment\Klarna\InitRegular">
+        <arguments>
+            <argument xsi:type="object" name="commandManager">ProxyEpaymentCommandManager</argument>
+        </arguments>
+    </type>
+    <!-- Klarna epayment end -->
 
     <virtualType name="ProxyEpaymentCommandManager" type="Vipps\Payment\GatewayEpayment\Command\PaymentCommandManager">
         <arguments>
             <argument xsi:type="object" name="commandManager">ProxyCommandManager</argument>
         </arguments>
     </virtualType>
-
-
-    <!-- Klarna epayment -->
-    <type name="Vipps\Payment\Controller\Payment\Klarna\InitRegular">
-        <arguments>
-            <argument xsi:type="object" name="commandManager">ProxyEpaymentCommandManager</argument>
-        </arguments>
-    </type>
-
-    <!-- Klarna epayment end -->
 
     <type name="Vipps\Payment\Model\CommandPoolProxy">
         <arguments>
@@ -518,7 +511,7 @@
             </argument>
         </arguments>
     </virtualType>
-    <!-- availability validator -->
+    <!-- availability validator end -->
 
     <!-- Defining Vipps logger object to process logs into vipps files -->
     <virtualType name="Vipps\Payment\Model\Logger" type="Monolog\Logger">
