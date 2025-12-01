@@ -78,7 +78,7 @@ class PaymentCommandManager extends CommandManager implements CommandManagerInte
         $quote->setReservedOrderId(null);
 
         // Extra data for express checkout
-        if ($arguments['method_type'] == Vipps::METHOD_TYPE_EXPRESS_CHECKOUT) {
+        if ($arguments['method_type'] === Vipps::METHOD_TYPE_EXPRESS_CHECKOUT) {
             $payment->setMethod(Vipps::METHOD_CODE);
             $quote->getPayment()
                 ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_EXPRESS_CHECKOUT);

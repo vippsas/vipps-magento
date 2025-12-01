@@ -48,9 +48,6 @@ class InitPreprocessor implements BuilderInterface
             $quote = $payment->getQuote();
             $quote->setReservedOrderId(null);
             $quote->reserveOrderId();
-
-            //$quote->getPayment()
-            //    ->setAdditionalInformation(Vipps::METHOD_TYPE_KEY, Vipps::METHOD_TYPE_EPAYMENT_CHECKOUT);
         }
 
         return [];

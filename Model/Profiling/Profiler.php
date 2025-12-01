@@ -248,6 +248,18 @@ class Profiler implements ProfilerInterface
         return $output;
     }
 
+    /**
+     * Determine whether to log new payment details request
+     *
+     * Compares current Payment details response state with the last logged one.
+     * If they are the same, no need to log it again. If different, log the new one.
+     * For example, if it changed from 'AUTHORIZED' state to 'CANCELLED', we need to log it.
+     *
+     * @param string $orderId
+     * @param array $responseData
+     *
+     * @return bool
+     */
     private function addNewPaymentDetailsRequest($orderId, $responseData) {
         $sort = $this->sortOrderBuilder
             ->setField('created_at')
@@ -265,8 +277,8 @@ class Profiler implements ProfilerInterface
         $searchResults = $this->itemRepository->getList($searchCriteria);
         $items = $searchResults->getItems();
         if (!empty($items)) {
+            // Compares if the state in the last logged response is the same as in the current one.
             if (preg_match('/\bstate\s*:\s*(?:"([^"]+)"|\'([^\']+)\'|([^\s\}\n\r]+))/i', $items[0]['response'], $m)) {
-                // capture group 1 or 2 or 3
                 $oldState = trim($m[1] ?: $m[2] ?: $m[3]);
                 if (isset($responseData['state']) && $responseData['state'] === $oldState) {
                     return false;

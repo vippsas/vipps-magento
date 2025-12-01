@@ -81,7 +81,7 @@ class AmountBuilder implements BuilderInterface
         ];
 
         // Express Required data
-        if ($buildSubject['paymentType'] == 'ePayment Express Payment') {
+        if ($buildSubject['paymentType'] === 'ePayment Express Payment') {
             $callbackAuthorizationToken = $this->generateAuthToken();
 
             $paymentData['shipping']['dynamicOptions']['callbackUrl'] = $this->urlBuilder->getUrl(
