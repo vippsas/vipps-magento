@@ -6,6 +6,7 @@ sidebar_position: 50
 description: Common questions and solutions for Vipps/MobilePay Adobe Commerce integration.
 pagination_next: null
 pagination_prev: null
+section: Plugins
 ---
 END_METADATA -->
 
