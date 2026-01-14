@@ -55,7 +55,7 @@ You can partially refund an order by specifying *Items to Refund* on the *Credit
 
 ## How can I get help with the Vipps/MobilePay Payment module?
 
-*Vipps/MobilePay Payment Module for Adobe Commerce* is developed by [Vaimo](https://www.vaimo.com), and the same developers who made
+*Vipps/MobilePay Payment Module for Adobe Commerce* is developed by [bluemint](https://www.bluemint.no/), and the same developers who made
 the Vipps/MobilePay Payment module also help with improvements, maintenance and developer assistance.
 
 If you are having a problem, please make sure that you are using the latest version:

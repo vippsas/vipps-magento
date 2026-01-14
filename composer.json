@@ -23,9 +23,6 @@
             "Vipps\\Payment\\": ""
         }
     },
-    "extra": {
-        "vaimo-module-category": "Integration"
-    },
     "repositories": {
         "magento": {
             "type": "composer",
