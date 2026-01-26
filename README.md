@@ -5,7 +5,7 @@ sidebar_label: Introduction
 sidebar_position: 1
 hide_table_of_contents: true
 description: Provide Vipps and MobilePay payment options for your Adobe Commerce website.
-pagination_next: null
+pagination_next: plugins-ext/magento/docs/documentation
 pagination_prev: null
 section: Plugins
 ---

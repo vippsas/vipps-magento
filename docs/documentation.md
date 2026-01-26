@@ -4,8 +4,8 @@ title: Vipps/MobilePay Payment Module for Adobe Commerce User Guide
 sidebar_label: User Guide
 sidebar_position: 10
 description: Everything you need to install and configure Vipps/MobilePay payment processing for your Adobe Commerce store.
-pagination_next: null
-pagination_prev: null
+pagination_next: plugins-ext/magento/docs/FAQ
+pagination_prev: plugins-ext/magento/README
 section: Plugins
 ---
 END_METADATA -->

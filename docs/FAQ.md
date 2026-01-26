@@ -5,7 +5,7 @@ sidebar_label: FAQ
 sidebar_position: 50
 description: Common questions and solutions for Vipps/MobilePay Adobe Commerce integration.
 pagination_next: null
-pagination_prev: null
+pagination_prev: gins-ext/magento/docs/documentation
 section: Plugins
 ---
 END_METADATA -->
