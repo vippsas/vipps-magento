@@ -162,8 +162,6 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
                 'country_id' => TransactionShippingDetails::NORWEGIAN_COUNTRY_ID
             ]);
             $reservedOrderId = $vippsAddress['reference'];
-
-            $this->logger->critical($reservedOrderId);
             $quote = $this->getQuote($reservedOrderId);
 
             /**
