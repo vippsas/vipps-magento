@@ -17,7 +17,6 @@ namespace Vipps\Payment\Model\Logger\Handler;
 
 use Magento\Framework\Filesystem\DriverInterface;
 use Magento\Framework\Logger\Handler\Base;
-use Magento\Payment\Gateway\ConfigInterface;
 use Monolog\Logger;
 
 /**
@@ -31,44 +30,16 @@ class Debug extends Base
      */
     protected $fileName = '/var/log/vipps_debug.log'; //@codingStandardsIgnoreLine
 
-    /**
-     * @var int
-     */
-    protected $loggerType = Logger::DEBUG; //@codingStandardsIgnoreLine
-
-    /**
-     * @var ConfigInterface
-     */
-    private $config;
-
-    /**
-     * Debug constructor.
-     *
-     * @param DriverInterface $filesystem
-     * @param ConfigInterface|null $config
-     * @param string|null $filePath
-     */
     public function __construct(
         DriverInterface $filesystem,
-        ConfigInterface $config = null,
-        string $filePath = null
+        ?string $filePath = null,
+        ?string $fileName = null
     ) {
-        parent::__construct($filesystem, $filePath);
-        $this->config = $config;
-    }
+        // Monolog v3 vs v2 compatibility
+        $this->loggerType = class_exists(\Monolog\Level::class)
+            ? \Monolog\Level::Debug->value
+            : Logger::DEBUG;
 
-    /**
-     * {@inheritdoc}
-     *
-     * @param array $record
-     *
-     * @return bool
-     */
-    public function isHandling(array $record): bool
-    {
-        if ($this->config && (bool)$this->config->getValue('debug')) {
-            return parent::isHandling($record);
-        }
-        return false;
+        parent::__construct($filesystem, $filePath, $fileName);
     }
 }
