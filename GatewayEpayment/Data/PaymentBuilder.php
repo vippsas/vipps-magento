@@ -82,7 +82,7 @@ class PaymentBuilder
                     'aggregate' =>
                         $this->aggregateFactory->create($this->response['aggregate'] ?? null),
                     'amount' => $this->amountFactory->create(['data' => $this->response['amount'] ?? null]),
-                    'customer' => $this->customerFactory->create(['data' => $this->response['customer'] ?? null]),
+                    'customer' => $this->customerFactory->create(['data' => $this->response['customer'] ?? []]),
                     'paymentMethod' =>
                         $this->paymentMethodFactory->create(['data' => $this->response['paymentMethod'] ?? null]),
                     'profile' => $this->profileFactory->create(['data' => $this->response['profile'] ?? null]),
