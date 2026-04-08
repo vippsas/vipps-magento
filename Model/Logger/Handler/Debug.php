@@ -60,11 +60,11 @@ class Debug extends Base
     /**
      * {@inheritdoc}
      *
-     * @param array $record
+     * @param \Monolog\LogRecord|array $record
      *
      * @return bool
      */
-    public function isHandling(array $record): bool
+    public function isHandling(\Monolog\LogRecord|array $record): bool
     {
         if ($this->config && (bool)$this->config->getValue('debug')) {
             return parent::isHandling($record);
