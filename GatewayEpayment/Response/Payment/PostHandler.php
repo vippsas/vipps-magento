@@ -25,13 +25,13 @@ use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
-use Vipps\Payment\Gateway\Request\SubjectReader;
+use Vipps\Payment\GatewayEpayment\Request\SubjectReader;
 use Vipps\Payment\Model\QuoteFactory;
 use Vipps\Payment\Model\QuoteRepository;
 
 /**
  * Class InitiateHandler
- * @package Vipps\Payment\Gateway\Response
+ * @package Vipps\Payment\GatewayEpayment\Response
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class PostHandler implements HandlerInterface

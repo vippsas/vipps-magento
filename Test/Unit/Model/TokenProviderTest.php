@@ -28,7 +28,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Vipps\Payment\Gateway\Exception\AuthenticationException;
+use Vipps\Payment\GatewayEpayment\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProvider;
 use Vipps\Payment\Model\UrlResolver;
 use Laminas\Http\Response;

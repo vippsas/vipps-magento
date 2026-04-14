@@ -13,14 +13,14 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Http\Client;
+namespace Vipps\Payment\GatewayEpayment\Http\Client;
 
 use Magento\Framework\HTTP\Adapter\Curl as MagentoCurl;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Magento\Framework\Json\EncoderInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
-use Vipps\Payment\Gateway\Exception\AuthenticationException;
+use Vipps\Payment\GatewayEpayment\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProviderInterface;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
@@ -29,7 +29,7 @@ use Vipps\Payment\Model\ModuleMetadataInterface;
 
 /**
  * Class Curl
- * @package Vipps\Payment\Gateway\Http\Client
+ * @package Vipps\Payment\GatewayEpayment\Http\Client
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -168,7 +168,7 @@ class Curl implements ClientInterface
                 self::HEADER_PARAM_CONTENT_TYPE => 'application/json',
                 self::HEADER_PARAM_AUTHORIZATION => 'Bearer '
                     . $this->tokenProvider->get($clientConfig['scopeId'] ?? null),
-                self::HEADER_PARAM_X_REQUEST_ID => '',
+                self::HEADER_PARAM_IDEMPOTENCY_KEY => '',
                 self::HEADER_PARAM_X_SOURCE_ADDRESS => '',
                 self::HEADER_PARAM_X_TIMESTAMP => '',
                 self::HEADER_PARAM_MERCHANT_SERIAL_NUMBER =>

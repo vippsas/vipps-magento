@@ -24,7 +24,7 @@
 
     <type name="Vipps\Payment\Model\System\Message\Notification\ExpressCheckout\TaxConfigurationError">
         <arguments>
-            <argument name="paymentConfig" xsi:type="object">Vipps\Payment\Gateway\Config\Config</argument>
+            <argument name="paymentConfig" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
         </arguments>
     </type>
 </config>

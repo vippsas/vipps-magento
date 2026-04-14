@@ -19,7 +19,7 @@ namespace Vipps\Payment\GraphQl\Resolver;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
+use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
 use Magento\Payment\Gateway\ConfigInterface;
 use Vipps\Payment\Model\Method\Vipps;
 
@@ -39,7 +39,7 @@ class GetPaymentLabel implements ResolverInterface
         $this->vipps = $vipps;
     }
 
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null): string
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null): string
     {
         return (string)$this->vipps->getTitle();
     }

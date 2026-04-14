@@ -13,29 +13,44 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Validator;
+namespace Vipps\Payment\GatewayEpayment\Request\InitSession;
 
-use Magento\Payment\Gateway\Validator\AbstractValidator;
-use Magento\Payment\Gateway\Validator\ResultInterface;
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
- * Class InitiateValidator
- * @package Vipps\Payment\Gateway\Validator
+ * Interface InitiateBuilderInterface
+ * @package Vipps\Payment\GatewayEpayment\Request\InitSession
  */
-class InitiateValidator extends AbstractValidator
+interface InitiateBuilderInterface extends BuilderInterface
 {
     /**
-     * @inheritdoc
+     * Merchant auth token identifier
      *
-     * @param array $validationSubject
-     *
-     * @return ResultInterface
+     * @var string
      */
-    public function validate(array $validationSubject)
-    {
-        $isValid = (bool)$validationSubject['jsonData']['url'] ?? false;
-        $errorMessages = $isValid ? [] : [__('Gateway response error. Incorrect initiate payment parameters.')];
+    const MERCHANT_AUTH_TOKEN = 'merchant_auth_token';
 
-        return $this->createResult($isValid, $errorMessages);
-    }
+    /**
+     * Auth token for accessing to fallback controller
+     *
+     * @var string
+     */
+    const FALLBACK_AUTH_TOKEN = 'fallback_auth_token';
+
+    /**
+     * @var string
+     */
+    const PAYMENT_TYPE_EXPRESS_CHECKOUT = "ePayment Express Payment";
+
+    /**
+     * @var string
+     */
+    const PAYMENT_TYPE_REGULAR_PAYMENT = "ePayment Regular Payment";
+
+    /**
+     * This parameter will identify difference between ecomm payment and ecomm express payment.
+     *
+     * @var string
+     */
+    const PAYMENT_TYPE_KEY = 'paymentType';
 }

@@ -17,6 +17,7 @@ namespace Vipps\Payment\Model\Logger\Handler;
 
 use Magento\Framework\Logger\Handler\Base;
 use Monolog\Logger;
+use Magento\Framework\Filesystem\DriverInterface;
 
 /**
  * Class Error
@@ -29,8 +30,16 @@ class Error extends Base
      */
     protected $fileName = '/var/log/vipps_exception.log'; //@codingStandardsIgnoreLine
 
-    /**
-     * @var int
-     */
-    protected $loggerType = Logger::INFO; //@codingStandardsIgnoreLine
+    public function __construct(
+        DriverInterface $filesystem,
+        ?string $filePath = null,
+        ?string $fileName = null
+    ) {
+        // Monolog v3 vs v2 compatibility
+        $this->loggerType = class_exists(\Monolog\Level::class)
+            ? \Monolog\Level::Error->value
+            : Logger::ERROR;
+
+        parent::__construct($filesystem, $filePath, $fileName);
+    }
 }

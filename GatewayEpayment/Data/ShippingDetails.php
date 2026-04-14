@@ -26,6 +26,11 @@ class ShippingDetails extends DataObject
     /**
      * @var string
      */
+    const NORWEGIAN_COUNTRY_ID = 'NO';
+
+    /**
+     * @var string
+     */
     const FIRST_NAME = 'firstName';
     /**
      * @var string
@@ -58,7 +63,11 @@ class ShippingDetails extends DataObject
     /**
      * @var string
      */
-    const SHIPPING_METHOD_ID = 'shippingMethodId';
+    const SHIPPING_OPTION_ID = 'shippingOptionId';
+    /**
+     * @var string
+     */
+    const SHIPPING_COST = 'shippingCost';
 
     /**
      * @return string
@@ -127,8 +136,16 @@ class ShippingDetails extends DataObject
     /**
      * @return string
      */
-    public function getShippingMethodId()
+    public function getShippingOptionId()
     {
-        return $this->getData(self::SHIPPING_METHOD_ID);
+        return $this->getData(self::SHIPPING_OPTION_ID);
+    }
+
+    /**
+     * @return string
+     */
+    public function getShippingCost()
+    {
+        return $this->getData(self::SHIPPING_COST);
     }
 }

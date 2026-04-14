@@ -19,11 +19,11 @@ namespace Vipps\Payment\Model;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\Gateway\Command\PaymentDetailsProvider;
-use Vipps\Payment\Gateway\Exception\VippsException;
-use Vipps\Payment\Gateway\Transaction\Transaction;
-use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
+use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
+use Vipps\Payment\GatewayEpayment\Exception\VippsException;
 use Vipps\Payment\Model\Helper\Utility;
+use Vipps\Payment\GatewayEpayment\Data\Payment;
+use Vipps\Payment\GatewayEpayment\Data\PaymentBuilder;
 
 /**
  * Class QuoteUpdater
@@ -40,11 +40,6 @@ class QuoteUpdater
      * @var PaymentDetailsProvider
      */
     private $paymentDetailsProvider;
-
-    /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
     /**
      * @var Utility
      */
@@ -55,28 +50,25 @@ class QuoteUpdater
      *
      * @param CartRepositoryInterface $cartRepository
      * @param PaymentDetailsProvider $paymentDetailsProvider
-     * @param TransactionBuilder $transactionBuilder
      * @param Utility $utility
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
         PaymentDetailsProvider $paymentDetailsProvider,
-        TransactionBuilder $transactionBuilder,
         Utility $utility
     ) {
         $this->cartRepository = $cartRepository;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
-        $this->transactionBuilder = $transactionBuilder;
         $this->utility = $utility;
     }
 
     /**
      * @param CartInterface $quote
-     * @param Transaction $transaction
+     * @param Payment $transaction
      *
      * @return bool|CartInterface|Quote
      */
-    public function execute(CartInterface $quote, Transaction $transaction)
+    public function execute(CartInterface $quote, Payment $transaction)
     {
         /** @var Quote $quote */
         $quote->setMayEditShippingAddress(false);
@@ -98,9 +90,9 @@ class QuoteUpdater
 
     /**
      * @param Quote $quote
-     * @param Transaction $transaction
+     * @param Payment $transaction
      */
-    private function updateQuoteAddresses(Quote $quote, Transaction $transaction)
+    private function updateQuoteAddresses(Quote $quote, Payment $transaction)
     {
         $this->updateBillingAddress($quote, $transaction);
         if (!$quote->getIsVirtual()) {
@@ -110,9 +102,9 @@ class QuoteUpdater
 
     /**
      * @param Quote $quote
-     * @param Transaction $transaction
+     * @param Payment $transaction
      */
-    private function updateShippingAddress(Quote $quote, Transaction $transaction)
+    private function updateShippingAddress(Quote $quote, Payment $transaction)
     {
         $userDetails = $transaction->getUserDetails();
         $shippingDetails = $transaction->getShippingDetails();
@@ -121,7 +113,7 @@ class QuoteUpdater
         $shippingAddress->setFirstname($userDetails->getFirstName());
         $shippingAddress->setEmail($userDetails->getEmail());
         $shippingAddress->setTelephone($userDetails->getMobileNumber());
-        $shippingAddress->setShippingMethod($shippingDetails->getShippingMethodId());
+        $shippingAddress->setShippingMethod($shippingDetails->getShippingOptionId());
         $shippingAddress->setShippingAmount($shippingDetails->getShippingCost());
 
         // try to obtain postCode one more time if it is not done before
@@ -138,9 +130,9 @@ class QuoteUpdater
 
     /**
      * @param Quote $quote
-     * @param Transaction $transaction
+     * @param Payment $transaction
      */
-    private function updateBillingAddress(Quote $quote, Transaction $transaction)
+    private function updateBillingAddress(Quote $quote, Payment $transaction)
     {
         $userDetails = $transaction->getUserDetails();
         $billingAddress = $quote->getBillingAddress();

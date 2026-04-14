@@ -13,97 +13,117 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-namespace Vipps\Payment\Gateway\Transaction;
+namespace Vipps\Payment\GatewayEpayment\Data;
 
 use Magento\Framework\DataObject;
 
 /**
- * Class TransactionSummary
- * @package Vipps\Payment\Gateway\Transaction
+ * Class UserDetails
+ * @package Vipps\Payment\GatewayEpayment\Data
  */
-class TransactionSummary extends DataObject
+class UserDetails extends DataObject
 {
     /**
      * @var string
      */
-    const CAPTURED_AMOUNT = 'capturedAmount';
+    const EMAIL = 'email';
 
     /**
      * @var string
      */
-    const REFUNDED_AMOUNT = 'refundedAmount';
+    const FIRST_NAME = 'firstName';
 
     /**
      * @var string
      */
-    const REMAINING_AMOUNT_TO_CAPTURE = 'remainingAmountToCapture';
+    const LAST_NAME = 'lastName';
 
     /**
      * @var string
      */
-    const REMAINING_AMOUNT_TO_REFUND = 'remainingAmountToRefund';
+    const MOBILE_NUMBER = 'mobileNumber';
+
+    /**
+     * @var string
+     */
+    const SSN = 'ssn';
+
+    /**
+     * @var string
+     */
+    const BANK_ID_VERIFIED = 'bankIdVerified';
+
+    /**
+     * @var string
+     */
+    const DATE_OF_BIRTH = 'dateOfBirth';
+
+    /**
+     * @var string
+     */
+    const USER_ID = 'userId';
 
     /**
      * @return string
      */
-    public function getCapturedAmount()
+    public function getEmail()
     {
-        return $this->getData(self::CAPTURED_AMOUNT);
+        return $this->getData(self::EMAIL);
     }
 
     /**
      * @return string
      */
-    public function getRefundedAmount()
+    public function getFirstName()
     {
-        return $this->getData(self::REFUNDED_AMOUNT);
+        return $this->getData(self::FIRST_NAME);
     }
 
     /**
      * @return string
      */
-    public function getRemainingAmountToCapture()
+    public function getLastName()
     {
-        return $this->getData(self::REMAINING_AMOUNT_TO_CAPTURE);
+        return $this->getData(self::LAST_NAME);
     }
 
     /**
      * @return string
      */
-    public function getRemainingAmountToRefund()
+    public function getMobileNumber()
     {
-        return $this->getData(self::REMAINING_AMOUNT_TO_REFUND);
+        return $this->getData(self::MOBILE_NUMBER);
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function hasCapturedAmount()
+    public function getSsn()
     {
-        return $this->hasData(self::CAPTURED_AMOUNT);
+        return $this->hasData(self::SSN);
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function hasRefundedAmount()
+    public function getBankIdVerified()
     {
-        return $this->hasData(self::REFUNDED_AMOUNT);
+        return $this->hasData(self::BANK_ID_VERIFIED);
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function hasRemainingAmountToCapture()
+    public function getDateOfBirth()
     {
-        return $this->hasData(self::REMAINING_AMOUNT_TO_CAPTURE);
+        return $this->hasData(self::DATE_OF_BIRTH);
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function hasRemainingAmountToRefund()
+    public function getUserId()
     {
-        return $this->hasData(self::REMAINING_AMOUNT_TO_REFUND);
+        return $this->hasData(self::USER_ID);
     }
 }

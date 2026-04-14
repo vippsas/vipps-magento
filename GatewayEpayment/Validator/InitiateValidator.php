@@ -20,7 +20,7 @@ use Magento\Payment\Gateway\Validator\ResultInterface;
 
 /**
  * Class InitiateValidator
- * @package Vipps\Payment\Gateway\Validator
+ * @package Vipps\Payment\GatewayEpayment\Validator
  */
 class InitiateValidator extends AbstractValidator
 {

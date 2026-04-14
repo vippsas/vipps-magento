@@ -21,7 +21,7 @@ use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\Json\EncoderInterface;
-use Vipps\Payment\Gateway\Http\Client\Curl as VippsCurl;
+use Vipps\Payment\GatewayEpayment\Http\Client\Curl as VippsCurl;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Model\TokenProviderInterface;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;

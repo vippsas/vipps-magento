@@ -20,7 +20,7 @@ use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails;
+use Vipps\Payment\GatewayEpayment\Data\ShippingDetails;
 use Vipps\Payment\Model\Helper\Utility;
 
 /**

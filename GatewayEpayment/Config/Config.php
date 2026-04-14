@@ -14,7 +14,7 @@
  * IN THE SOFTWARE.
  */
 
-namespace Vipps\Payment\Gateway\Config;
+namespace Vipps\Payment\GatewayEpayment\Config;
 
 use Magento\Payment\Gateway\Config\Config as OriginConfig;
 use Magento\Store\Model\StoreManagerInterface;

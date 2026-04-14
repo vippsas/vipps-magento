@@ -32,6 +32,8 @@ class PaymentBuilder
     private CustomerFactory $customerFactory;
     private PaymentMethodFactory $paymentMethodFactory;
     private ProfileFactory $profileFactory;
+    private UserDetailsFactory $userDetailsFactory;
+    private ShippingDetailsFactory $shippingDetailsFactory;
 
     public function __construct(
         PaymentFactory $paymentFactory,
@@ -39,7 +41,9 @@ class PaymentBuilder
         AmountFactory $amountFactory,
         CustomerFactory $customerFactory,
         PaymentMethodFactory $paymentMethodFactory,
-        ProfileFactory $profileFactory
+        ProfileFactory $profileFactory,
+        UserDetailsFactory $userDetailsFactory,
+        ShippingDetailsFactory $shippingDetailsFactory
     ) {
         $this->paymentFactory = $paymentFactory;
         $this->aggregateFactory = $aggregateFactory;
@@ -47,6 +51,8 @@ class PaymentBuilder
         $this->customerFactory = $customerFactory;
         $this->paymentMethodFactory = $paymentMethodFactory;
         $this->profileFactory = $profileFactory;
+        $this->userDetailsFactory = $userDetailsFactory;
+        $this->shippingDetailsFactory = $shippingDetailsFactory;
     }
 
     /**
@@ -74,12 +80,14 @@ class PaymentBuilder
                 $this->response,
                 [
                     'aggregate' =>
-                        $this->aggregateFactory->create((array)($this->response['aggregate'] ?? null)),
-                    'amount' => $this->amountFactory->create((array)($this->response['amount'] ?? null)),
-                    'customer' => $this->customerFactory->create((array)($this->response['customer'] ?? null)),
+                        $this->aggregateFactory->create($this->response['aggregate'] ?? null),
+                    'amount' => $this->amountFactory->create(['data' => $this->response['amount'] ?? null]),
+                    'customer' => $this->customerFactory->create(['data' => $this->response['customer'] ?? []]),
                     'paymentMethod' =>
-                        $this->paymentMethodFactory->create((array)($this->response['paymentMethod'] ?? null)),
-                    'profile' => $this->profileFactory->create((array)($this->response['profile'] ?? null)),
+                        $this->paymentMethodFactory->create(['data' => $this->response['paymentMethod'] ?? null]),
+                    'profile' => $this->profileFactory->create(['data' => $this->response['profile'] ?? null]),
+                    'userDetails' => $this->userDetailsFactory->create(['data' => $this->response['userDetails'] ?? null]),
+                    'shippingDetails' => $this->shippingDetailsFactory->create(['data' => $this->response['shippingDetails'] ?? null]),
                     'raw_data' => \json_encode($this->response)
                 ]
             )

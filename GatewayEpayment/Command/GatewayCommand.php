@@ -97,9 +97,9 @@ class GatewayCommand implements CommandInterface
         ClientInterface $client,
         LoggerInterface $logger,
         DecoderInterface $jsonDecoder,
-        ProfilerInterface $profiler = null,
-        HandlerInterface $handler = null,
-        ValidatorInterface $validator = null
+        ?ProfilerInterface $profiler = null,
+        ?HandlerInterface $handler = null,
+        ?ValidatorInterface $validator = null
     ) {
         $this->requestBuilder = $requestBuilder;
         $this->transferFactory = $transferFactory;
@@ -153,6 +153,7 @@ class GatewayCommand implements CommandInterface
                 $errorMessage
             );
             $this->logger->critical($message);
+
             throw new \Exception($errorMessage, $errorCode);
         }
 

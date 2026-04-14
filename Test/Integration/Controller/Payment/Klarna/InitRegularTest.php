@@ -28,7 +28,7 @@ use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Magento\TestFramework\TestCase\AbstractController;
 use PHPUnit\Framework\MockObject\MockObject;
-use Vipps\Payment\Gateway\Http\Client\Curl as VippsCurl;
+use Vipps\Payment\GatewayEpayment\Http\Client\Curl as VippsCurl;
 use Vipps\Payment\GatewayEpayment\Http\Client\PaymentCurl;
 use Vipps\Payment\Model\TokenProvider;
 
