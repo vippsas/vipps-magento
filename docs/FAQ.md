@@ -46,7 +46,7 @@ Otherwise, the refund should be finished first. This Vipps/MobilePay Payment mod
 
 ## How do I refund an order?
 
-For orders refunding Adobe Commerce proposes [Adobe Commerce: Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
+For orders refunding Adobe Commerce, we propose [Adobe Commerce: Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
 Credit Memo allows you to make a refund for captured transaction.
 
 ## How do I partially refund an order?
@@ -75,8 +75,8 @@ Failure to set it up properly means it will not function as expected.
 
 ## Why are some orders missing in Adobe Commerce?
 
-This scenario is possible for express payment flow. Unlike a regular payment, order is not created before redirecting to
-Vipps Landing page. If the transaction was successfully initiated by client, a new record
+It is possible for some orders to be missing when using the Express payment flow because, unlike a regular payment, the order is not created before redirecting to
+Vipps MobilePay Landing page. If the transaction was successfully initiated by client, a new record
 with a quote ID and reserved order ID will be created in DB table `vipps_quote`. This can be helpful to find a status of a transaction.
 
 ## How do I enable Vipps Payment for Klarna Checkout
