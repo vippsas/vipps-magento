@@ -79,7 +79,7 @@ The module configuration is divided by sections. It helps to quickly find and ma
 
 * [Basic settings](#basic-settings)
 * [Checkout settings](#checkout-settings)
-* [Express Checkout settings](#express-checkout-settings)
+* [Express settings](#express-settings)
 * [Cancellation settings](#cancellation-settings)
 
 Ensure that you check all configuration settings before using the module. Pay special attention to the [Basic settings](#basic-settings) section.
@@ -99,17 +99,17 @@ Basic settings include:
 * *Subscription Key* - Subscription key for the API product.
 
 For help finding the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*,
-see [API keys](https://developer.vippsmobilepay.com/docs/knowledge-base/api-keys/).
+see [API keys](/docs/knowledge-base/api-keys/).
 
 ![Screenshot of Basic Vipps MobilePay settings](images/vipps_basic_v2.png)
 
 ### Checkout settings
 
-The Vipps MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the *Express Checkout* page.
+The Vipps MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the *Express* page.
 
 ![Screenshot of Checkout settings](images/checkout_settings.png)
 
-### Express Checkout settings
+### Express settings
 
 ![Screenshot of Express Vipps MobilePay settings](images/express_vipps_settings.png)
 
@@ -201,11 +201,11 @@ By clicking on *Show* in the *Action* column of the grid, you can find the appro
 
 By using the built-in Adobe Commerce grid filter, you can find all requests per order that you are interested in.
 
-## Tax calculation for Express Checkout
+## Tax calculation for Express
 
-When enabling the Express checkout payment in the configuration area, you may see a notification at the top of the Adobe Commerce admin panel such as:
+When enabling the Express payment in the configuration area, you may see a notification at the top of the Adobe Commerce admin panel such as:
 
-![Express Checkout notice](images/express-checkout-notice.png)
+![Express notice](images/express-notice.png)
 
 This means that you should change *Tax Calculation Settings* to be based on *Shipping Origin*.
 
