@@ -101,17 +101,17 @@ Basic settings include:
 For help finding the values for *Merchant Serial Number*, *Client ID*, *Client Secret*, and *Subscription Key*,
 see [API keys](/docs/knowledge-base/api-keys/).
 
-![Screenshot of Basic Vipps MobilePay settings](images/vipps_basic_v2.png)
+![Basic Settings panel showing all Vipps MobilePay API credential and configuration fields](images/vipps_basic_v2.png)
 
 ### Checkout settings
 
 The Vipps MobilePay payment will be unavailable when disallowed shipping methods are selected on checkout. These methods are also unavailable on the *Express* page.
 
-![Screenshot of Checkout settings](images/checkout_settings.png)
+![Checkout settings showing the Disallowed Shipping Methods multi-select list](images/checkout_settings.png)
 
 ### Express settings
 
-![Screenshot of Express Vipps MobilePay settings](images/express_vipps_settings.png)
+![Express settings with Enable Express and Display on Shopping Cart options](images/express_vipps_settings.png)
 
 ### Cancellation settings
 
@@ -123,7 +123,7 @@ The Cancellation settings include:
 * *Inactivity Time* - (Developers only) The number of minutes that customer is idle before the Vipps MobilePay order will be cancelled in Adobe Commerce.
 * *Processing Type* - Deprecated setting that will be removed in future releases. (Should be set to "Automatic").
 
-![Screenshot of Checkout settings](images/cancellation_settings.png)
+![Cancellation settings showing Cart Persistence, Attempts, Storage Period, and Inactivity Time](images/cancellation_settings.png)
 
 ## Order processing
 
@@ -159,7 +159,7 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
 
 Here is a diagram of the process:
 
-![Screenshot of quote processing flow](images/quote-monitoring-flow.png)
+![Flow diagram of the Vipps MobilePay quote processing states and transitions](images/quote-monitoring-flow.png)
 
 ## Quote Monitoring tool
 
@@ -184,7 +184,7 @@ Monitoring quote statuses include:
 
 If you have experienced any issue with Vipps MobilePay, try to enable *Request Profiling* and *Debug* features in the payment configuration area: *Stores* > *Configuration* > *Sales* > *Payment Methods* > *Vipps MobilePay*.
 
-![Screenshot of Vipps MobilePay Configuration Area](images/vipps_basic.png)
+![Basic Settings panel with Request/Response Profiling field highlighted and set to No](images/vipps_basic.png)
 
 After that, all information related to the Payment module will be stored into two files:
 
@@ -194,7 +194,7 @@ After that, all information related to the Payment module will be stored into tw
 *Requests Profiling* is a page in the Adobe Commerce that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
 You can find the page under *System* > *Vipps*.
 
-![Screenshot of Request Profiling Grid](images/request_profiling.png)
+![Requests Profiling grid listing API calls with status codes, request types, and Show links](images/request_profiling.png)
 
 On the page, you can see the list of all requests for all orders that Adobe Commerce sends to Vipps MobilePay.
 By clicking on *Show* in the *Action* column of the grid, you can find the appropriate response from Vipps MobilePay.
@@ -205,11 +205,11 @@ By using the built-in Adobe Commerce grid filter, you can find all requests per 
 
 When enabling the Express payment in the configuration area, you may see a notification at the top of the Adobe Commerce admin panel such as:
 
-![Express notice](images/express-notice.png)
+![Warning that tax calculation must use Shipping Origin for Express Checkout to work](images/express-notice.png)
 
 This means that you should change *Tax Calculation Settings* to be based on *Shipping Origin*.
 
-![Tax calculation settings](images/tax-origin-settings.png)
+![Tax Calculation Based On dropdown open with Shipping Origin highlighted](images/tax-origin-settings.png)
 
 Otherwise, an issue with calculating delivery cost might occur.
 
