@@ -148,13 +148,13 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
 1. When an order is cancelled on the Vipps MobilePay side, Adobe Commerce marks such record as `Cancelled`.
    * The order is cancelled on the Adobe Commerce side, if it was previously placed.
 
-1. If an order has not been accepted on the Vipps MobilePay side within some period of time, it marked as expired. Adobe Commerce subsequently marks the order as `Expired`.
+1. If an order has not been accepted on the Vipps MobilePay side within some period of time, it is marked as expired. Adobe Commerce subsequently marks the order as `Expired`.
    * The order is cancelled on the Adobe Commerce side, if it was previously placed.
 
 1. If an order has not been yet been accepted on the Vipps MobilePay side and has not yet expired, Adobe Commerce marks it as `Processing`. An appropriate message is added on *Record details* page.
-1. If an order has been accepted on the Vipps MobilePay side, but an error has occurred during order placement on Adobe Commerce side, such record marks as `Processing`. An appropriate message is added on record details page.
+1. If an order has been accepted on the Vipps MobilePay side, but an error has occurred during order placement on Adobe Commerce side, such a record is marked as `Processing`. An appropriate message is added on record details page.
 1. Adobe Commerce will attempt to process a record three times. After it fails three times, the record is marked as `Place Failed`.
-1. It is possible to specify that Adobe Commerce must cancel a Vipps MobilePay order automatically when an appropriate Adobe Commerce quote has failed, so that client's money released. See *Store* > *Sales* > *Payment Methods* > *Vipps MobilePay* > *Cancellation*.
+1. It is possible to specify that Adobe Commerce must cancel a Vipps MobilePay order automatically when an appropriate Adobe Commerce quote has failed, so that client's money is released. See *Store* > *Sales* > *Payment Methods* > *Vipps MobilePay* > *Cancellation*.
 1. If it is specified that Adobe Commerce must cancel all failed quotes, then Adobe Commerce fetches all records marked as `Place Failed`, cancels them, and marks them as `Cancelled`.
 
 Here is a diagram of the process:
@@ -178,7 +178,7 @@ Monitoring quote statuses include:
 * *Placement Failed* - All attempts were unsuccessful.
 * *Canceled* - The payment has been cancelled.
   Cancellation can be initiated by the customer in Vipps MobilePay or manually/automatically by *Adobe Commerce for Quotes* in *Placement Failed* status.
-* *Cancel Failed* - The payment could not be cancelled. Record in this status and require admin/developer interaction.
+* *Cancel Failed* - The payment could not be cancelled. Records in this status require admin/developer interaction.
 
 ## Enable debug mode / requests profiling
 

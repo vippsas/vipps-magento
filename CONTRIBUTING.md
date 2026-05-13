@@ -21,7 +21,7 @@ If you want to contribute: Great! No issue or pull request is too small!
 
 ## Contributing
 
-Contributing is easy. The steps below is intended to be helpful. Please help us improve it.
+Contributing is easy. The steps below are intended to be helpful. Please help us improve it.
 
 1. Create a personal fork of the project on GitHub from [vipps-magento](https://github.com/vippsas/vipps-magento)
 1. Clone the fork on your local machine
