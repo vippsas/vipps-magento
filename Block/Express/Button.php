@@ -20,9 +20,11 @@ use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\Math\Random;
+use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Catalog\Block\ShortcutInterface;
 use Vipps\Payment\Model\Config\Source\Version;
+use Magento\Framework\Locale\Resolver;
 
 /**
  * Class Button
@@ -60,22 +62,30 @@ class Button extends Template implements ShortcutInterface
     protected $_template = "Vipps_Payment::button.phtml"; //@codingStandardsIgnoreLine
 
     /**
+     * @var Resolver
+     */
+    protected $localeResolver;
+
+    /**
      * Button constructor.
      *
-     * @param Template\Context $context
+     * @param Context $context
      * @param Random $mathRandom
      * @param ConfigInterface $config
+     * @param Resolver $localeResolver
      * @param array $data
      */
     public function __construct(
         Template\Context $context,
         Random           $mathRandom,
         ConfigInterface  $config,
+        Resolver $localeResolver,
         array            $data = []
     ) {
         $this->config = $config;
         $this->assetRepo = $context->getAssetRepository();
         $this->mathRandom = $mathRandom;
+        $this->localeResolver = $localeResolver;
         parent::__construct($context, $data);
     }
 
@@ -101,6 +111,13 @@ class Button extends Template implements ShortcutInterface
         }
 
         return parent::_toHtml();
+    }
+
+    public function getLabel()
+    {
+        return $this->config->getValue('version') === Version::CONFIG_VIPPS
+            ? __('Vipps')
+            : __('MobilePay');
     }
 
     /**
@@ -139,5 +156,58 @@ class Button extends Template implements ShortcutInterface
             $this->alias = 'vipps.express.catalog_product.button';
         }
         return $this->alias;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLocale()
+    {
+        return $this->localeResolver->getLocale();
+    }
+
+    /**
+     * Return button language based on store locale
+     *
+     * @return string
+     */
+    public function getLanguage()
+    {
+        $language = strtolower(substr($this->getLocale(), 3, 2)); // region part of the locale: us, no, se, dk, fi
+
+        // Vipps button
+        if (in_array($language, ['no', 'se', 'en']) && $this->config->getValue('version') === Version::CONFIG_VIPPS) {
+            return $language;
+        }
+
+        // MobilePay button
+        if (in_array($language, ['dk', 'fi', 'en']) && $this->config->getValue('version') === Version::CONFIG_MOBILE_EPAYMENT) {
+            return $language;
+        }
+
+        return 'en'; // Default to English if unsupported language
+    }
+
+    /**
+     * Returns the inline SVG markup for the button matching the current brand and language.
+     *
+     * Resolves the file via the asset repository so it works regardless of install location
+     * (app/code or vendor/ via Composer).
+     *
+     * @return string
+     */
+    public function getButtonImage()
+    {
+        $brand = $this->config->getValue('version') === Version::CONFIG_VIPPS ? 'Vipps' : 'MobilePay';
+        $file = $this->assetRepo
+            ->createAsset(sprintf(
+                'Vipps_Payment::images/buttons/%s/%s-%s.svg',
+                $brand,
+                strtolower($brand),
+                $this->getLanguage()
+            ))
+            ->getSourceFile();
+
+        return file_exists($file) ? file_get_contents($file) : '';
     }
 }
