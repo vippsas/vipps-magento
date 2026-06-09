@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright 2020 Vipps
+  ~ Copyright 2026 Vipps
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
   ~ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,11 +13,9 @@
   ~ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   ~ IN THE SOFTWARE.
   -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="shortcut_buttons_container">
-        <observer name="vipps_express_checkout_shortcuts" instance="Vipps\Payment\Observer\AddVippsShortcutsObserver"/>
-    </event>
-    <event name="controller_action_predispatch">
-        <observer name="vipps_cart_restore" instance="Vipps\Payment\Observer\CartRestoreObserver"/>
-    </event>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Customer:etc/sections.xsd">
+    <action name="vipps/payment/restoreCart">
+        <section name="cart"/>
+    </action>
 </config>

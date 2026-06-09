@@ -17,4 +17,11 @@
     <head>
         <css src="Vipps_Payment::css/vipps_styles.css"/>
     </head>
+    <body>
+        <referenceContainer name="before.body.end">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="vipps.cart.restore"
+                   template="Vipps_Payment::cart-restore.phtml"/>
+        </referenceContainer>
+    </body>
 </page>

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.0.2] - 2026-06-15
+
+### Fixed
+- Prevent the cart from being emptied when returning to the store via the browser back button after
+  starting a Vipps/MobilePay Express payment. The pending quote id is stored in a cookie when express
+  payment is initiated and the cart is restored from it on return (VIPPS-61).
+
 ## [3.0.1] - 2026-06-15
 
 ### Added

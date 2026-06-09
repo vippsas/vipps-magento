@@ -34,6 +34,7 @@ use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
+use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -94,6 +95,11 @@ class InitExpress implements ActionInterface
     private $logger;
 
     /**
+     * @var CartRestoreCookie
+     */
+    private $cartRestoreCookie;
+
+    /**
      * InitExpress constructor.
      *
      * @param ResultFactory $resultFactory
@@ -106,6 +112,7 @@ class InitExpress implements ActionInterface
      * @param ManagerInterface $messageManager
      * @param CheckoutHelper $checkoutHelper
      * @param LoggerInterface $logger
+     * @param CartRestoreCookie $cartRestoreCookie
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -119,7 +126,8 @@ class InitExpress implements ActionInterface
         Config $config,
         ManagerInterface $messageManager,
         CheckoutHelper $checkoutHelper,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        CartRestoreCookie $cartRestoreCookie
     ) {
         $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
@@ -131,6 +139,7 @@ class InitExpress implements ActionInterface
         $this->messageManager = $messageManager;
         $this->checkoutHelper = $checkoutHelper;
         $this->logger = $logger;
+        $this->cartRestoreCookie = $cartRestoreCookie;
     }
 
     public function execute()
@@ -144,6 +153,11 @@ class InitExpress implements ActionInterface
             }
 
             $responseData = $this->initiatePayment();
+
+            $quoteId = $this->checkoutSession->getQuoteId();
+            if ($quoteId) {
+                $this->cartRestoreCookie->setPending((int)$quoteId);
+            }
 
             $this->checkoutSession->clearStorage();
             $resultRedirect->setPath($responseData['redirectUrl'], ['_secure' => true]);
