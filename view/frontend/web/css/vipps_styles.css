@@ -27,10 +27,16 @@
     max-width: 100%;
     vertical-align: top;
     filter: drop-shadow( 0px 1px 2px #d7d7d7);
+    color: #ff5b24;
 }
 
 .vipps-express-checkout:hover svg {
     opacity: 0.9;
+}
+
+.vipps-express-checkout.vipps-express-checkout-button:hover svg {
+    opacity: 1;
+    color: #ff985f;
 }
 
 .vipps-express-checkout {

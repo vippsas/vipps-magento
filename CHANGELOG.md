@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.0.1] - 2026-06-15
+
+### Added
+- New Vipps/MobilePay Express button styling for the ePayment flow, with localized button images
+  (Vipps EN/NO/SE, MobilePay DK/EN/FI) and matching translations (VIPPS-38).
+
 ## [3.0.0] - 2026-04-03
 
 ### Added
