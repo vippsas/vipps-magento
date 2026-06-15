@@ -29,7 +29,7 @@ This is the guide for installing and configuring *Vipps/MobilePay Payment Module
 
 ### Installation via Composer
 
-1. Navigate to your [Adobe Commerce root directory](https://developer.adobe.com/commerce/php/development/build/component-file-structure/).
+1. Navigate to your [Adobe Commerce root directory](https://developer.adobe.com/commerce/php/development/build/component-file-structure).
 1. Enter command: `composer require vipps/module-payment`
 1. Enter command: `php bin/magento module:enable Vipps_Payment`
 1. Enter command: `php bin/magento setup:upgrade`
