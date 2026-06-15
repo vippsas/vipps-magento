@@ -40,6 +40,7 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Data\Payment;
+use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\OrderLocator;
@@ -126,6 +127,11 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     private AuthoriseProxy $authoriseProxy;
 
     /**
+     * @var CartRestoreCookie
+     */
+    private $cartRestoreCookie;
+
+    /**
      * Fallback constructor.
      *
      * @param ResultFactory $resultFactory
@@ -157,7 +163,8 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         LoggerInterface          $logger,
         Config                   $config,
         StatusVisitor            $statusVisitor,
-        AuthoriseProxy           $authoriseProxy
+        AuthoriseProxy           $authoriseProxy,
+        CartRestoreCookie        $cartRestoreCookie
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
@@ -173,6 +180,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $this->config = $config;
         $this->statusVisitor = $statusVisitor;
         $this->authoriseProxy = $authoriseProxy;
+        $this->cartRestoreCookie = $cartRestoreCookie;
     }
 
     /**
@@ -226,6 +234,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
                     $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
                 }
             }
+            $this->cartRestoreCookie->clearPending();
             $this->logger->debug($this->request->getRequestString());
         }
 
