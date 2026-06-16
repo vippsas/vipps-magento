@@ -13,6 +13,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.0.3] - 2026-06-15
+
+### Added
+- "Show On Virtual Products" setting for the Express button. When disabled (the default), the Express
+  shortcut is hidden on product pages for items that don't require shipping (virtual and downloadable),
+  since express checkout collects a shipping address (VIPPS-451). Reworked from the community
+  contribution in #180.
+
 ## [3.0.2] - 2026-06-15
 
 ### Fixed
