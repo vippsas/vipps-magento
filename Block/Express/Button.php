@@ -23,8 +23,11 @@ use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Catalog\Block\ShortcutInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Vipps\Payment\Model\Config\Source\Version;
 use Magento\Framework\Locale\Resolver;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class Button
@@ -67,26 +70,53 @@ class Button extends Template implements ShortcutInterface
     protected $localeResolver;
 
     /**
+     * @var ProductRepositoryInterface
+     */
+    private $productRepository;
+
+    /**
      * Button constructor.
      *
      * @param Context $context
      * @param Random $mathRandom
      * @param ConfigInterface $config
      * @param Resolver $localeResolver
+     * @param ProductRepositoryInterface $productRepository
      * @param array $data
      */
     public function __construct(
-        Template\Context $context,
-        Random           $mathRandom,
-        ConfigInterface  $config,
-        Resolver $localeResolver,
-        array            $data = []
+        Template\Context           $context,
+        Random                     $mathRandom,
+        ConfigInterface            $config,
+        Resolver                   $localeResolver,
+        ProductRepositoryInterface $productRepository,
+        array                      $data = []
     ) {
         $this->config = $config;
         $this->assetRepo = $context->getAssetRepository();
         $this->mathRandom = $mathRandom;
         $this->localeResolver = $localeResolver;
+        $this->productRepository = $productRepository;
         parent::__construct($context, $data);
+    }
+
+    /**
+     * The product being viewed on a catalog product page, resolved from the request.
+     *
+     * @return ProductInterface|null
+     */
+    private function getProduct(): ?ProductInterface
+    {
+        $productId = (int)$this->getRequest()->getParam('id');
+        if (!$productId) {
+            return null;
+        }
+
+        try {
+            return $this->productRepository->getById($productId);
+        } catch (NoSuchEntityException $e) {
+            return null;
+        }
     }
 
     /**
@@ -106,6 +136,14 @@ class Button extends Template implements ShortcutInterface
         }
         if (!$this->getIsInCatalogProduct() &&
             !$this->config->getValue('checkout_cart_display')
+        ) {
+            return '';
+        }
+        /** @var \Magento\Catalog\Model\Product|null $product */
+        $product = $this->getIsInCatalogProduct() ? $this->getProduct() : null;
+        if ($product
+            && !$this->config->getValue('virtual_products_display')
+            && $product->getTypeInstance()->isVirtual($product)
         ) {
             return '';
         }
