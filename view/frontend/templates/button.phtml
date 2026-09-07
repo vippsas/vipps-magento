@@ -24,6 +24,20 @@ if ($block->getIsInCatalogProduct()) {
 $shortcutHtmlId = $escaper->escapeHtml($block->getShortcutHtmlId());
 ?>
 
+<?php if ($block->getWidgetSdkEnabled()): ?>
+<a class="vipps-express-checkout vipps-express-checkout-button"
+     href="#"
+     aria-label="<?= $escaper->escapeHtml(__('Buy now with') . ' ' . $block->getLabel()) ?>"
+     data-mage-init='{
+     "Vipps_Payment/js/view/vipps-widget-trigger": {
+                "triggerUrl": "<?= $escaper->escapeUrl($block->getWidgetTriggerUrl()) //@codingStandardsIgnoreLine ?>",
+                "isCatalogProduct": <?= $isInCatalogProduct ? 'true' : 'false' ?>,
+                "language": "<?= $escaper->escapeHtml($block->getWidgetLanguage()) //@codingStandardsIgnoreLine ?>"
+            }
+     }'>
+    <?= $block->getButtonImage(); ?>
+</a>
+<?php else: ?>
 <a class="vipps-express-checkout vipps-express-checkout-button"
      href="#"
      aria-label="<?= $escaper->escapeHtml(__('Buy now with') . ' ' . $block->getLabel()) ?>"
@@ -37,3 +51,4 @@ $shortcutHtmlId = $escaper->escapeHtml($block->getShortcutHtmlId());
      }'>
     <?= $block->getButtonImage(); ?>
 </a>
+<?php endif; ?>

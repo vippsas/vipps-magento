@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.1.0] - 2026-09-07
+
+### Added
+- Support for Vipps Widget SDK for express button https://developer.vippsmobilepay.com/docs/knowledge-base/widget 
+
 ## [3.0.3] - 2026-06-15
 
 ### Added
