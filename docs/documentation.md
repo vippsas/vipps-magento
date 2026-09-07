@@ -20,7 +20,7 @@ This is the guide for installing and configuring *Vipps/MobilePay Payment Module
   * [Adobe Commerce System Requirements](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
 * SSL must be installed on your site and active on your checkout pages.
 * You must have a Vipps MobilePay merchant account in the country (see [Apply for services](/docs/knowledge-base/applying-for-services/)).
-* As with all Adobe Commerce extensions, it is highly recommended backing up your site before installation and to install and test on a staging environment prior to production deployments.
+* As with all Adobe Commerce extensions, it is highly recommended to back up your site before installation, and to install and test on a staging environment prior to production deployments.
 * Supported protocols HTTP1/HTTP1.1
   * Adobe Commerce relies on the [Zend Framework](https://framework.zend.com), which does not support HTTP/2.
   * HTTP/1.1 must therefore be "forced", typically by using [CPanel](https://api.docs.cpanel.net/) or similar.
@@ -72,6 +72,7 @@ These settings are required to prevent the loss of profiles when Adobe Commerce 
    'vipps' => [
       'connection' => 'vipps',
    ],
+   ```
 
 ## Settings
 
@@ -89,10 +90,10 @@ Ensure that you check all configuration settings before using the module. Pay sp
 Basic settings include:
 
 * *Environment* - Vipps MobilePay API mode, which can be *Production* or *Develop*.
-* *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on customer account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
-* *Debug* - Log all actions with this Payment module into `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
+* *Payment Action* - *Authorize* (process authorization transaction; funds are blocked on the customer's account, but not withdrawn) or *Capture* (withdraw previously authorized amount).
+* *Debug* - Log all actions with this Payment module into the `{project_root}/var/log/vipps_debug.log` file *(not recommended in production mode)*.
 * *Order Status* - Default order status before redirecting back to Adobe Commerce. Can be *Pending* or *Payment Review*.
-* *Request/Response Profiling* - Log all requests/responses to Vipps MobilePay API into `vipps_profiling` table.
+* *Request/Response Profiling* - Log all requests/responses to the Vipps MobilePay API into the `vipps_profiling` table.
 * *Merchant Serial Number* - ID number for the sales unit.
 * *Client ID* - Client ID for the sales unit (the "username").
 * *Client Secret* - Client secret for the merchant (the "password").
@@ -117,10 +118,10 @@ The Vipps MobilePay payment will be unavailable when disallowed shipping methods
 
 The Cancellation settings include:
 
-* *Cart Persistence* - If set to *Yes* and client cancels an order on the Vipps MobilePay side, the cart will still contain the recently added products.
+* *Cart Persistence* - If set to *Yes* and the client cancels an order on the Vipps MobilePay side, the cart will still contain the recently added products.
 * *Number of Attempts* - The number of failed order placement attempts allowed before the order will be cancelled.
 * *Storage Period* - The number of days to store the quote information. Use `0` to keep all records.
-* *Inactivity Time* - (Developers only) The number of minutes that customer is idle before the Vipps MobilePay order will be cancelled in Adobe Commerce.
+* *Inactivity Time* - (Developers only) The number of minutes that the customer is idle before the Vipps MobilePay order will be cancelled in Adobe Commerce.
 * *Processing Type* - Deprecated setting that will be removed in future releases. (Should be set to "Automatic").
 
 ![Cancellation settings showing Cart Persistence, Attempts, Storage Period, and Inactivity Time](images/cancellation_settings.png)
@@ -142,7 +143,7 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
    * For a "Regular Payment", the order is immediately placed on the Adobe Commerce side with status *new*, *pending*, or *payment review*, depending on the configuration.
 
 1. Adobe Commerce regularly (by `cron`) polls Vipps MobilePay for orders that need processing.
-1. When an order is accepted on Vipps MobilePay side, Adobe Commerce tries to place the order and marks a record as `Placed`
+1. When an order is accepted on the Vipps MobilePay side, Adobe Commerce tries to place the order and marks a record as `Placed`
    * For a "Regular Payment", the Adobe Commerce order is moved to status `Processing`.
 
 1. When an order is cancelled on the Vipps MobilePay side, Adobe Commerce marks such record as `Cancelled`.
@@ -151,8 +152,8 @@ You can find this page under the *System* > *Vipps Payment* > *Quote Processing*
 1. If an order has not been accepted on the Vipps MobilePay side within some period of time, it is marked as expired. Adobe Commerce subsequently marks the order as `Expired`.
    * The order is cancelled on the Adobe Commerce side, if it was previously placed.
 
-1. If an order has not been yet been accepted on the Vipps MobilePay side and has not yet expired, Adobe Commerce marks it as `Processing`. An appropriate message is added on *Record details* page.
-1. If an order has been accepted on the Vipps MobilePay side, but an error has occurred during order placement on Adobe Commerce side, such a record is marked as `Processing`. An appropriate message is added on record details page.
+1. If an order has not yet been accepted on the Vipps MobilePay side and has not yet expired, Adobe Commerce marks it as `Processing`. An appropriate message is added on the *Record details* page.
+1. If an order has been accepted on the Vipps MobilePay side, but an error has occurred during order placement on the Adobe Commerce side, such a record is marked as `Processing`. An appropriate message is added on the record details page.
 1. Adobe Commerce will attempt to process a record three times. After it fails three times, the record is marked as `Place Failed`.
 1. It is possible to specify that Adobe Commerce must cancel a Vipps MobilePay order automatically when an appropriate Adobe Commerce quote has failed, so that client's money is released. See *Store* > *Sales* > *Payment Methods* > *Vipps MobilePay* > *Cancellation*.
 1. If it is specified that Adobe Commerce must cancel all failed quotes, then Adobe Commerce fetches all records marked as `Place Failed`, cancels them, and marks them as `Cancelled`.
@@ -167,14 +168,14 @@ Quote Monitoring simplifies detection of failed order placement and identifies t
 
 The monitoring tool is located under *System* > *Vipps Payment* > *Quote Monitoring*.
 This page displays all orders that were attempted to be placed.
-Each record in the list provides detailed information about order creation flow: current status, list of attempts, each attempt results.
+Each record in the list provides detailed information about the order creation flow: current status, list of attempts, each attempt results.
 
 Monitoring quote statuses include:
 
 * *New* - Payment is initiated on the Vipps MobilePay side.
-* *Processing* - Adobe Commerce has started processing for initiated payment.
+* *Processing* - Adobe Commerce has started processing for the initiated payment.
 * *Placed* - The order has been placed.
-* *Expired* - The customer has not approved payment for some time.
+* *Expired* - The customer has not approved the payment for some time.
 * *Placement Failed* - All attempts were unsuccessful.
 * *Canceled* - The payment has been cancelled.
   Cancellation can be initiated by the customer in Vipps MobilePay or manually/automatically by *Adobe Commerce for Quotes* in *Placement Failed* status.
@@ -191,7 +192,7 @@ After that, all information related to the Payment module will be stored into tw
 * `{project_root}/var/log/vipps_exception.log`
 * `{project_root}/var/log/vipps_debug.log`
 
-*Requests Profiling* is a page in the Adobe Commerce that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
+*Requests Profiling* is a page in Adobe Commerce that helps you track the communication between Vipps MobilePay and Adobe Commerce.
 You can find the page under *System* > *Vipps*.
 
 ![Requests Profiling grid listing API calls with status codes, request types, and Show links](images/request_profiling.png)
@@ -221,7 +222,7 @@ For example, to customize the *Order Success* page, you can:
 
 * Use an existing 3rd party module or by doing the customization yourself. Visit [Adobe Marketplace](https://commercemarketplace.adobe.com/) to see which 3rd party solutions are available.
 
-* Do the customization yourself. Refer to [Adobe Commerce Frontend Developer Guide](https://developer.adobe.com/commerce/frontend-core/guide/).
+* Do the customization yourself. Refer to the [Adobe Commerce Frontend Developer Guide](https://developer.adobe.com/commerce/frontend-core/guide/).
 
    The following code is related to the *Order Success* page:
 
