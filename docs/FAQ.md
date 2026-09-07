@@ -19,7 +19,7 @@ You can get paid by users who have Vipps in Norway, or who have MobilePay in Den
 ## For how long is an order reserved?
 
 :::note
-Payments initiated in Finland and Denmark have only 14 days to be captured; while
+Payments initiated in Finland and Denmark have only 14 days to be captured, while
 payments in Norway have 180 days.
 If the payments aren't captured within this time, they will be automatically cancelled.
 
@@ -27,7 +27,7 @@ Payments can only be captured up to 14 days (MobilePay) or 180 days (Vipps) afte
 See [Reserve and capture](https://developer.vippsmobilepay.com/docs/knowledge-base/reserve-and-capture/).
 :::
 
-When a payment is completed with Vipps MobilePay, the money will be reserved, but only transferred to the merchant when the order is set to “Complete” or the money is captured manually. For MobilePay, this reservation period is 14 days, so you will need to ship and fulfill orders before this; or to make an agreement with the customer to capture the money before this period is over. For Vipps, the period is 180 days. For payments made by credit card in Vipps/MobilePay Checkout, the period can again be as short as 7 days.
+When a payment is completed with Vipps MobilePay, the money will be reserved, but only transferred to the merchant when the order is set to “Complete” or the money is captured manually. For MobilePay, this reservation period is 14 days, so you will need to ship and fulfill orders before this, or to make an agreement with the customer to capture the money before this period is over. For Vipps, the period is 180 days. For payments made by credit card in Vipps/MobilePay Checkout, the period can again be as short as 7 days.
 
 ## How do I capture an order?
 
@@ -46,8 +46,8 @@ Otherwise, the refund should be finished first. This Vipps/MobilePay Payment mod
 
 ## How do I refund an order?
 
-For orders refunding Adobe Commerce, we propose [Adobe Commerce: Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
-Credit Memo allows you to make a refund for captured transaction.
+For refunding orders in Adobe Commerce, we propose the [Adobe Commerce: Credit Memo](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/credit-memos/credit-memos) functionality.
+Credit Memo allows you to make a refund for a captured transaction.
 
 ## How do I partially refund an order?
 
@@ -76,8 +76,8 @@ Failure to set it up properly means it will not function as expected.
 ## Why are some orders missing in Adobe Commerce?
 
 It is possible for some orders to be missing when using the Express payment flow because, unlike a regular payment, the order is not created before redirecting to
-Vipps MobilePay Landing page. If the transaction was successfully initiated by client, a new record
-with a quote ID and reserved order ID will be created in DB table `vipps_quote`. This can be helpful to find a status of a transaction.
+the Vipps MobilePay landing page. If the transaction was successfully initiated by the client, a new record
+with a quote ID and reserved order ID will be created in the DB table `vipps_quote`. This can be helpful to find the status of a transaction.
 
 ## How do I enable Vipps Payment for Klarna Checkout
 
@@ -87,7 +87,7 @@ Select Vipps from the list of external payment methods in the appropriate Klarna
 
 ### Why am I seeing a strange page with URL printed?
 
-Right after pressing *Place Order*, the client may see the page with message
+Right after pressing *Place Order*, the client may see the page with the message
 `{"url":"https:\/\/apitest.vipps.no\/dwo-api-application\/v1\/****"}`
 
 **Solution:** Update your Vipps/MobilePay Payment module to the latest version.
@@ -102,12 +102,12 @@ If you have experienced any issue with Vipps MobilePay, try to enable *Request P
 
 After that, all information related to the Vipps/MobilePay payment module will be stored into two files `{project_root}/var/log/vipps_exception.log` or `{project_root}/var/log/vipps_debug.log`.
 
-*Requests Profiling* is a page in the Adobe Commerce admin panel that helps you to track a communication between Vipps MobilePay and Adobe Commerce.
+*Requests Profiling* is a page in the Adobe Commerce admin panel that helps you track the communication between Vipps MobilePay and Adobe Commerce.
 You can find the page under `System -> Vipps Payment -> Requests Profiling`
 
 ![Screenshot of Request Profiling Grid](images/request_profiling.png)
 
 On the page, you can see the list of all requests for all orders that Adobe Commerce sends to Vipps MobilePay.
-By clicking *Show* in an *Action* column of grid, you can find appropriate response from Vipps MobilePay.
+By clicking *Show* in the *Action* column of the grid, you can find the appropriate response from Vipps MobilePay.
 
 Using the built-in Adobe Commerce grid filter, you can find all the requests for an order you're interested in.
