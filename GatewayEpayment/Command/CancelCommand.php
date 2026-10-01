@@ -129,7 +129,10 @@ class CancelCommand extends GatewayCommand
      */
     public function execute(array $commandSubject)
     {
-        $orderId = $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
+        // A caller that knows the reference passes it, because a pre-authorisation payment keeps
+        // it on the cart and placeOrder() clears that once the cart has produced an order.
+        $orderId = $commandSubject['reference']
+            ?? $this->subjectReader->readPayment($commandSubject)->getOrder()->getOrderIncrementId();
         $payment = $this->paymentProvider->get($orderId);
 
         // try to cancel based on payment info

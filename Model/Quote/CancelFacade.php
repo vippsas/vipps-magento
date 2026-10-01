@@ -72,7 +72,12 @@ class CancelFacade implements CancelFacadeInterface
             } else {
                 /** @var \Magento\Quote\Model\Quote $quote */
                 $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
-                $this->commandManager->cancel($quote->getPayment());
+                // The monitoring quote owns the reference. The cart only borrows it, and has
+                // already given it up if this cart went on to produce an order.
+                $this->commandManager->cancel(
+                    $quote->getPayment(),
+                    ['reference' => $vippsQuote->getReservedOrderId()]
+                );
             }
 
             $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
