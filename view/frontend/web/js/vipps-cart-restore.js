@@ -31,7 +31,8 @@ define(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerDat
                 dataType: 'json',
                 success: function (response) {
                     if (response.restored) {
-                        customerData.reload(['cart'], false);
+                        // 'messages' too, or the restore notice is never shown on this path.
+                        customerData.reload(['cart', 'messages'], false);
                     }
                 }
             });
