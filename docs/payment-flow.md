@@ -3,9 +3,7 @@
 title: Vipps/MobilePay Payment Module for Adobe Commerce payment flow
 sidebar_label: Payment flow
 sidebar_position: 30
-description: How a payment moves through the module: where it is initiated, where its state is read, where the order is placed, and how it can be cancelled.
-pagination_next: plugins-ext/magento/docs/FAQ
-pagination_prev: plugins-ext/magento/docs/documentation
+description: "How a payment moves through the module: where it is initiated, where its state is read, where the order is placed, and how it can be cancelled."
 section: Plugins
 ---
 END_METADATA -->
