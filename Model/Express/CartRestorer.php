@@ -22,7 +22,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
-use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\Model\QuoteRepository;
 
@@ -31,6 +30,13 @@ use Vipps\Payment\Model\QuoteRepository;
  *
  * Shared by both restore entry points: the server-side cart-page observer and the
  * AJAX RestoreCart controller (which covers the bfcache back-button case).
+ *
+ * The shopper's browser coming back is not proof that the payment is over. On mobile it is
+ * approved in the Vipps/MobilePay app, so the store can be shown again while the payment is
+ * still live or already authorised. This class therefore only hands the cart back and never
+ * touches the monitoring quote: FetchOrderFromVipps already reads the real payment state and
+ * places, cancels or expires it from there. Writing the payment off here instead cost shoppers
+ * their orders while the amount stayed reserved at Vipps.
  */
 class CartRestorer
 {
@@ -44,7 +50,11 @@ class CartRestorer
     }
 
     /**
-     * Cancel the pending Vipps monitoring quote and reactivate the cart quote.
+     * Reactivate the cart quote so the shopper can carry on shopping.
+     *
+     * The reserved order id is cleared so a further checkout gets a fresh reference. The
+     * monitoring quote keeps its own copy, and TransactionProcessor::placeOrder() puts it back
+     * on the cart if the original payment is completed after all.
      *
      * @param int $quoteId
      * @return bool True if the cart was restored, false if there was nothing to restore
@@ -57,9 +67,8 @@ class CartRestorer
         }
 
         try {
-            $vippsQuote = $this->vippsQuoteRepository->loadNewByQuote($quoteId);
-            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
-            $this->vippsQuoteRepository->save($vippsQuote);
+            // Confirms a payment is still outstanding for this cart. Its status is left alone.
+            $this->vippsQuoteRepository->loadNewByQuote($quoteId);
 
             /** @var Quote $quote */
             $quote = $this->cartRepository->get($quoteId);
@@ -68,13 +77,21 @@ class CartRestorer
             $this->cartRepository->save($quote);
             $this->checkoutSession->replaceQuote($quote);
 
-            $this->messageManager->addWarningMessage(
-                __('Your order was cancelled in %1.', $this->config->getTitle())
+            // Nothing has been read from Vipps/MobilePay at this point, so the payment may be
+            // unapproved, already approved, aborted or expired. Say only what is true of all four:
+            // it is still ours to resolve. Claiming it failed invites a second payment, and
+            // telling the shopper to go and complete it may be asking for the impossible.
+            $this->messageManager->addNoticeMessage(
+                __(
+                    'Your cart has been restored. Any payment you have already started in %1 is'
+                    . ' still being processed, so please wait a few minutes before paying again.',
+                    $this->config->getTitle()
+                )
             );
 
             return true;
         } catch (NoSuchEntityException $e) {
-            // Payment was already processed — nothing to restore.
+            // Payment was already processed, nothing to restore.
             return false;
         }
     }

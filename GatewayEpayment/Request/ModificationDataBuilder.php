@@ -65,7 +65,10 @@ class ModificationDataBuilder implements BuilderInterface
             ];
         }
 
-        $result['modificationReference'] = $order->getOrderIncrementId();
+        // Falls back to the order only when the caller has not supplied the reference. A
+        // pre-authorisation payment keeps it on the cart, which placeOrder() clears once the cart
+        // has produced an order, and an empty body serialises as [] which Vipps rejects.
+        $result['modificationReference'] = $buildSubject['reference'] ?? $order->getOrderIncrementId();
 
         return $result;
     }

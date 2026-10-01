@@ -35,7 +35,11 @@ class ReferenceDataBuilder implements BuilderInterface
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         if ($paymentDO) {
             $orderAdapter = $paymentDO->getOrder();
-            if ($orderAdapter) {
+            // A pre-authorisation payment carries its reference on the cart, and placeOrder()
+            // clears that once the cart becomes an order. Overwriting with the null that follows
+            // left ":reference" unsubstituted in the URL, which Vipps rejects, so a caller that
+            // knows the reference can pass it and have it survive.
+            if ($orderAdapter && $orderAdapter->getOrderIncrementId()) {
                 $buildSubject = array_merge(
                     $buildSubject,
                     ['reference' => $orderAdapter->getOrderIncrementId()]

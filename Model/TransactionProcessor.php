@@ -171,6 +171,7 @@ class TransactionProcessor
     {
         $order = $this->orderLocator->get($vippsQuote->getReservedOrderId());
         if (!$order) {
+            $this->assertCartHasNoOrder($vippsQuote);
             $order = $this->placeOrder($vippsQuote, $payment);
         }
 
@@ -486,5 +487,45 @@ class TransactionProcessor
             'authorizedAmount' => $dataPayment->getAggregate()->getAuthorizedAmount()->getValue(),
             'currency'         => (string) $dataPayment->getAmount()->getCurrency(),
         ];
+    }
+
+    /**
+     * A cart converts to exactly one order, so refuse to place a second from another payment.
+     *
+     * Pressing the Express button again creates a fresh monitoring quote with its own reference
+     * against the same cart, and nothing links the two. If the shopper authorises both, each one
+     * looks placeable on its own: the reference-based check above only sees orders carrying that
+     * reference. Left unguarded that is two orders and two shipments for one basket.
+     *
+     * Throwing hands the surplus payment to the normal retry path, so CancelQuoteByAttempts
+     * eventually voids it at Vipps/MobilePay and the shopper gets that amount back.
+     *
+     * @throws LocalizedException
+     */
+    private function assertCartHasNoOrder(QuoteInterface $vippsQuote): void
+    {
+        $quoteId = $vippsQuote->getQuoteId();
+
+        // The cart row is removed once Magento cleans up expired quotes, leaving this null. There
+        // is nothing to compare against then, and placeOrder() fails on the missing cart anyway.
+        if (!$quoteId) {
+            return;
+        }
+
+        $existingOrder = $this->orderLocator->getByQuoteId($quoteId);
+
+        if (!$existingOrder) {
+            return;
+        }
+
+        throw new LocalizedException(
+            __(
+                'Cart %1 has already been ordered as %2, so payment %3 will not place a second'
+                . ' order. It is left to be cancelled so the reserved amount is released.',
+                $vippsQuote->getQuoteId(),
+                $existingOrder->getIncrementId(),
+                $vippsQuote->getReservedOrderId()
+            )
+        );
     }
 }

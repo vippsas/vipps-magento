@@ -31,6 +31,7 @@ use Magento\Framework\View\Result\Layout;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterfaceFactory;
 use Magento\Quote\Api\Data\CartInterface;
+use Magento\Quote\Api\Data\ShippingMethodInterface;
 use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
@@ -197,7 +198,7 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
                         [
                             'id' => $methodFullCode,
                             'amount' => [
-                                'value' => $shippingMethod->getAmount() > 0 ? (int)($shippingMethod->getAmount() * 100) : 0,
+                                'value' => $this->getShippingOptionAmount($shippingMethod),
                                 'currency' => $quote->getStoreCurrencyCode()
                             ],
                             'name' => $shippingMethod->getMethodTitle(),
@@ -296,5 +297,27 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
         }
 
         return $quote;
+    }
+
+    /**
+     * The amount the shopper is charged, in minor units.
+     *
+     * Vipps/MobilePay shows this in the app and adds the chosen option to the amount it authorises,
+     * so sending the excluding-tax figure both misquotes the shopper and leaves the authorised
+     * total short of the quote grand total, which fails order placement on the amount check.
+     *
+     * @param ShippingMethodInterface $shippingMethod
+     * @return int
+     */
+    private function getShippingOptionAmount(ShippingMethodInterface $shippingMethod): int
+    {
+        if ($shippingMethod->getAmount() <= 0) {
+            return 0;
+        }
+
+        // price_incl_tax is not populated by every carrier, so fall back rather than send zero.
+        $amount = $shippingMethod->getPriceInclTax() ?: $shippingMethod->getAmount();
+
+        return (int)round($amount * 100);
     }
 }
