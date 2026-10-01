@@ -16,6 +16,10 @@
 
 namespace Vipps\Payment\Model;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Tax\Model\Config as TaxConfig;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
@@ -46,6 +50,11 @@ class QuoteUpdater
     private $utility;
 
     /**
+     * @var ScopeConfigInterface
+     */
+    private $scopeConfig;
+
+    /**
      * QuoteUpdater constructor.
      *
      * @param CartRepositoryInterface $cartRepository
@@ -55,11 +64,14 @@ class QuoteUpdater
     public function __construct(
         CartRepositoryInterface $cartRepository,
         PaymentDetailsProvider $paymentDetailsProvider,
-        Utility $utility
+        Utility $utility,
+        ?ScopeConfigInterface $scopeConfig = null
     ) {
         $this->cartRepository = $cartRepository;
         $this->paymentDetailsProvider = $paymentDetailsProvider;
         $this->utility = $utility;
+        // Optional so the signature stays compatible for anything extending this class.
+        $this->scopeConfig = $scopeConfig ?? ObjectManager::getInstance()->get(ScopeConfigInterface::class);
     }
 
     /**
@@ -117,8 +129,10 @@ class QuoteUpdater
         $shippingAddress->setShippingAmount($shippingDetails->getShippingCost());
 
         // try to obtain postCode one more time if it is not done before
-        if (!$shippingAddress->getPostcode() && $shippingDetails->getPostcode()) {
-            $shippingAddress->setPostcode($shippingDetails->getPostcode());
+        if ($this->isPostcodeUnset($shippingAddress->getPostcode(), $quote)
+            && $shippingDetails->getPostalCode()
+        ) {
+            $shippingAddress->setPostcode($shippingDetails->getPostalCode());
         }
 
         $shippingAddress->setSameAsBilling(true);
@@ -144,8 +158,10 @@ class QuoteUpdater
         $billingAddress->setTelephone($userDetails->getMobileNumber());
 
         // try to obtain postCode one more time if it is not done before
-        if (!$billingAddress->getPostcode() && $shippingDetails->getPostcode()) {
-            $billingAddress->setPostcode($shippingDetails->getPostcode());
+        if ($this->isPostcodeUnset($billingAddress->getPostcode(), $quote)
+            && $shippingDetails->getPostalCode()
+        ) {
+            $billingAddress->setPostcode($shippingDetails->getPostalCode());
         }
 
         $billingAddress->setSameAsBilling(false);
@@ -153,5 +169,31 @@ class QuoteUpdater
         //We do not save user address from vipps in Magento
         $billingAddress->setSaveInAddressBook(false);
         $billingAddress->setCustomerAddressId(null);
+    }
+
+    /**
+     * Whether the address still needs a postal code from Vipps/MobilePay.
+     *
+     * The tax module writes its configured default postal code, conventionally "*", onto an address
+     * that has none so it can estimate tax. That placeholder is truthy, so an emptiness check passes
+     * it through and it survives all the way onto the order.
+     *
+     * @param string|null $postcode
+     * @param Quote $quote
+     * @return bool
+     */
+    private function isPostcodeUnset($postcode, Quote $quote): bool
+    {
+        if (!$postcode) {
+            return true;
+        }
+
+        $defaultPostcode = $this->scopeConfig->getValue(
+            TaxConfig::CONFIG_XML_PATH_DEFAULT_POSTCODE,
+            ScopeInterface::SCOPE_STORE,
+            $quote->getStoreId()
+        );
+
+        return $defaultPostcode && $postcode === $defaultPostcode;
     }
 }

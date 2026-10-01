@@ -52,6 +52,10 @@ class ShippingDetails extends DataObject
      * @var string
      */
     const POSTAL_CODE = 'postalCode';
+
+    const ADDRESS = 'address';
+
+    const ADDRESS_POST_CODE = 'postCode';
     /**
      * @var string
      */
@@ -114,7 +118,10 @@ class ShippingDetails extends DataObject
      */
     public function getPostalCode()
     {
-        return $this->getData(self::POSTAL_CODE);
+        // The API returns the address as a nested object, so the flat key is never present.
+        // Only the postal code is mapped here; the other address fields are not read anywhere.
+        return $this->getData(self::ADDRESS)[self::ADDRESS_POST_CODE]
+            ?? $this->getData(self::POSTAL_CODE);
     }
 
     /**
