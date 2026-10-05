@@ -117,7 +117,11 @@ class PostHandler implements HandlerInterface
         $vippsQuote->setQuoteId((int)$quoteId);
         $vippsQuote->setStatus(QuoteInterface::STATUS_NEW);
         $vippsQuote->setReservedOrderId($orderAdapter->getOrderIncrementId());
-        $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['callbackAuthorizationToken'] ?? '');
+        // The transfer body is the request we sent, so this is the token AmountBuilder generated for Express.
+        // Regular payments carry none and store '', which CallbackAuthorization never accepts.
+        $vippsQuote->setAuthToken(
+            (string)($transfer->getBody()['shipping']['dynamicOptions']['callbackAuthorizationToken'] ?? '')
+        );
         $this->quoteRepository->save($vippsQuote);
     }
 }

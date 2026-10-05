@@ -36,6 +36,7 @@ use Magento\Quote\Api\ShipmentEstimationInterface;
 use Magento\Quote\Model\Quote;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\GatewayEpayment\Data\ShippingDetails as TransactionShippingDetails;
+use Vipps\Payment\Model\Express\ShippingCallbackGuard;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\Quote\AddressUpdater;
 use Vipps\Payment\Model\Quote\ShippingMethodValidator;
@@ -104,6 +105,11 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
     private $shippingMethodValidator;
 
     /**
+     * @var ShippingCallbackGuard
+     */
+    private $callbackGuard;
+
+    /**
      * ShippingDetails constructor.
      *
      * @param ResultFactory $resultFactory
@@ -117,6 +123,7 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
      * @param ShippingMethodValidator $shippingMethodValidator
      * @param CartRepositoryInterface $cartRepository
      * @param LoggerInterface $logger
+     * @param ShippingCallbackGuard $callbackGuard
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -131,7 +138,8 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
         AddressUpdater $addressUpdater,
         ShippingMethodValidator $shippingMethodValidator,
         CartRepositoryInterface $cartRepository,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ShippingCallbackGuard $callbackGuard
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
@@ -144,6 +152,7 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
         $this->gdprCompliance = $compliance;
         $this->cartRepository = $cartRepository;
         $this->logger = $logger;
+        $this->callbackGuard = $callbackGuard;
     }
 
     /**
@@ -153,6 +162,13 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
     {
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         try {
+            // The ShippingDetailsAuthorization plugin already rejects unauthenticated requests; checking again
+            // here keeps the controller safe on its own, before it touches the cart.
+            $rejectionStatus = $this->callbackGuard->getRejectionStatus($this->request);
+            if ($rejectionStatus !== null) {
+                return $this->reject($result, $rejectionStatus, __('Invalid request'));
+            }
+
             $vippsAddress = $this->serializer->unserialize($this->request->getContent());
             $address = $this->addressFactory->create();
             $address->addData([
@@ -253,6 +269,24 @@ class ShippingDetails implements ActionInterface, CsrfAwareActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         return true;
+    }
+
+    /**
+     * @param ResultInterface $result
+     * @param int $statusCode
+     * @param \Magento\Framework\Phrase $message
+     *
+     * @return ResultInterface
+     */
+    private function reject(ResultInterface $result, int $statusCode, $message): ResultInterface
+    {
+        $result->setHttpResponseCode($statusCode);
+        $result->setData([
+            'status' => $statusCode,
+            'message' => $message
+        ]);
+
+        return $result;
     }
 
     /**
