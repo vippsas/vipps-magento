@@ -47,6 +47,15 @@
         </arguments>
     </type>
 
+    <type name="Vipps\Payment\Controller\Payment\InitWidget">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
+        </arguments>
+    </type>
+
     <type name="Vipps\Payment\Controller\Payment\ShippingDetails">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
