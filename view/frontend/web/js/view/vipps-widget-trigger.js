@@ -36,11 +36,32 @@ define([
                 window.vippsWidgetHostStarted = true;
             }
 
-            this._trigger = window.vipps.trigger($.proxy(this._createSession, this));
+            // On desktop the SDK may load the return URL in its cookie-less iframe, so repeat it in this tab
+            // where Fallback runs in the shopper's session: restores the cart, or shows the confirmation.
+            this._trigger = window.vipps.trigger($.proxy(this._createSession, this))
+                .on('success', $.proxy(this._returnToStore, this))
+                .on('cancel', $.proxy(this._returnToStore, this));
 
             this._on(this.element, {
                 click: this._handleClick
             });
+        },
+
+        /**
+         * @param {Function} close
+         * @param {string} [redirectUrl]
+         * @private
+         */
+        _returnToStore: function (close, redirectUrl) {
+            if (typeof close === 'function') {
+                close();
+            }
+
+            if (this._returnUrl || redirectUrl) {
+                window.location.assign(this._returnUrl || redirectUrl);
+            } else {
+                window.location.reload();
+            }
         },
 
         /** @private */
@@ -68,7 +89,7 @@ define([
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
-                }).then(function (response) {
+                }).then($.proxy(function (response) {
                     // An earlier payment for this cart was already approved: go to the order, or to the
                     // cart where the shopper is told it is being completed, instead of paying again.
                     if (response && response.redirectUrl) {
@@ -81,8 +102,10 @@ define([
                         throw new Error(response && response.message || 'Vipps Widget: unable to start payment.');
                     }
 
+                    this._returnUrl = response.returnUrl;
+
                     return response.paymentUrl;
-                });
+                }, this));
             }, this));
         },
 

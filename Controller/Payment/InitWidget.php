@@ -91,6 +91,7 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
             }
 
             $responseData = $decision->getPaymentResponse();
+            $reference = $responseData['reference'] ?? $this->checkoutSession->getQuote()->getReservedOrderId();
 
             $quoteId = $this->checkoutSession->getQuoteId();
             if ($quoteId) {
@@ -99,7 +100,12 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
 
             $this->checkoutSession->clearStorage();
 
-            return $result->setData(['paymentUrl' => $responseData['redirectUrl']]);
+            // The SDK may load the return URL in its cookie-less iframe; the widget script repeats it in the
+            // main tab so Fallback runs in the shopper's session.
+            return $result->setData([
+                'paymentUrl' => $responseData['redirectUrl'],
+                'returnUrl' => $this->urlBuilder->getUrl('vipps/payment/fallback', ['reference' => $reference]),
+            ]);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));
 

@@ -19,6 +19,7 @@ namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
@@ -62,6 +63,8 @@ class FallbackTest extends TestCase
     private Session|MockObject $checkoutSession;
     private ?string $redirectPath = null;
     private bool $cartPersistence = true;
+    private string $fetchDest = 'document';
+    private mixed $result = null;
 
     protected function setUp(): void
     {
@@ -152,6 +155,24 @@ class FallbackTest extends TestCase
         $this->execute();
     }
 
+    /**
+     * The widget's iframe has no session: resolving there would cancel or place in the wrong session, and its
+     * cart page would consume the shopper's message. The widget script repeats the request in their tab.
+     */
+    public function testAnIframeReturnDoesNothing(): void
+    {
+        $this->fetchDest = 'iframe';
+        $this->transactionProcessor->expects($this->never())->method('process');
+        $this->cartRepository->expects($this->never())->method('save');
+        $this->messageManager->expects($this->never())->method('addWarningMessage');
+        $this->cartRestoreCookie->expects($this->never())->method('clearPending');
+
+        $this->execute();
+
+        $this->assertInstanceOf(Raw::class, $this->result);
+        $this->assertNull($this->redirectPath);
+    }
+
     private function payment(string $state): Payment
     {
         return new Payment([Payment::STATE => $state]);
@@ -164,8 +185,12 @@ class FallbackTest extends TestCase
             $this->redirectPath = $path;
             return $redirect;
         });
+        $raw = $this->createMock(Raw::class);
+        $raw->method('setContents')->willReturnSelf();
         $resultFactory = $this->createMock(ResultFactory::class);
-        $resultFactory->method('create')->willReturn($redirect);
+        $resultFactory->method('create')->willReturnCallback(
+            fn ($type) => $type === ResultFactory::TYPE_RAW ? $raw : $redirect
+        );
 
         $vippsQuote = $this->createMock(QuoteInterface::class);
         $vippsQuote->method('getReservedOrderId')->willReturn(self::REFERENCE);
@@ -181,8 +206,11 @@ class FallbackTest extends TestCase
 
         $request = $this->createMock(HttpRequest::class);
         $request->method('getRequestString')->willReturn('/vipps/payment/fallback');
+        $request->method('getHeader')->willReturnCallback(
+            fn ($name) => $name === 'Sec-Fetch-Dest' ? $this->fetchDest : false
+        );
 
-        (new Fallback(
+        $this->result = (new Fallback(
             $resultFactory,
             $request,
             $this->checkoutSession,

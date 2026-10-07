@@ -189,6 +189,11 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      */
     public function execute()
     {
+        // The widget's iframe has no session; the widget script repeats this request in the shopper's tab.
+        if ($this->request->getHeader('Sec-Fetch-Dest') === 'iframe') {
+            return $this->resultFactory->create(ResultFactory::TYPE_RAW)->setContents('');
+        }
+
         $transaction = null;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
