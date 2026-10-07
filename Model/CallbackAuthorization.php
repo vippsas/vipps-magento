@@ -18,10 +18,8 @@ declare(strict_types=1);
 namespace Vipps\Payment\Model;
 
 /**
- * Checks the token Vipps/MobilePay presents on a server-to-server callback against the one stored at initiation.
- *
- * Fails closed: a missing stored token or a missing presented token is never a match, so a payment that was
- * initiated without a token (or before tokens were persisted) cannot be called back at all.
+ * Compares the callback token Vipps/MobilePay presents with the one stored at initiation.
+ * Fails closed: an empty stored or presented token never matches.
  */
 class CallbackAuthorization
 {

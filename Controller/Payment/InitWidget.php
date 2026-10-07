@@ -25,12 +25,18 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Framework\UrlInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
+use Vipps\Payment\Model\Checkout\LastOrderSession;
 use Vipps\Payment\Model\Express\CartRestoreCookie;
+use Vipps\Payment\Model\Express\LivePaymentDecision;
+use Vipps\Payment\Model\Express\LivePaymentGuard;
+use Vipps\Payment\Model\Express\LivePaymentMessages;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -49,7 +55,12 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
         private readonly Config $config,
         private readonly CheckoutHelper $checkoutHelper,
         private readonly LoggerInterface $logger,
-        private readonly CartRestoreCookie $cartRestoreCookie
+        private readonly CartRestoreCookie $cartRestoreCookie,
+        private readonly LivePaymentGuard $livePaymentGuard,
+        private readonly LastOrderSession $lastOrderSession,
+        private readonly LivePaymentMessages $livePaymentMessages,
+        private readonly ManagerInterface $messageManager,
+        private readonly UrlInterface $urlBuilder
     ) {
     }
 
@@ -62,7 +73,24 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
                 throw new LocalizedException(__('Widget SDK is not available.'));
             }
 
-            $responseData = $this->initiatePayment();
+            $decision = $this->initiatePayment();
+
+            // The widget navigates to redirectUrl itself instead of opening a new payment.
+            if ($decision->isOrderPlaced()) {
+                $this->lastOrderSession->store($decision->getOrder());
+                $this->cartRestoreCookie->clearPending();
+                $this->messageManager->addSuccessMessage($this->livePaymentMessages->orderPlaced());
+
+                return $result->setData(['redirectUrl' => $this->urlBuilder->getUrl('checkout/onepage/success')]);
+            }
+
+            if ($decision->isAuthorisedPending()) {
+                $this->messageManager->addNoticeMessage($this->livePaymentMessages->authorisedPending());
+
+                return $result->setData(['redirectUrl' => $this->urlBuilder->getUrl('checkout/cart')]);
+            }
+
+            $responseData = $decision->getPaymentResponse();
 
             $quoteId = $this->checkoutSession->getQuoteId();
             if ($quoteId) {
@@ -92,7 +120,7 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
      * @return \Magento\Payment\Gateway\Command\ResultInterface|null
      * @throws LocalizedException
      */
-    private function initiatePayment()
+    private function initiatePayment(): LivePaymentDecision
     {
         $quote = $this->checkoutSession->getQuote();
 
@@ -101,19 +129,25 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
             throw new LocalizedException(__('Sorry, guest checkout is not available.'));
         }
 
-        $shippingAddress = $quote->getShippingAddress();
-        $shippingAddress->setShippingMethod('');
-        $quote->collectTotals();
+        return $this->livePaymentGuard->initiate(
+            $quote->getId() ? (int)$quote->getId() : null,
+            function () use ($quote) {
+                $shippingAddress = $quote->getShippingAddress();
+                $shippingAddress->setShippingMethod('');
+                $quote->collectTotals();
 
-        $quote->setIsActive(false);
+                $quote->setIsActive(false);
 
-        return $this->commandManager->initiatePayment(
-            $quote->getPayment(),
-            [
-                'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
-                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT,
-            ]
+                return $this->commandManager->initiatePayment(
+                    $quote->getPayment(),
+                    [
+                        'amount' => $quote->getGrandTotal(),
+                        InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
+                            InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
+                        Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT,
+                    ]
+                );
+            }
         );
     }
 

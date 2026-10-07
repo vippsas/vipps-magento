@@ -25,6 +25,7 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\Quote\CancelFacadeInterface;
 use Vipps\Payment\Model\OrderLocator;
+use Vipps\Payment\Model\PaymentProvider;
 use Vipps\Payment\Model\QuoteRepository;
 
 /**
@@ -40,6 +41,7 @@ class CancelFacade implements CancelFacadeInterface
     private CartRepositoryInterface $cartRepository;
     private OrderLocator $orderLocator;
     private LoggerInterface $logger;
+    private PaymentProvider $paymentProvider;
 
     public function __construct(
         CommandManagerInterface $commandManager,
@@ -48,7 +50,8 @@ class CancelFacade implements CancelFacadeInterface
         AttemptManagement $attemptManagement,
         CartRepositoryInterface $cartRepository,
         OrderLocator $orderLocator,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PaymentProvider $paymentProvider
     ) {
         $this->commandManager = $commandManager;
         $this->orderManagement = $orderManagement;
@@ -57,6 +60,7 @@ class CancelFacade implements CancelFacadeInterface
         $this->cartRepository = $cartRepository;
         $this->orderLocator = $orderLocator;
         $this->logger = $logger;
+        $this->paymentProvider = $paymentProvider;
     }
 
     /**
@@ -90,6 +94,50 @@ class CancelFacade implements CancelFacadeInterface
             $attempt = $this->attemptManagement->createAttempt($vippsQuote);
             $attempt->setMessage($t->getMessage());
             $this->attemptManagement->save($attempt);
+        }
+    }
+
+    /**
+     * Terminate an unapproved payment; unlike cancel(), never voids an approved one.
+     * Marks the row cancelled only once Vipps confirms; otherwise it stays queued for FetchOrderFromVipps.
+     *
+     * @return bool true if the payment was terminated and the row marked cancelled
+     * @throws CouldNotSaveException
+     */
+    public function terminateIfCreated(QuoteInterface $vippsQuote): bool
+    {
+        $reference = $vippsQuote->getReservedOrderId();
+
+        try {
+            /** @var \Magento\Quote\Model\Quote $quote */
+            $quote = $this->cartRepository->get($vippsQuote->getQuoteId());
+            $this->commandManager->cancel(
+                $quote->getPayment(),
+                ['reference' => $reference, 'cancel_transaction_only' => true]
+            );
+
+            $payment = $this->paymentProvider->get($reference, true);
+            if (!$payment->isTerminated()) {
+                $this->logger->warning(sprintf(
+                    'Payment %s was not terminated, it is %s. It is left for the order fetch to resolve.',
+                    $reference,
+                    $payment->getState()
+                ));
+                return false;
+            }
+
+            $vippsQuote->setStatus(QuoteStatusInterface::STATUS_CANCELED);
+            $this->quoteRepository->save($vippsQuote);
+
+            return true;
+        } catch (\Throwable $t) {
+            $this->logger->critical($t);
+
+            $attempt = $this->attemptManagement->createAttempt($vippsQuote);
+            $attempt->setMessage($t->getMessage());
+            $this->attemptManagement->save($attempt);
+
+            return false;
         }
     }
 }

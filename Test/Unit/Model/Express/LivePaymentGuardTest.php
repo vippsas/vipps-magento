@@ -32,9 +32,8 @@ use Vipps\Payment\Model\QuoteRepository;
 use Vipps\Payment\Model\TransactionProcessor;
 
 /**
- * A cart may carry one live Express payment. Starting another terminates an unapproved one, and an approved
- * one is never terminated: it becomes the order instead, because voiding it would leave a shopper who paid
- * with nothing if they then abandon the new payment.
+ * Starting another Express payment terminates an unapproved one; an approved one is never terminated
+ * but becomes the order instead.
  *
  * @package Vipps\Payment\Test\Unit\Model\Express
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)

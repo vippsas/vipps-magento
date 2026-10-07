@@ -70,6 +70,11 @@ class ModificationDataBuilder implements BuilderInterface
         // has produced an order, and an empty body serialises as [] which Vipps rejects.
         $result['modificationReference'] = $buildSubject['reference'] ?? $order->getOrderIncrementId();
 
+        // Cancel only if still unapproved; without it the same call voids an authorised payment.
+        if (!empty($buildSubject['cancel_transaction_only'])) {
+            $result['cancelTransactionOnly'] = true;
+        }
+
         return $result;
     }
 }

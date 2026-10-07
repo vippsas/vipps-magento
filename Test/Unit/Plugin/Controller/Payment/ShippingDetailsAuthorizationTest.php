@@ -27,9 +27,8 @@ use Vipps\Payment\Model\Express\ShippingCallbackGuard;
 use Vipps\Payment\Plugin\Controller\Payment\ShippingDetailsAuthorization;
 
 /**
- * Integrations replace ShippingDetails::execute() with around plugins that never call proceed, so the check
- * inside the controller is not enough on its own. This plugin wraps them all and must stop the chain on
- * rejection.
+ * The plugin wraps integrations that replace execute() without calling proceed, so it must stop the
+ * chain on rejection.
  *
  * @package Vipps\Payment\Test\Unit\Plugin\Controller\Payment
  */

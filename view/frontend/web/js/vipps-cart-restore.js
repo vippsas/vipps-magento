@@ -12,7 +12,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-define(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerData) {
+define(['jquery', 'Magento_Customer/js/customer-data', 'mage/cookies'], function ($, customerData) {
     'use strict';
 
     return function (config) {
@@ -24,6 +24,26 @@ define(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerDat
             return match ? decodeURIComponent(match[1]) : null;
         }
 
+        /**
+         * Asks the store whether the payment behind the restored cart was already approved. The page has
+         * rendered by now, so this never holds a page load up on Vipps/MobilePay.
+         */
+        function checkReturn() {
+            $.ajax({
+                url: config.checkReturnUrl,
+                type: 'POST',
+                dataType: 'json',
+                data: {form_key: $.mage.cookies.get('form_key')},
+                success: function (response) {
+                    if (response.orderPlaced && response.redirectUrl) {
+                        window.location.assign(response.redirectUrl);
+                    } else if (response.pending) {
+                        customerData.reload(['messages'], false);
+                    }
+                }
+            });
+        }
+
         function ajaxRestore() {
             $.ajax({
                 url: config.restoreUrl,
@@ -33,6 +53,7 @@ define(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerDat
                     if (response.restored) {
                         // 'messages' too, or the restore notice is never shown on this path.
                         customerData.reload(['cart', 'messages'], false);
+                        checkReturn();
                     }
                 }
             });
@@ -53,6 +74,7 @@ define(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerDat
         if (getCookie(RESTORED_COOKIE)) {
             document.cookie = RESTORED_COOKIE + '=; path=/; max-age=0';
             customerData.reload(['cart', 'messages'], false);
+            checkReturn();
             return;
         }
 

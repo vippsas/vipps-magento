@@ -24,9 +24,11 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
+use Vipps\Payment\Api\Data\QuoteStatusInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Model\QuoteFactory;
 use Vipps\Payment\Model\ResourceModel\Quote as QuoteResource;
+use Vipps\Payment\Model\ResourceModel\Quote\CollectionFactory;
 
 /**
  * Class QuoteRepository
@@ -59,6 +61,11 @@ class QuoteRepository implements QuoteRepositoryInterface
     private $logger;
 
     /**
+     * @var CollectionFactory
+     */
+    private $collectionFactory;
+
+    /**
      * QuoteRepository constructor.
      *
      * @param QuoteResource $quoteResource .
@@ -66,19 +73,22 @@ class QuoteRepository implements QuoteRepositoryInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param LoggerInterface $logger
+     * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         QuoteResource $quoteResource,
         QuoteFactory $quoteFactory,
         OrderRepositoryInterface $orderRepository,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        CollectionFactory $collectionFactory
     ) {
         $this->quoteResource = $quoteResource;
         $this->quoteFactory = $quoteFactory;
         $this->orderRepository = $orderRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -145,6 +155,27 @@ class QuoteRepository implements QuoteRepositoryInterface
         }
 
         return $vippsQuote;
+    }
+
+    /**
+     * The cart's payments still in the order fetch queue (new or pending), newest first.
+     *
+     * @param int $quoteId
+     *
+     * @return QuoteInterface[]
+     */
+    public function getLiveByQuote(int $quoteId): array
+    {
+        $collection = $this->collectionFactory->create();
+        $collection
+            ->addFieldToFilter('quote_id', $quoteId)
+            ->addFieldToFilter(
+                QuoteStatusInterface::FIELD_STATUS,
+                ['in' => [QuoteStatusInterface::STATUS_NEW, QuoteStatusInterface::STATUS_PENDING]]
+            )
+            ->setOrder('entity_id', 'DESC');
+
+        return array_values($collection->getItems());
     }
 
     /**

@@ -24,12 +24,8 @@ use Vipps\Payment\Controller\Payment\ShippingDetails;
 use Vipps\Payment\Model\Express\ShippingCallbackGuard;
 
 /**
- * Authenticates the shipping details callback ahead of every other plugin on it.
- *
- * Integrations replace ShippingDetails::execute() with their own around plugin to offer extra shipping
- * options, and one that never calls $proceed skips any check inside the controller. Declared with the lowest
- * sort order, this plugin wraps all of them, so an unauthenticated request is rejected before any of them
- * can load or change the cart.
+ * Authenticates the shipping details callback before any other plugin, as integrations may replace
+ * execute() without calling $proceed and so skip the controller's own check.
  */
 class ShippingDetailsAuthorization
 {

@@ -26,11 +26,8 @@ use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Model\CallbackAuthorization;
 
 /**
- * Authenticates the Express shipping details callback.
- *
- * The callback is public and identifies the cart by its reserved order id, which is sequential and so not a
- * secret. The only proof that a request comes from Vipps/MobilePay is the Authorization header carrying the
- * callbackAuthorizationToken we sent when initiating the payment.
+ * Authenticates the Express shipping details callback by its Authorization header, which must carry the
+ * callbackAuthorizationToken sent at initiation; the reference alone is sequential, not a secret.
  */
 class ShippingCallbackGuard
 {
@@ -73,10 +70,8 @@ class ShippingCallbackGuard
     }
 
     /**
-     * Return the HTTP status to reject the request with, or null when it may proceed.
-     *
-     * An unknown reference is rejected exactly like a wrong token, so the endpoint does not reveal which
-     * references exist.
+     * HTTP status to reject the request with, or null when it may proceed.
+     * An unknown reference gets the same 403 as a wrong token, so references can't be probed.
      *
      * @param RequestInterface $request
      *

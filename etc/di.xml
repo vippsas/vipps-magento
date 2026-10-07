@@ -250,6 +250,7 @@
             </argument>
             <argument name="allowedBodyKeys" xsi:type="array">
                 <item name="modificationReference" xsi:type="string">modificationReference</item>
+                <item name="cancelTransactionOnly" xsi:type="string">cancelTransactionOnly</item>
             </argument>
         </arguments>
     </virtualType>
@@ -608,6 +609,11 @@
         </arguments>
     </type>
     <type name="Vipps\Payment\Model\Quote\CancelFacade">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Vipps\Payment\Model\Express\LivePaymentGuard">
         <arguments>
             <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
         </arguments>

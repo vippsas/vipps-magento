@@ -42,9 +42,8 @@ use Vipps\Payment\Model\Quote\ShippingMethodValidator;
 use Vipps\Payment\Model\QuoteLocator;
 
 /**
- * The shipping details callback is public and keyed on a sequential reference, so the
- * callbackAuthorizationToken is the only thing standing between the internet and the shopper's cart.
- * Every rejection must happen before the cart is loaded, changed, reactivated or saved.
+ * The public shipping callback must reject a missing or wrong token before the cart is loaded,
+ * changed, reactivated or saved.
  *
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)

@@ -69,6 +69,14 @@ define([
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 }).then(function (response) {
+                    // An earlier payment for this cart was already approved: go to the order, or to the
+                    // cart where the shopper is told it is being completed, instead of paying again.
+                    if (response && response.redirectUrl) {
+                        window.location.assign(response.redirectUrl);
+
+                        return $.Deferred().promise();
+                    }
+
                     if (!response || !response.paymentUrl) {
                         throw new Error(response && response.message || 'Vipps Widget: unable to start payment.');
                     }

@@ -28,13 +28,16 @@ use Magento\Framework\Exception\LocalizedExceptionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Session\SessionManagerInterface;
-use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
+use Vipps\Payment\Model\Checkout\LastOrderSession;
 use Vipps\Payment\Model\Express\CartRestoreCookie;
+use Vipps\Payment\Model\Express\LivePaymentDecision;
+use Vipps\Payment\Model\Express\LivePaymentGuard;
+use Vipps\Payment\Model\Express\LivePaymentMessages;
 use Vipps\Payment\Model\Method\Vipps;
 
 /**
@@ -100,6 +103,21 @@ class InitExpress implements ActionInterface
     private $cartRestoreCookie;
 
     /**
+     * @var LivePaymentGuard
+     */
+    private $livePaymentGuard;
+
+    /**
+     * @var LastOrderSession
+     */
+    private $lastOrderSession;
+
+    /**
+     * @var LivePaymentMessages
+     */
+    private $livePaymentMessages;
+
+    /**
      * InitExpress constructor.
      *
      * @param ResultFactory $resultFactory
@@ -113,6 +131,9 @@ class InitExpress implements ActionInterface
      * @param CheckoutHelper $checkoutHelper
      * @param LoggerInterface $logger
      * @param CartRestoreCookie $cartRestoreCookie
+     * @param LivePaymentGuard $livePaymentGuard
+     * @param LastOrderSession $lastOrderSession
+     * @param LivePaymentMessages $livePaymentMessages
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -127,7 +148,10 @@ class InitExpress implements ActionInterface
         ManagerInterface $messageManager,
         CheckoutHelper $checkoutHelper,
         LoggerInterface $logger,
-        CartRestoreCookie $cartRestoreCookie
+        CartRestoreCookie $cartRestoreCookie,
+        LivePaymentGuard $livePaymentGuard,
+        LastOrderSession $lastOrderSession,
+        LivePaymentMessages $livePaymentMessages
     ) {
         $this->resultFactory = $resultFactory;
         $this->checkoutSession = $checkoutSession;
@@ -140,6 +164,9 @@ class InitExpress implements ActionInterface
         $this->checkoutHelper = $checkoutHelper;
         $this->logger = $logger;
         $this->cartRestoreCookie = $cartRestoreCookie;
+        $this->livePaymentGuard = $livePaymentGuard;
+        $this->lastOrderSession = $lastOrderSession;
+        $this->livePaymentMessages = $livePaymentMessages;
     }
 
     public function execute()
@@ -152,7 +179,25 @@ class InitExpress implements ActionInterface
                 );
             }
 
-            $responseData = $this->initiatePayment();
+            $decision = $this->initiatePayment();
+
+            if ($decision->isOrderPlaced()) {
+                $this->lastOrderSession->store($decision->getOrder());
+                $this->cartRestoreCookie->clearPending();
+                $this->messageManager->addSuccessMessage($this->livePaymentMessages->orderPlaced());
+                $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+
+                return $resultRedirect;
+            }
+
+            if ($decision->isAuthorisedPending()) {
+                $this->messageManager->addNoticeMessage($this->livePaymentMessages->authorisedPending());
+                $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
+                return $resultRedirect;
+            }
+
+            $responseData = $decision->getPaymentResponse();
 
             $quoteId = $this->checkoutSession->getQuoteId();
             if ($quoteId) {
@@ -178,11 +223,14 @@ class InitExpress implements ActionInterface
     }
 
     /**
-     * @return ResultInterface|null
+     * Create the payment, unless the cart already has an approved one.
+     * The guard runs before the cart is touched, so a blocked cart stays active and unchanged.
+     *
+     * @return LivePaymentDecision
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    private function initiatePayment()
+    private function initiatePayment(): LivePaymentDecision
     {
         $quote = $this->checkoutSession->getQuote();
 
@@ -191,19 +239,25 @@ class InitExpress implements ActionInterface
             throw new LocalizedException(__('Sorry, guest checkout is not available.'));
         }
 
-        $shippingAddress = $quote->getShippingAddress();
-        $shippingAddress->setShippingMethod('');
-        $quote->collectTotals();
+        return $this->livePaymentGuard->initiate(
+            $quote->getId() ? (int)$quote->getId() : null,
+            function () use ($quote) {
+                $shippingAddress = $quote->getShippingAddress();
+                $shippingAddress->setShippingMethod('');
+                $quote->collectTotals();
 
-        $quote->setIsActive(false);
+                $quote->setIsActive(false);
 
-        return $this->commandManager->initiatePayment(
-            $quote->getPayment(),
-            [
-                'amount' => $quote->getGrandTotal(),
-                InitiateBuilderInterface::PAYMENT_TYPE_KEY => InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
-                Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
-            ]
+                return $this->commandManager->initiatePayment(
+                    $quote->getPayment(),
+                    [
+                        'amount' => $quote->getGrandTotal(),
+                        InitiateBuilderInterface::PAYMENT_TYPE_KEY =>
+                            InitiateBuilderInterface::PAYMENT_TYPE_EXPRESS_CHECKOUT,
+                        Vipps::METHOD_TYPE_KEY => Vipps::METHOD_TYPE_EXPRESS_CHECKOUT
+                    ]
+                );
+            }
         );
     }
 
