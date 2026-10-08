@@ -13,13 +13,13 @@ END_METADATA -->
 
 ## In which countries can I use Vipps MobilePay?
 
-You can get paid by users who have Vipps in Norway, or who have MobilePay in Denmark or Finland.
+You can get paid by Vipps MobilePay users in Denmark, Finland, Greenland, and Norway.
 
 ## For how long is an order reserved?
 
 :::note
-Payments initiated in Finland and Denmark have only 14 days to be captured, while
-payments in Norway have 180 days.
+Payments in the Danish and Finnish markets have only 14 days to be captured, while
+payments in the Norwegian market have 180 days.
 If the payments aren't captured within this time, they will be automatically cancelled.
 
 Payments can only be captured up to 14 days (MobilePay) or 180 days (Vipps) after reservation.
