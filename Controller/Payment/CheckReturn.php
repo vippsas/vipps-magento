@@ -58,6 +58,8 @@ class CheckReturn implements HttpPostActionInterface
             if ($decision && $decision->isOrderPlaced()) {
                 $this->lastOrderSession->store($decision->getOrder());
                 $this->cartRestoreCookie->clearPending();
+                // Drop the "cart restored" notice queued moments ago; the cart is an order now.
+                $this->messageManager->getMessages(true);
                 $this->messageManager->addSuccessMessage($this->livePaymentMessages->orderPlaced());
 
                 return $result->setData([

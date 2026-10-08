@@ -19,16 +19,26 @@ define(['jquery', 'Magento_Customer/js/customer-data', 'mage/cookies'], function
         var PENDING_COOKIE = 'vipps_pending_quote_id';
         var RESTORED_COOKIE = 'vipps_cart_restored';
 
+        // Magento's full-page loader while the payment is checked; left up when redirecting to the confirmation.
+        function showLoader() {
+            $('body').trigger('processStart');
+        }
+
+        function hideLoader() {
+            $('body').trigger('processStop');
+        }
+
         function getCookie(name) {
             var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
             return match ? decodeURIComponent(match[1]) : null;
         }
 
         /**
-         * Asks the store whether the payment behind the restored cart was already approved. The page has
-         * rendered by now, so this never holds a page load up on Vipps/MobilePay.
+         * Asks whether the restored cart's payment was already approved; runs after render, never blocking it.
+         *
+         * @param {Array} sections refreshed unless redirecting, so an approved cart never flashes as restored
          */
-        function checkReturn() {
+        function checkReturn(sections) {
             $.ajax({
                 url: config.checkReturnUrl,
                 type: 'POST',
@@ -37,25 +47,37 @@ define(['jquery', 'Magento_Customer/js/customer-data', 'mage/cookies'], function
                 success: function (response) {
                     if (response.orderPlaced && response.redirectUrl) {
                         window.location.assign(response.redirectUrl);
-                    } else if (response.pending) {
-                        customerData.reload(['messages'], false);
+                        return;
                     }
+                    if (sections.length || response.pending) {
+                        customerData.reload(sections.concat(['messages']), false);
+                    }
+                    hideLoader();
+                },
+                error: function () {
+                    if (sections.length) {
+                        customerData.reload(sections.concat(['messages']), false);
+                    }
+                    hideLoader();
                 }
             });
         }
 
         function ajaxRestore() {
+            showLoader();
             $.ajax({
                 url: config.restoreUrl,
                 type: 'POST',
                 dataType: 'json',
                 success: function (response) {
                     if (response.restored) {
-                        // 'messages' too, or the restore notice is never shown on this path.
-                        customerData.reload(['cart', 'messages'], false);
-                        checkReturn();
+                        // The cart and the restore notice are refreshed once checkReturn has answered.
+                        checkReturn(['cart']);
+                    } else {
+                        hideLoader();
                     }
-                }
+                },
+                error: hideLoader
             });
         }
 
@@ -65,7 +87,12 @@ define(['jquery', 'Magento_Customer/js/customer-data', 'mage/cookies'], function
         }
 
         window.addEventListener('pageshow', function (event) {
-            if (event.persisted && getCookie(PENDING_COOKIE)) {
+            if (!event.persisted) {
+                return;
+            }
+            // Back from the confirmation can restore this page with the loader still up.
+            hideLoader();
+            if (getCookie(PENDING_COOKIE)) {
                 ajaxRestore();
             }
         });
@@ -74,7 +101,8 @@ define(['jquery', 'Magento_Customer/js/customer-data', 'mage/cookies'], function
         if (getCookie(RESTORED_COOKIE)) {
             document.cookie = RESTORED_COOKIE + '=; path=/; max-age=0';
             customerData.reload(['cart', 'messages'], false);
-            checkReturn();
+            showLoader();
+            checkReturn([]);
             return;
         }
 

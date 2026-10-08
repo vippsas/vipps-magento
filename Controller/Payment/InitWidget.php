@@ -73,21 +73,35 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
                 throw new LocalizedException(__('Widget SDK is not available.'));
             }
 
+            // No cart in the session, e.g. after an order or an abandoned initiation: show the real, empty cart.
+            $quote = $this->checkoutSession->getQuote();
+            if (!$quote->getId() || !$quote->getItemsCount()) {
+                $this->messageManager->addErrorMessage(__('Your cart is empty.'));
+                $url = $this->urlBuilder->getUrl('checkout/cart');
+
+                return $result->setData(['redirectUrl' => $url, 'redirect' => $url]);
+            }
+
             $decision = $this->initiatePayment();
 
-            // The widget navigates to redirectUrl itself instead of opening a new payment.
+            // The widget navigates to redirectUrl itself instead of opening a new payment. "redirect" makes
+            // customer-data skip its instant messages reload, so the notice survives onto the next page.
             if ($decision->isOrderPlaced()) {
                 $this->lastOrderSession->store($decision->getOrder());
                 $this->cartRestoreCookie->clearPending();
                 $this->messageManager->addSuccessMessage($this->livePaymentMessages->orderPlaced());
 
-                return $result->setData(['redirectUrl' => $this->urlBuilder->getUrl('checkout/onepage/success')]);
+                $url = $this->urlBuilder->getUrl('checkout/onepage/success');
+
+                return $result->setData(['redirectUrl' => $url, 'redirect' => $url]);
             }
 
             if ($decision->isAuthorisedPending()) {
                 $this->messageManager->addNoticeMessage($this->livePaymentMessages->authorisedPending());
 
-                return $result->setData(['redirectUrl' => $this->urlBuilder->getUrl('checkout/cart')]);
+                $url = $this->urlBuilder->getUrl('checkout/cart');
+
+                return $result->setData(['redirectUrl' => $url, 'redirect' => $url]);
             }
 
             $responseData = $decision->getPaymentResponse();

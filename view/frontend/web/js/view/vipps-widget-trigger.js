@@ -38,7 +38,8 @@ define([
 
             // On desktop the SDK may load the return URL in its cookie-less iframe, so repeat it in this tab
             // where Fallback runs in the shopper's session: restores the cart, or shows the confirmation.
-            this._trigger = window.vipps.trigger($.proxy(this._createSession, this))
+            // Not _trigger: that is jQuery UI's own event method, which it calls right after _create().
+            this._vippsTrigger = window.vipps.trigger($.proxy(this._createSession, this))
                 .on('success', $.proxy(this._returnToStore, this))
                 .on('cancel', $.proxy(this._returnToStore, this));
 
@@ -67,7 +68,7 @@ define([
         /** @private */
         _handleClick: function (event) {
             event.preventDefault();
-            this._trigger.open(this.options.language ? {language: this.options.language} : undefined);
+            this._vippsTrigger.open(this.options.language ? {language: this.options.language} : undefined);
         },
 
         /**

@@ -45,6 +45,8 @@ use Vipps\Payment\Model\Express\LivePaymentMessages;
 class InitWidgetTest extends TestCase
 {
     private array $data = [];
+    private ?int $cartId = 42;
+    private int $itemsCount = 1;
 
     public function testReturnsThePaymentAndItsReturnUrl(): void
     {
@@ -63,7 +65,30 @@ class InitWidgetTest extends TestCase
         $this->assertSame('https://store/vipps/payment/fallback/reference/000450209/', $this->data['returnUrl']);
     }
 
-    private function execute(array $paymentResponse): void
+    /**
+     * Without a cart in the session the payment code would fail with an \Error and a bare 500.
+     */
+    public function testAnEmptyCartGoesToTheCartPageWithoutStartingAPayment(): void
+    {
+        $this->itemsCount = 0;
+
+        $this->execute(['redirectUrl' => 'https://pay-mt.vipps.no/x'], false);
+
+        $this->assertSame('https://store/checkout/cart/reference//', $this->data['redirectUrl']);
+        $this->assertSame($this->data['redirectUrl'], $this->data['redirect']);
+        $this->assertArrayNotHasKey('paymentUrl', $this->data);
+    }
+
+    public function testASessionWithoutACartIsTreatedAsEmpty(): void
+    {
+        $this->cartId = null;
+
+        $this->execute(['redirectUrl' => 'https://pay-mt.vipps.no/x'], false);
+
+        $this->assertArrayNotHasKey('paymentUrl', $this->data);
+    }
+
+    private function execute(array $paymentResponse, bool $expectPayment = true): void
     {
         $result = $this->createMock(JsonResult::class);
         $result->method('setData')->willReturnCallback(function ($data) use ($result) {
@@ -74,7 +99,8 @@ class InitWidgetTest extends TestCase
         $resultFactory->method('create')->willReturn($result);
 
         $cart = $this->createMock(Quote::class);
-        $cart->method('getId')->willReturn(42);
+        $cart->method('getId')->willReturn($this->cartId);
+        $cart->method('getItemsCount')->willReturn($this->itemsCount);
         $cart->method('getCheckoutMethod')->willReturn('guest');
         $cart->method('getReservedOrderId')->willReturn('000450209');
 
@@ -86,7 +112,8 @@ class InitWidgetTest extends TestCase
         $config->method('getValue')->willReturn(true);
 
         $guard = $this->createMock(LivePaymentGuard::class);
-        $guard->method('initiate')->willReturn(LivePaymentDecision::proceed($paymentResponse));
+        $guard->expects($expectPayment ? $this->once() : $this->never())->method('initiate')
+            ->willReturn(LivePaymentDecision::proceed($paymentResponse));
 
         $urlBuilder = $this->createMock(UrlInterface::class);
         $urlBuilder->method('getUrl')->willReturnCallback(

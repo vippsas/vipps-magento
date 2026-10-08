@@ -45,11 +45,13 @@ class CheckReturnTest extends TestCase
     private LivePaymentGuard|MockObject $guard;
     private LastOrderSession|MockObject $lastOrderSession;
     private array $data = [];
+    private ManagerInterface|MockObject $messageManager;
 
     protected function setUp(): void
     {
         $this->guard = $this->createMock(LivePaymentGuard::class);
         $this->lastOrderSession = $this->createMock(LastOrderSession::class);
+        $this->messageManager = $this->createMock(ManagerInterface::class);
     }
 
     public function testAnApprovedPaymentSendsTheShopperToTheirOrder(): void
@@ -57,6 +59,8 @@ class CheckReturnTest extends TestCase
         $order = $this->createMock(OrderInterface::class);
         $this->guard->method('placeAuthorised')->with(42)->willReturn(LivePaymentDecision::orderPlaced($order));
         $this->lastOrderSession->expects($this->once())->method('store')->with($order);
+        // The restore notice queued just before must not follow the shopper to the confirmation.
+        $this->messageManager->expects($this->once())->method('getMessages')->with(true);
 
         $this->execute();
 
@@ -128,7 +132,7 @@ class CheckReturnTest extends TestCase
             $this->lastOrderSession,
             $messages,
             $this->createMock(CartRestoreCookie::class),
-            $this->createMock(ManagerInterface::class),
+            $this->messageManager,
             $urlBuilder,
             $this->createMock(LoggerInterface::class)
         ))->execute();

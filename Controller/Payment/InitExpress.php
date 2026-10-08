@@ -234,6 +234,11 @@ class InitExpress implements ActionInterface
     {
         $quote = $this->checkoutSession->getQuote();
 
+        // No cart in the session, e.g. after an order or an abandoned initiation; there is nothing to pay for.
+        if (!$quote->getId() || !$quote->getItemsCount()) {
+            throw new LocalizedException(__('Your cart is empty.'));
+        }
+
         $this->setCheckoutMethod($quote);
         if ($quote->getCheckoutMethod() === Onepage::METHOD_REGISTER) {
             throw new LocalizedException(__('Sorry, guest checkout is not available.'));
