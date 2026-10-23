@@ -40,26 +40,16 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Regression in 3.0.4 for regular checkout using vipps payment method (not express) had a
   check against two orders for one cart counted that cancelled order, so the new payment was refused and
   only released again by the cancellation cron.
+- `vippsGetPaymentDetails` works again. It read the payment through methods that no longer existed after the
+  move to the ePayment API, so every call failed and the headless return flow with it.
 
 ### Security
-- Returning from Vipps/MobilePay now requires a single-use token that is generated when the payment
-  starts and carried in the return URL. The token expires after 24 hours and is used up once the return has placed the order
-  or restored the cart; a return that could not be resolved yet can be retried with the same link.
-- `vippsActivateCart` only reactivates the cart of a payment that was cancelled or has expired, and only for
-  the customer who owns it. Reported by Michael Stochl of ICT IronByte.
-- `vippsGetPaymentDetails` works again, and with `vippsActivateCart` restores the cart of a payment the shopper
-  cancelled in the app, as the return page already did. Both read the payment through methods that no longer
-  existed after the move to the ePayment API, so every call failed.
-- The Express cart restore cookie is signed, so it can only restore the cart it was issued for.
-- The return page no longer puts an order in the visitor's session when the return could not be
-  authorised. It did so even for a failed return, which handed whoever asked someone else's confirmation
-  page, with their email address and an offer to attach the order to a new account, or their restored cart.
-- The Express shipping callback requires the callback authorization token that was sent when the payment
-  was initiated, and is checked ahead of any plugin on the controller. The endpoint had no authentication,
-  and the token it should have been checked against was read from a field the ePayment API does not send,
-  so it was stored empty for every payment.
-- The payment callback compares its token in constant time and refuses a request when either the stored or
-  the presented token is empty, rather than treating two empty values as a match.
+- **Upgrade as soon as possible.** Returning from a Vipps/MobilePay payment is now authenticated with a
+  single-use secret token, issued when the payment starts, rather than with an identifier that could be
+  guessed. Every version from 2.4.23 to 3.0.4 could expose customer details held on carts and orders,
+  including name, address, email, phone number and basket contents. Rated high severity, CVSS 8.2.
+  Reported by Michael Stochl of ICT IronByte. Full technical detail will follow in a GitHub security
+  advisory once merchants have had a chance to upgrade.
 
 ### Changed
 - **Headless storefronts:** `vippsGetPaymentDetails` and `vippsActivateCart` take a required `token`
@@ -67,8 +57,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - **Upgrading:** a shopper who is at Vipps/MobilePay while you deploy comes back to the cart instead of the
   confirmation page, because their payment was started without a return token. Their order is still created,
   by the order fetch cron, within ten minutes.
-- **Upgrading:** an Express payment started before the upgrade cannot finish choosing an address, because its
-  shipping callback has no stored token and is now rejected. The shopper can start the payment again.
+- **Upgrading:** an Express payment that was already under way when you deploy cannot be completed. The
+  shopper needs to start it again.
 
 ## [3.0.4] - 2026-09-30
 
