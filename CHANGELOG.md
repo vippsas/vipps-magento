@@ -30,10 +30,24 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
   cancelled in the app, as the return page already did. Both read the payment through methods that no longer
   existed after the move to the ePayment API, so every call failed.
 - The Express cart restore cookie is signed, so it can only restore the cart it was issued for.
+- The return page no longer puts an order in the visitor's session when the return could not be
+  authorised. It did so even for a failed return, which handed whoever asked someone else's confirmation
+  page, with their email address and an offer to attach the order to a new account, or their restored cart.
+- The Express shipping callback requires the callback authorization token that was sent when the payment
+  was initiated, and is checked ahead of any plugin on the controller. The endpoint had no authentication,
+  and the token it should have been checked against was read from a field the ePayment API does not send,
+  so it was stored empty for every payment.
+- The payment callback compares its token in constant time and refuses a request when either the stored or
+  the presented token is empty, rather than treating two empty values as a match.
 
 ### Changed
 - **Headless storefronts:** `vippsGetPaymentDetails` and `vippsActivateCart` take a required `token`
   argument. Read it from the `token` parameter of the return URL, next to `reference`, and pass it to both.
+- **Upgrading:** a shopper who is at Vipps/MobilePay while you deploy comes back to the cart instead of the
+  confirmation page, because their payment was started without a return token. Their order is still created,
+  by the order fetch cron, within ten minutes.
+- **Upgrading:** an Express payment started before the upgrade cannot finish choosing an address, because its
+  shipping callback has no stored token and is now rejected. The shopper can start the payment again.
 
 ## [3.0.4] - 2026-09-30
 
