@@ -30,6 +30,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
+use Vipps\Payment\Model\CallbackAuthorization;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\TransactionProcessor;
 use Laminas\Http\Response as Response;
@@ -82,6 +83,11 @@ class Callback implements ActionInterface, CsrfAwareActionInterface
     private $resultFactory;
 
     /**
+     * @var CallbackAuthorization
+     */
+    private $callbackAuthorization;
+
+    /**
      * Callback constructor.
      *
      * @param ResultFactory $resultFactory
@@ -91,6 +97,7 @@ class Callback implements ActionInterface, CsrfAwareActionInterface
      * @param Json $jsonDecoder
      * @param Compliance $compliance
      * @param LoggerInterface $logger
+     * @param CallbackAuthorization $callbackAuthorization
      */
     public function __construct(
         ResultFactory $resultFactory,
@@ -99,7 +106,8 @@ class Callback implements ActionInterface, CsrfAwareActionInterface
         QuoteRepositoryInterface $vippsQuoteRepository,
         Json $jsonDecoder,
         Compliance $compliance,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        CallbackAuthorization $callbackAuthorization
     ) {
         $this->request = $request;
         $this->resultFactory = $resultFactory;
@@ -108,6 +116,7 @@ class Callback implements ActionInterface, CsrfAwareActionInterface
         $this->jsonDecoder = $jsonDecoder;
         $this->gdprCompliance = $compliance;
         $this->logger = $logger;
+        $this->callbackAuthorization = $callbackAuthorization;
     }
 
     /**
@@ -199,13 +208,12 @@ class Callback implements ActionInterface, CsrfAwareActionInterface
     private function isAuthorized($requestData): bool
     {
         $vippsQuote = $this->getVippsQuote($requestData);
-        if ($vippsQuote &&
-            $vippsQuote->getAuthToken() === $this->request->getHeader('authorization')
-        ) {
-            return true;
-        }
+        $presentedToken = $this->request->getHeader('authorization');
 
-        return false;
+        return $vippsQuote && $this->callbackAuthorization->isAuthorized(
+            $vippsQuote->getAuthToken(),
+            is_string($presentedToken) ? $presentedToken : null
+        );
     }
 
     /**

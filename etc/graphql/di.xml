@@ -19,6 +19,11 @@
             <argument name="config" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
         </arguments>
     </type>
+    <type name="Vipps\Payment\GraphQl\Resolver\ActivateCart">
+        <arguments>
+            <argument name="config" xsi:type="object">Vipps\Payment\GatewayEpayment\Config\Config</argument>
+        </arguments>
+    </type>
     <type name="Magento\StoreGraphQl\Model\Resolver\Store\StoreConfigDataProvider">
         <arguments>
             <argument name="extendedConfigData" xsi:type="array">

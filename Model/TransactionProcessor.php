@@ -512,7 +512,7 @@ class TransactionProcessor
             return;
         }
 
-        $existingOrder = $this->orderLocator->getByQuoteId($quoteId);
+        $existingOrder = $this->orderLocator->getActiveByQuoteId($quoteId);
 
         if (!$existingOrder) {
             return;

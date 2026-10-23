@@ -16,19 +16,16 @@
 namespace Vipps\Payment\GraphQl\Resolver;
 
 use Magento\Framework\GraphQl\Config\Element\Field;
-use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
-use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
-use Vipps\Payment\Api\CommandManagerInterface;
-use Vipps\Payment\Api\QuoteRepositoryInterface;
-use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
-use Magento\Quote\Model\QuoteIdMask;
 use Magento\Quote\Model\QuoteIdMaskFactory;
-use Vipps\Payment\Model\QuoteRepository;
 use Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask as QuoteIdMaskResourceModel;
+use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
+use Vipps\Payment\GraphQl\ReturnAuthorizer;
+use Vipps\Payment\Model\ReturnToken;
+use Vipps\Payment\Model\Transaction\StatusVisitor;
 
 class ActivateCart implements ResolverInterface
 {
@@ -37,10 +34,6 @@ class ActivateCart implements ResolverInterface
      */
     private $quoteIdMaskFactory;
     /**
-     * @var QuoteRepositoryInterface
-     */
-    private $vippsQuoteRepository;
-    /**
      * @var QuoteIdMaskResourceModel
      */
     private $quoteIdMaskResourceModel;
@@ -48,48 +41,92 @@ class ActivateCart implements ResolverInterface
      * @var CartRepositoryInterface
      */
     private $cartRepository;
+    /**
+     * @var ReturnAuthorizer
+     */
+    private $returnAuthorizer;
+    /**
+     * @var ReturnToken
+     */
+    private $returnToken;
+    /**
+     * @var PaymentDetailsProvider
+     */
+    private $detailsProvider;
+    /**
+     * @var ConfigInterface
+     */
+    private $config;
+    /**
+     * @var StatusVisitor
+     */
+    private $statusVisitor;
 
     /**
      * ActivateCart constructor.
      *
      * @param QuoteIdMaskFactory $quoteIdMaskFactory
-     * @param QuoteRepositoryInterface $vippsQuoteRepository
      * @param QuoteIdMaskResourceModel $quoteIdMaskResourceModel
      * @param CartRepositoryInterface $cartRepository
+     * @param ReturnAuthorizer $returnAuthorizer
+     * @param ReturnToken $returnToken
+     * @param PaymentDetailsProvider $detailsProvider
+     * @param ConfigInterface $config
+     * @param StatusVisitor $statusVisitor
      */
     public function __construct(
         QuoteIdMaskFactory $quoteIdMaskFactory,
-        QuoteRepositoryInterface $vippsQuoteRepository,
         QuoteIdMaskResourceModel $quoteIdMaskResourceModel,
-        CartRepositoryInterface $cartRepository
+        CartRepositoryInterface $cartRepository,
+        ReturnAuthorizer $returnAuthorizer,
+        ReturnToken $returnToken,
+        PaymentDetailsProvider $detailsProvider,
+        ConfigInterface $config,
+        StatusVisitor $statusVisitor
     ) {
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
-        $this->vippsQuoteRepository = $vippsQuoteRepository;
         $this->quoteIdMaskResourceModel = $quoteIdMaskResourceModel;
         $this->cartRepository = $cartRepository;
+        $this->returnAuthorizer = $returnAuthorizer;
+        $this->returnToken = $returnToken;
+        $this->detailsProvider = $detailsProvider;
+        $this->config = $config;
+        $this->statusVisitor = $statusVisitor;
     }
 
     public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
-        $maskedId = null;
-        $orderNumber = $args['order_number'] ?? '';
+        $orderNumber = (string)($args['order_number'] ?? '');
+        [$vippsQuote, $quote] = $this->returnAuthorizer->authorize(
+            $orderNumber,
+            (string)($args['token'] ?? ''),
+            $context
+        );
 
-        $vippsQuote = $this->vippsQuoteRepository->loadByOrderId($orderNumber);
-        if ($vippsQuote) {
-            $quoteId = $vippsQuote->getQuoteId();
-
-            $quoteIdMask = $this->quoteIdMaskFactory->create();
-            $this->quoteIdMaskResourceModel->load($quoteIdMask, $quoteId, 'quote_id');
-            if ($quoteIdMask->getMaskedId()) {
-                $quote = $this->cartRepository->get($quoteId);
-                $quote->setIsActive(true);
-                $quote->setReservedOrderId(null);
-                $this->cartRepository->save($quote);
-
-                $maskedId = $quoteIdMask->getMaskedId();
-            }
+        // Only a payment that can no longer complete gives its cart back. Reactivating the cart of a live
+        // payment would let it be changed between authorisation and order placement.
+        $transaction = $this->detailsProvider->get($orderNumber);
+        $quoteCouldBeRestored = $transaction && $this->statusVisitor->isRestorable($transaction);
+        if (!$quoteCouldBeRestored || !$this->config->getValue('cancellation_cart_persistence')) {
+            return null;
         }
 
-        return $maskedId;
+        $quoteIdMask = $this->quoteIdMaskFactory->create();
+        $this->quoteIdMaskResourceModel->load($quoteIdMask, $quote->getId(), 'quote_id');
+        if (!$quoteIdMask->getMaskedId()) {
+            return null;
+        }
+
+        // Claimed before the cart is touched, so of two simultaneous calls only one goes on.
+        if (!$this->returnToken->consume($vippsQuote)) {
+            return null;
+        }
+
+        $quote->setIsActive(true);
+        // The next payment reuses a reserved ID that is still set, and Vipps/MobilePay rejects a repeated reference.
+        $quote->setReservedOrderId(null);
+        $this->cartRepository->save($quote);
+
+        return $quoteIdMask->getMaskedId();
     }
 }

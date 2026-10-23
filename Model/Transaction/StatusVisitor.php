@@ -58,4 +58,12 @@ class StatusVisitor
     {
         return false;
     }
+
+    /**
+     * The payment can no longer complete, so its cart may be given back to the shopper.
+     */
+    public function isRestorable($transaction): bool
+    {
+        return $this->isCanceled($transaction) || $this->isExpired($transaction) || $this->isVoided($transaction);
+    }
 }

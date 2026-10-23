@@ -21,21 +21,25 @@ use Magento\Framework\UrlInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Vipps\Payment\GatewayEpayment\Request\SubjectReader;
+use Vipps\Payment\Model\ReturnToken;
 
 class AmountBuilder implements BuilderInterface
 {
     private SubjectReader $subjectReader;
     private UrlInterface $urlBuilder;
     private StoreManagerInterface $storeManager;
+    private ReturnToken $returnToken;
 
     public function __construct(
         SubjectReader         $subjectReader,
         UrlInterface          $urlBuilder,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        ReturnToken           $returnToken
     ) {
         $this->subjectReader = $subjectReader;
         $this->urlBuilder = $urlBuilder;
         $this->storeManager = $storeManager;
+        $this->returnToken = $returnToken;
     }
 
     /**
@@ -57,6 +61,10 @@ class AmountBuilder implements BuilderInterface
         }
         $reference = $quote->getReservedOrderId();
 
+        // The reference is sequential, so the return URL also carries a secret. PostHandler stores it.
+        $returnToken = $this->returnToken->generate();
+        $payment->setAdditionalInformation(ReturnToken::PAYMENT_KEY, $returnToken);
+
         $storeName = $this->storeManager->getStore()->getName();
 
         $paymentDescription = __(
@@ -77,7 +85,10 @@ class AmountBuilder implements BuilderInterface
             'paymentDescription' => $paymentDescription,
             'paymentMethod'      => ["type" => "WALLET"],
             "userFlow"           => "WEB_REDIRECT",
-            'returnUrl'          => $this->urlBuilder->getUrl('vipps/payment/fallback', ['reference' => $reference])
+            'returnUrl'          => $this->urlBuilder->getUrl(
+                'vipps/payment/fallback',
+                ['reference' => $reference, 'token' => $returnToken]
+            )
         ];
 
         // Express Required data

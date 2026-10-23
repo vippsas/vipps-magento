@@ -577,6 +577,19 @@
         </arguments>
     </type>
 
+    <!-- Lowest sort order so it wraps every other plugin: integrations replace execute() without calling
+         proceed, which would otherwise skip the check inside the controller. -->
+    <type name="Vipps\Payment\Controller\Payment\ShippingDetails">
+        <plugin name="vipps_shipping_details_authorization"
+                type="Vipps\Payment\Plugin\Controller\Payment\ShippingDetailsAuthorization"
+                sortOrder="-1000"/>
+    </type>
+    <type name="Vipps\Payment\Model\Express\ShippingCallbackGuard">
+        <arguments>
+            <argument name="logger" xsi:type="object">Vipps\Payment\Model\Logger</argument>
+        </arguments>
+    </type>
+
     <!-- Moved plugin declaration into global config because of Magento issue-->
     <type name="Magento\Config\Model\Config">
         <plugin name="admin_system_config_save_plugin" type="Vipps\Payment\Plugin\Config\Model\Config" sortOrder="10"/>

@@ -13,6 +13,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.0.5] - 2026-10-23
+
+### Fixed
+- Regression in 3.0.4 for regular checkout using vipps payment method (not express) had a
+  check against two orders for one cart counted that cancelled order, so the new payment was refused and
+  only released again by the cancellation cron.
+
+### Security
+- Returning from Vipps/MobilePay now requires a single-use token that is generated when the payment
+  starts and carried in the return URL. The token expires after 24 hours and is used up once the return has placed the order
+  or restored the cart; a return that could not be resolved yet can be retried with the same link.
+- `vippsActivateCart` only reactivates the cart of a payment that was cancelled or has expired, and only for
+  the customer who owns it. Reported by Michael Stochl of ICT IronByte.
+- `vippsGetPaymentDetails` works again, and with `vippsActivateCart` restores the cart of a payment the shopper
+  cancelled in the app, as the return page already did. Both read the payment through methods that no longer
+  existed after the move to the ePayment API, so every call failed.
+- The Express cart restore cookie is signed, so it can only restore the cart it was issued for.
+
+### Changed
+- **Headless storefronts:** `vippsGetPaymentDetails` and `vippsActivateCart` take a required `token`
+  argument. Read it from the `token` parameter of the return URL, next to `reference`, and pass it to both.
+
 ## [3.0.4] - 2026-09-30
 
 ### Fixed
@@ -81,6 +103,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - Vipps now uses the ePayment API for express and payment method flows
 
+[3.0.5]: https://github.com/vippsas/vipps-magento/compare/3.0.4...3.0.5
 [3.0.4]: https://github.com/vippsas/vipps-magento/compare/3.0.3...3.0.4
 [3.0.3]: https://github.com/vippsas/vipps-magento/compare/3.0.2...3.0.3
 [3.0.2]: https://github.com/vippsas/vipps-magento/compare/3.0.1...3.0.2
