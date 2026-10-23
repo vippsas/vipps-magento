@@ -44,6 +44,7 @@ use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\OrderLocator;
+use Vipps\Payment\Model\ReturnToken;
 use Vipps\Payment\Model\Transaction\StatusVisitor;
 use Vipps\Payment\Model\TransactionProcessor;
 
@@ -132,6 +133,11 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     private $cartRestoreCookie;
 
     /**
+     * @var ReturnToken
+     */
+    private $returnToken;
+
+    /**
      * Fallback constructor.
      *
      * @param ResultFactory $resultFactory
@@ -164,7 +170,8 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         Config                   $config,
         StatusVisitor            $statusVisitor,
         AuthoriseProxy           $authoriseProxy,
-        CartRestoreCookie        $cartRestoreCookie
+        CartRestoreCookie        $cartRestoreCookie,
+        ReturnToken              $returnToken
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
@@ -181,6 +188,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $this->statusVisitor = $statusVisitor;
         $this->authoriseProxy = $authoriseProxy;
         $this->cartRestoreCookie = $cartRestoreCookie;
+        $this->returnToken = $returnToken;
     }
 
     /**
@@ -195,12 +203,14 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         }
 
         $transaction = null;
+        $authorised = false;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             $vippsQuote = $this->getVippsQuote();
 
             $this->authoriseProxy->do($this->request, $vippsQuote);
+            $authorised = true;
 
             $transaction = $this->transactionProcessor->process($vippsQuote);
 
@@ -215,21 +225,26 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
                     . ' Please contact to store administrator.')
             );
         } finally {
-            $vippsQuote = $this->getVippsQuote(true);
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
 
-            $quoteCouldBeRestored = false;
-            if ($transaction) {
-                $quoteCouldBeRestored = $this->statusVisitor->isCanceled($transaction)
-                    || $this->statusVisitor->isExpired($transaction)
-                    || $this->statusVisitor->isVoided($transaction);
-            }
+            // Both branches below hand the visitor someone's cart or order, so neither may run for a request
+            // that failed authorisation.
+            $order = null;
+            if ($authorised) {
+                $vippsQuote = $this->getVippsQuote(true);
 
-            $order = $this->getOrder();
-            if ($quoteCouldBeRestored && $cartPersistence) {
-                $this->restoreQuote($vippsQuote);
-            } elseif ($order) {
-                $this->storeLastOrder($order);
+                $quoteCouldBeRestored = $transaction && $this->statusVisitor->isRestorable($transaction);
+
+                $order = $this->getOrder();
+                if ($quoteCouldBeRestored && $cartPersistence) {
+                    $this->restoreQuote($vippsQuote);
+                    $this->returnToken->consume($vippsQuote);
+                } elseif ($order) {
+                    $this->storeLastOrder($order);
+                    $this->returnToken->consume($vippsQuote);
+                }
+                // Otherwise the payment is unresolved, e.g. the callback held the lock or Vipps/MobilePay did not
+                // answer. The token is left so the shopper can return again; it still expires.
             }
 
             if (isset($e)) {

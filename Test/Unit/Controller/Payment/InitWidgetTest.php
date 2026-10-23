@@ -28,6 +28,8 @@ use Magento\Quote\Model\Quote;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\Data\QuoteInterface as VippsQuoteInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Controller\Payment\InitWidget;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\Model\Checkout\LastOrderSession;
@@ -54,7 +56,7 @@ class InitWidgetTest extends TestCase
 
         $this->assertSame([
             'paymentUrl' => 'https://pay-mt.vipps.no/x',
-            'returnUrl' => 'https://store/vipps/payment/fallback/reference/000450210/',
+            'returnUrl' => 'https://store/vipps/payment/fallback/reference/000450210/token/token-000450210/',
         ], $this->data);
     }
 
@@ -62,7 +64,10 @@ class InitWidgetTest extends TestCase
     {
         $this->execute(['redirectUrl' => 'https://pay-mt.vipps.no/x']);
 
-        $this->assertSame('https://store/vipps/payment/fallback/reference/000450209/', $this->data['returnUrl']);
+        $this->assertSame(
+            'https://store/vipps/payment/fallback/reference/000450209/token/token-000450209/',
+            $this->data['returnUrl']
+        );
     }
 
     /**
@@ -74,7 +79,7 @@ class InitWidgetTest extends TestCase
 
         $this->execute(['redirectUrl' => 'https://pay-mt.vipps.no/x'], false);
 
-        $this->assertSame('https://store/checkout/cart/reference//', $this->data['redirectUrl']);
+        $this->assertSame('https://store/checkout/cart/', $this->data['redirectUrl']);
         $this->assertSame($this->data['redirectUrl'], $this->data['redirect']);
         $this->assertArrayNotHasKey('paymentUrl', $this->data);
     }
@@ -117,8 +122,21 @@ class InitWidgetTest extends TestCase
 
         $urlBuilder = $this->createMock(UrlInterface::class);
         $urlBuilder->method('getUrl')->willReturnCallback(
-            fn ($path, $params = []) => 'https://store/' . $path . '/reference/' . ($params['reference'] ?? '') . '/'
+            function ($path, $params = []) {
+                $url = 'https://store/' . $path . '/';
+                foreach ($params ?? [] as $key => $value) {
+                    $url .= $key . '/' . $value . '/';
+                }
+                return $url;
+            }
         );
+
+        $vippsQuoteRepository = $this->createMock(QuoteRepositoryInterface::class);
+        $vippsQuoteRepository->method('loadByOrderId')->willReturnCallback(function ($reference) {
+            $vippsQuote = $this->createMock(VippsQuoteInterface::class);
+            $vippsQuote->method('getReturnToken')->willReturn('token-' . $reference);
+            return $vippsQuote;
+        });
 
         (new InitWidget(
             $resultFactory,
@@ -133,7 +151,8 @@ class InitWidgetTest extends TestCase
             $this->createMock(LastOrderSession::class),
             $this->createMock(LivePaymentMessages::class),
             $this->createMock(ManagerInterface::class),
-            $urlBuilder
+            $urlBuilder,
+            $vippsQuoteRepository
         ))->execute();
     }
 }

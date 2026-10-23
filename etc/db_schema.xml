@@ -52,6 +52,7 @@
         <column xsi:type="smallint" name="store_id" padding="5" unsigned="false" nullable="false" identity="false" default="0" comment="Store ID"/>
         <column xsi:type="int" name="order_id" padding="10" unsigned="true" nullable="true" identity="false" comment="Order Id"/>
         <column xsi:type="varchar" name="auth_token" nullable="true" length="32" comment="Auth Token"/>
+        <column xsi:type="varchar" name="return_token" nullable="true" length="64" comment="Single-use token authorising the shopper's return from Vipps/MobilePay"/>
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="entity_id"/>
         </constraint>

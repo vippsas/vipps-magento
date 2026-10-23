@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Vipps\Payment\Model\Express;
 
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Stdlib\CookieManagerInterface;
 
@@ -27,6 +28,9 @@ use Magento\Framework\Stdlib\CookieManagerInterface;
  * (the cart-page observer and the AJAX RestoreCart controller). The restored flag tells the storefront
  * JS that a server-side restore already happened so it can refresh its cart state without restoring
  * again. Cookie names are kept in sync with view/frontend/web/js/vipps-cart-restore.js.
+ *
+ * The quote id is sequential and the cookie is set by the browser, so the pending value is signed. Without
+ * that, anyone could name another shopper's quote and have it restored into their own session.
  */
 class CartRestoreCookie
 {
@@ -38,7 +42,8 @@ class CartRestoreCookie
 
     public function __construct(
         private readonly CookieManagerInterface $cookieManager,
-        private readonly CookieMetadataFactory $cookieMetadataFactory
+        private readonly CookieMetadataFactory $cookieMetadataFactory,
+        private readonly EncryptorInterface $encryptor
     ) {
     }
 
@@ -47,18 +52,29 @@ class CartRestoreCookie
         $metadata = $this->cookieMetadataFactory->createPublicCookieMetadata()
             ->setDuration(self::PENDING_LIFETIME)
             ->setPath('/');
-        $this->cookieManager->setPublicCookie(self::PENDING_COOKIE, (string)$quoteId, $metadata);
+        $value = $quoteId . ':' . $this->sign((string)$quoteId);
+        $this->cookieManager->setPublicCookie(self::PENDING_COOKIE, $value, $metadata);
     }
 
     public function getPending(): int
     {
-        return (int)$this->cookieManager->getCookie(self::PENDING_COOKIE);
+        $parts = explode(':', (string)$this->cookieManager->getCookie(self::PENDING_COOKIE), 2);
+        if (count($parts) !== 2 || !ctype_digit($parts[0]) || !hash_equals($this->sign($parts[0]), $parts[1])) {
+            return 0;
+        }
+
+        return (int)$parts[0];
     }
 
     public function clearPending(): void
     {
         $metadata = $this->cookieMetadataFactory->createPublicCookieMetadata()->setPath('/');
         $this->cookieManager->deleteCookie(self::PENDING_COOKIE, $metadata);
+    }
+
+    private function sign(string $quoteId): string
+    {
+        return $this->encryptor->hash(self::PENDING_COOKIE . ':' . $quoteId);
     }
 
     public function markRestored(): void

@@ -30,6 +30,7 @@ use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\UrlInterface;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\CommandManagerInterface;
+use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Request\InitSession\InitiateBuilderInterface;
 use Vipps\Payment\Model\Checkout\LastOrderSession;
@@ -60,7 +61,8 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
         private readonly LastOrderSession $lastOrderSession,
         private readonly LivePaymentMessages $livePaymentMessages,
         private readonly ManagerInterface $messageManager,
-        private readonly UrlInterface $urlBuilder
+        private readonly UrlInterface $urlBuilder,
+        private readonly QuoteRepositoryInterface $vippsQuoteRepository
     ) {
     }
 
@@ -115,10 +117,16 @@ class InitWidget implements ActionInterface, CsrfAwareActionInterface
             $this->checkoutSession->clearStorage();
 
             // The SDK may load the return URL in its cookie-less iframe; the widget script repeats it in the
-            // main tab so Fallback runs in the shopper's session.
+            // main tab so Fallback runs in the shopper's session. Fallback needs the same token as the URL
+            // Vipps/MobilePay returns to, which is kept on the monitoring quote.
+            $returnToken = (string)$this->vippsQuoteRepository->loadByOrderId((string)$reference)->getReturnToken();
+
             return $result->setData([
                 'paymentUrl' => $responseData['redirectUrl'],
-                'returnUrl' => $this->urlBuilder->getUrl('vipps/payment/fallback', ['reference' => $reference]),
+                'returnUrl' => $this->urlBuilder->getUrl(
+                    'vipps/payment/fallback',
+                    ['reference' => $reference, 'token' => $returnToken]
+                ),
             ]);
         } catch (LocalizedException $e) {
             $this->logger->critical($this->enlargeMessage($e));

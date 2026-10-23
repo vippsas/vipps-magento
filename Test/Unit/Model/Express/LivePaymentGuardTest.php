@@ -107,7 +107,7 @@ class LivePaymentGuardTest extends TestCase
     {
         $this->row('000000001', Payment::STATE_AUTHORIZED);
         $this->orderLocator->method('get')->willReturn(null);
-        $this->orderLocator->method('getByQuoteId')->willReturn(null);
+        $this->orderLocator->method('getActiveByQuoteId')->willReturn(null);
 
         $this->cancelFacade->expects($this->never())->method('terminateIfCreated');
 

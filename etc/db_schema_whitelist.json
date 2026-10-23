@@ -41,7 +41,8 @@
             "status": true,
             "store_id": true,
             "order_id": true,
-            "auth_token": true
+            "auth_token": true,
+            "return_token": true
         },
         "index": {
             "VIPPS_QUOTE_QUOTE_ID": true

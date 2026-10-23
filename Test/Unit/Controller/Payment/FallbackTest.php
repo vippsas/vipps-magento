@@ -40,6 +40,7 @@ use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\OrderLocator;
+use Vipps\Payment\Model\ReturnToken;
 use Vipps\Payment\Model\Transaction\StatusVisitor;
 use Vipps\Payment\Model\TransactionProcessor;
 
@@ -61,6 +62,7 @@ class FallbackTest extends TestCase
     private ManagerInterface|MockObject $messageManager;
     private CartRestoreCookie|MockObject $cartRestoreCookie;
     private Session|MockObject $checkoutSession;
+    private ReturnToken|MockObject $returnToken;
     private ?string $redirectPath = null;
     private bool $cartPersistence = true;
     private string $fetchDest = 'document';
@@ -76,6 +78,7 @@ class FallbackTest extends TestCase
         $this->messageManager = $this->createMock(ManagerInterface::class);
         $this->cartRestoreCookie = $this->createMock(CartRestoreCookie::class);
         $this->checkoutSession = $this->createMock(Session::class);
+        $this->returnToken = $this->createMock(ReturnToken::class);
     }
 
     public function testAnApprovedPaymentGoesToTheConfirmation(): void
@@ -137,11 +140,58 @@ class FallbackTest extends TestCase
     {
         $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
         $this->transactionProcessor->expects($this->never())->method('process');
+        $this->returnToken->expects($this->never())->method('consume');
         $this->messageManager->expects($this->once())->method('addErrorMessage');
 
         $this->execute();
 
         $this->assertSame('checkout/cart', $this->redirectPath);
+    }
+
+    /**
+     * The order number is sequential. A request that fails authorisation must not put someone else's order in
+     * the visitor's session, where the success page shows its email and offers to attach it to a new account,
+     * nor hand them the cart.
+     */
+    public function testAnUnauthorisedReturnNeverReachesTheSession(): void
+    {
+        $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
+        $this->orderLocator->method('get')->willReturn($this->createMock(OrderInterface::class));
+        $this->checkoutSession->expects($this->never())->method('clearStorage');
+        $this->checkoutSession->expects($this->never())->method('replaceQuote');
+        $this->cartRepository->expects($this->never())->method('save');
+
+        $this->execute();
+    }
+
+    public function testAFinishedReturnUsesUpItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_AUTHORIZED));
+        $this->orderLocator->method('get')->willReturn($this->createMock(OrderInterface::class));
+        $this->returnToken->expects($this->once())->method('consume');
+
+        $this->execute();
+    }
+
+    public function testARestoredCartUsesUpItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_ABORTED));
+        $this->cartRepository->method('get')->willReturn($this->createMock(Quote::class));
+        $this->returnToken->expects($this->once())->method('consume');
+
+        $this->execute();
+    }
+
+    /**
+     * The callback held the lock or Vipps/MobilePay did not answer: nothing was resolved, so the shopper must be
+     * able to come back with the same link.
+     */
+    public function testAnUnresolvedReturnKeepsItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn(null);
+        $this->returnToken->expects($this->never())->method('consume');
+
+        $this->execute();
     }
 
     /**
@@ -225,7 +275,8 @@ class FallbackTest extends TestCase
             $config,
             new StatusVisitor(),
             $this->authoriseProxy,
-            $this->cartRestoreCookie
+            $this->cartRestoreCookie,
+            $this->returnToken
         ))->execute();
     }
 }

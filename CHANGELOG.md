@@ -34,6 +34,28 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Starting Express with no cart in the session, for example right after an order, no longer fails with a
   server error. The shopper is sent to the cart page with "Your cart is empty."
 
+## [3.0.5] - 2026-10-23
+
+### Fixed
+- Regression in 3.0.4 for regular checkout using vipps payment method (not express) had a
+  check against two orders for one cart counted that cancelled order, so the new payment was refused and
+  only released again by the cancellation cron.
+
+### Security
+- Returning from Vipps/MobilePay now requires a single-use token that is generated when the payment
+  starts and carried in the return URL. The token expires after 24 hours and is used up once the return has placed the order
+  or restored the cart; a return that could not be resolved yet can be retried with the same link.
+- `vippsActivateCart` only reactivates the cart of a payment that was cancelled or has expired, and only for
+  the customer who owns it. Reported by Michael Stochl of ICT IronByte.
+- `vippsGetPaymentDetails` works again, and with `vippsActivateCart` restores the cart of a payment the shopper
+  cancelled in the app, as the return page already did. Both read the payment through methods that no longer
+  existed after the move to the ePayment API, so every call failed.
+- The Express cart restore cookie is signed, so it can only restore the cart it was issued for.
+
+### Changed
+- **Headless storefronts:** `vippsGetPaymentDetails` and `vippsActivateCart` take a required `token`
+  argument. Read it from the `token` parameter of the return URL, next to `reference`, and pass it to both.
+
 ## [3.0.4] - 2026-09-30
 
 ### Fixed

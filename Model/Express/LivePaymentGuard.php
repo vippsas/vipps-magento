@@ -149,7 +149,7 @@ class LivePaymentGuard
 
         try {
             $order = $this->orderLocator->get($vippsQuote->getReservedOrderId())
-                ?: $this->orderLocator->getByQuoteId($vippsQuote->getQuoteId());
+                ?: $this->orderLocator->getActiveByQuoteId($vippsQuote->getQuoteId());
         } catch (\Throwable $t) {
             $this->logger->error($t->getMessage());
             $order = null;
