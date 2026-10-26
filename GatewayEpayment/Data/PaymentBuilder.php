@@ -80,14 +80,19 @@ class PaymentBuilder
                 $this->response,
                 [
                     'aggregate' =>
-                        $this->aggregateFactory->create($this->response['aggregate'] ?? null),
-                    'amount' => $this->amountFactory->create(['data' => $this->response['amount'] ?? null]),
+                        $this->aggregateFactory->create($this->response['aggregate'] ?? []),
+                    'amount' => $this->amountFactory->create(['data' => $this->response['amount'] ?? []]),
                     'customer' => $this->customerFactory->create(['data' => $this->response['customer'] ?? []]),
                     'paymentMethod' =>
-                        $this->paymentMethodFactory->create(['data' => $this->response['paymentMethod'] ?? null]),
-                    'profile' => $this->profileFactory->create(['data' => $this->response['profile'] ?? null]),
-                    'userDetails' => $this->userDetailsFactory->create(['data' => $this->response['userDetails'] ?? null]),
-                    'shippingDetails' => $this->shippingDetailsFactory->create(['data' => $this->response['shippingDetails'] ?? null]),
+                        $this->paymentMethodFactory->create(['data' => $this->response['paymentMethod'] ?? []]),
+                    'profile' => $this->profileFactory->create(['data' => $this->response['profile'] ?? []]),
+                    // Only present once an Express payment is approved; isExpressCheckout() relies on null.
+                    'userDetails' => isset($this->response['userDetails'])
+                        ? $this->userDetailsFactory->create(['data' => $this->response['userDetails']])
+                        : null,
+                    'shippingDetails' => isset($this->response['shippingDetails'])
+                        ? $this->shippingDetailsFactory->create(['data' => $this->response['shippingDetails']])
+                        : null,
                     'raw_data' => \json_encode($this->response)
                 ]
             )
