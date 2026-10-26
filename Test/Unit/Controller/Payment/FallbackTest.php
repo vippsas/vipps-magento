@@ -22,6 +22,7 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Payment\Gateway\ConfigInterface;
@@ -40,6 +41,7 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Controller\Payment\Fallback;
 use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
+use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Gateway\Transaction\ShippingDetails;
 use Vipps\Payment\Gateway\Transaction\Transaction;
 use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
@@ -229,6 +231,66 @@ class FallbackTest extends TestCase
             ['00000000001', null],
             [null, 'some token'],
             ['00000000001', 'some token'],
+        ];
+    }
+
+    /**
+     * A return link whose token has already been used is the shopper opening their own confirmation again,
+     * far more often than it is an attack. It must not tell them their completed order was invalid, and it
+     * must decide that from their session alone, never from the guessable reference.
+     *
+     * @dataProvider unusableTokenDataProvider
+     */
+    public function testReturnWithUnusableTokenDecidesFromTheSessionAlone($lastRealOrderId, $expectedPath)
+    {
+        $authoriseProxy = $this->getMockBuilder(AuthoriseProxy::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['do', 'getOrderId'])
+            ->getMock();
+        $authoriseProxy->method('getOrderId')->willReturn('000000777');
+        $authoriseProxy->method('do')
+            ->willThrowException(new LocalizedException(__('Invalid request')));
+
+        $this->request->method('getParam')->willReturn('000000777');
+        $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
+
+        // The payment is never read and the cart is never touched for a return that failed authorisation.
+        $this->transactionProcessor->expects(self::never())->method('process');
+        $this->checkoutSession->expects(self::never())->method('setLastRealOrderId');
+        $this->messageManagerMock->expects(self::never())->method('addErrorMessage');
+
+        $this->resultRedirect->expects(self::once())
+            ->method('setPath')
+            ->with($expectedPath, ['_secure' => true]);
+
+        $action = $this->objectManagerHelper->getObject(Fallback::class, [
+            'resultFactory' => $this->resultFactory,
+            'request' => $this->request,
+            'checkoutSession' => $this->checkoutSession,
+            'transactionProcessor' => $this->transactionProcessor,
+            'cartRepository' => $this->cartRepository,
+            'messageManager' => $this->messageManagerMock,
+            'vippsQuoteRepository' => $this->vippsQuoteRepository,
+            'orderLocator' => $this->orderLocator,
+            'compliance' => $this->compliance,
+            'orderManagement' => $this->createOrderManagement(),
+            'logger' => $this->logger,
+            'config' => $this->configMock,
+            'authoriseProxy' => $authoriseProxy
+        ]);
+
+        $action->execute();
+    }
+
+    /**
+     * @return array
+     */
+    public function unusableTokenDataProvider()
+    {
+        return [
+            'shopper reopening their own used link' => ['000000777', 'checkout/onepage/success'],
+            'someone else, or an expired session' => ['000000778', 'checkout/cart'],
+            'no order in the session at all' => [null, 'checkout/cart'],
         ];
     }
 
@@ -479,7 +541,8 @@ class FallbackTest extends TestCase
                 'setLastOrderStatus',
                 'replaceQuote',
                 'clearStorage',
-                'getQuoteId'
+                'getQuoteId',
+                'getLastRealOrderId'
             ])
             ->getMock();
 
