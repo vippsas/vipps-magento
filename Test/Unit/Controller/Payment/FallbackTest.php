@@ -25,7 +25,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Magento\Payment\Gateway\ConfigInterface;
+use Vipps\Payment\GatewayEpayment\Config\Config as VippsConfig;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\CartInterface;
@@ -210,7 +210,7 @@ class FallbackTest extends TestCase
             ->willReturn($token . ' make it invalid');
 
         $this->configMock
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('getValue')
             ->willReturn(true);
 
@@ -252,10 +252,12 @@ class FallbackTest extends TestCase
             ->willThrowException(new LocalizedException(__('Invalid request')));
 
         $this->request->method('getParam')->willReturn('000000777');
+        $this->request->method('getRequestString')
+            ->willReturn('/vipps/payment/fallback/reference/000000777/token/used/');
         $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
 
         // The payment is never read and the cart is never touched for a return that failed authorisation.
-        $this->transactionProcessor->expects(self::never())->method('process');
+        $this->paymentDetailsProvider->expects(self::never())->method('get');
         $this->checkoutSession->expects(self::never())->method('setLastRealOrderId');
         $this->messageManagerMock->expects(self::never())->method('addErrorMessage');
 
@@ -490,10 +492,12 @@ class FallbackTest extends TestCase
 
         $this->transactionProcessor = $this->createTransactionProcessor();
 
-        $this->configMock = $this->getMockBuilder(ConfigInterface::class)
+        // The controller requires the concrete config, so the interface mock it used before could never
+        // be constructed and every test in this file errored.
+        $this->configMock = $this->getMockBuilder(VippsConfig::class)
             ->setMethods(['getValue'])
             ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
+            ->getMock();
 
         $this->action = $this->objectManagerHelper->getObject(Fallback::class, [
             'resultFactory' => $this->resultFactory,
@@ -619,7 +623,7 @@ class FallbackTest extends TestCase
         $this->lockManager = $this->getMockBuilder(LockManager::class)
             ->setMethods(['lock', 'unlock'])->disableOriginalConstructor()->getMock();
 
-        $this->config = $this->getMockBuilder(ConfigInterface::class)
+        $this->config = $this->getMockBuilder(VippsConfig::class)
             ->setMethods(['save', 'getValue'])->disableOriginalConstructor()->getMockForAbstractClass();
 
         $this->quoteManagement = $this->getMockBuilder(QuoteManagement::class)

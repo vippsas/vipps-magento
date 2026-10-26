@@ -369,10 +369,14 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $lastOrderId = (string)$this->checkoutSession->getLastRealOrderId();
 
         if ($reference !== '' && $lastOrderId === $reference) {
-            return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+
+            return $resultRedirect;
         }
 
-        return $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+        $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
+        return $resultRedirect;
     }
 
     /**
