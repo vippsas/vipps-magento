@@ -368,7 +368,10 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $reference = (string)$this->request->getParam('reference', '');
         $lastOrderId = (string)$this->checkoutSession->getLastRealOrderId();
 
-        if ($reference !== '' && $lastOrderId === $reference) {
+        if ($reference !== '' && $lastOrderId === $reference && $this->checkoutSession->getLastQuoteId()) {
+            // Showing the success page clears the flag it checks, so a shopper who has already seen it would be
+            // bounced to the cart. Restore just that flag, from the session's own record of the order's cart.
+            $this->checkoutSession->setLastSuccessQuoteId($this->checkoutSession->getLastQuoteId());
             $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
 
             return $resultRedirect;

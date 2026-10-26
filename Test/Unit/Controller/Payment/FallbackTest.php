@@ -241,8 +241,11 @@ class FallbackTest extends TestCase
      *
      * @dataProvider unusableTokenDataProvider
      */
-    public function testReturnWithUnusableTokenDecidesFromTheSessionAlone($lastRealOrderId, $expectedPath)
-    {
+    public function testReturnWithUnusableTokenDecidesFromTheSessionAlone(
+        $lastRealOrderId,
+        $lastQuoteId,
+        $expectedPath
+    ) {
         $authoriseProxy = $this->getMockBuilder(AuthoriseProxy::class)
             ->disableOriginalConstructor()
             ->setMethods(['do', 'getOrderId'])
@@ -255,6 +258,15 @@ class FallbackTest extends TestCase
         $this->request->method('getRequestString')
             ->willReturn('/vipps/payment/fallback/reference/000000777/token/used/');
         $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
+        $this->checkoutSession->method('getLastQuoteId')->willReturn($lastQuoteId);
+
+        // The success page clears this flag the first time it is shown; without restoring it the shopper is
+        // bounced from the confirmation to the cart, so asserting the redirect path alone is not enough.
+        if ($expectedPath === 'checkout/onepage/success') {
+            $this->checkoutSession->expects(self::once())->method('setLastSuccessQuoteId')->with($lastQuoteId);
+        } else {
+            $this->checkoutSession->expects(self::never())->method('setLastSuccessQuoteId');
+        }
 
         // The payment is never read and the cart is never touched for a return that failed authorisation.
         $this->paymentDetailsProvider->expects(self::never())->method('get');
@@ -290,9 +302,10 @@ class FallbackTest extends TestCase
     public function unusableTokenDataProvider()
     {
         return [
-            'shopper reopening their own used link' => ['000000777', 'checkout/onepage/success'],
-            'someone else, or an expired session' => ['000000778', 'checkout/cart'],
-            'no order in the session at all' => [null, 'checkout/cart'],
+            'shopper reopening their own used link' => ['000000777', 42, 'checkout/onepage/success'],
+            'someone else, or an expired session' => ['000000778', 42, 'checkout/cart'],
+            'no order in the session at all' => [null, null, 'checkout/cart'],
+            'order in the session but not its cart' => ['000000777', null, 'checkout/cart'],
         ];
     }
 
@@ -546,7 +559,8 @@ class FallbackTest extends TestCase
                 'replaceQuote',
                 'clearStorage',
                 'getQuoteId',
-                'getLastRealOrderId'
+                'getLastRealOrderId',
+                'getLastQuoteId'
             ])
             ->getMock();
 
