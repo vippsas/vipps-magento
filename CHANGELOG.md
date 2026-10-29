@@ -47,7 +47,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - **Upgrade as soon as possible.** Returning from a Vipps/MobilePay payment is now authenticated with a
   single-use secret token, issued when the payment starts, rather than with an identifier that could be
   guessed. Every version from 2.4.23 to 3.0.4 could expose customer details held on carts and orders,
-  including name, address, email, phone number and basket contents. Rated high severity, CVSS 8.2.
+  including name, address, email, phone number and basket contents. Rated high severity, 8.8 under
+  CVSS 4.0.
   Reported by Michael Stochl of ICT IronByte. Full technical detail will follow in a GitHub security
   advisory once merchants have had a chance to upgrade.
 
