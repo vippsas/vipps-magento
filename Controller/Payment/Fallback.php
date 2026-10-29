@@ -238,8 +238,10 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
                 $order = $this->getOrder();
                 if ($quoteCouldBeRestored && $cartPersistence) {
-                    $this->restoreQuote($vippsQuote);
-                    $this->returnToken->consume($vippsQuote);
+                    // Claimed before the cart is written, so of two simultaneous returns only one restores it.
+                    if ($this->returnToken->consume($vippsQuote)) {
+                        $this->restoreQuote($vippsQuote);
+                    }
                 } elseif ($order) {
                     $this->storeLastOrder($order);
                     $this->returnToken->consume($vippsQuote);
