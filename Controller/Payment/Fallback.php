@@ -209,7 +209,13 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         try {
             $vippsQuote = $this->getVippsQuote();
 
-            $this->authoriseProxy->do($this->request, $vippsQuote);
+            try {
+                $this->authoriseProxy->do($this->request, $vippsQuote);
+            } catch (LocalizedException $authorisationFailed) {
+                $this->logger->critical($this->enlargeMessage($authorisationFailed));
+
+                return $this->redirectUnauthorised($resultRedirect);
+            }
             $authorised = true;
 
             $transaction = $this->transactionProcessor->process($vippsQuote);
@@ -237,8 +243,10 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
 
                 $order = $this->getOrder();
                 if ($quoteCouldBeRestored && $cartPersistence) {
-                    $this->restoreQuote($vippsQuote);
-                    $this->returnToken->consume($vippsQuote);
+                    // Claimed before the cart is written, so of two simultaneous returns only one restores it.
+                    if ($this->returnToken->consume($vippsQuote)) {
+                        $this->restoreQuote($vippsQuote);
+                    }
                 } elseif ($order) {
                     $this->storeLastOrder($order);
                     $this->returnToken->consume($vippsQuote);
@@ -347,6 +355,36 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $this->defineRedirectPath($resultRedirect, $transaction);
 
         return $resultRedirect;
+    }
+
+    /**
+     * Where to send a return that could not be authorised.
+     *
+     * Nothing may be read about the payment itself: the reference is sequential, so an unauthorised caller
+     * must learn nothing from the answer. The visitor's own session is the one safe source, and it is enough
+     * for the case that matters, a shopper reopening a return link they have already used, whose token was
+     * consumed the first time. They go back to their confirmation instead of being told their completed
+     * order was invalid. Anyone else quietly gets the cart.
+     *
+     * No message is shown either way. The only people a rejection message reaches are real shoppers, who
+     * have done nothing wrong, and past releases have shown that telling a shopper their payment failed when
+     * it has not is what makes them pay a second time.
+     */
+    private function redirectUnauthorised(Redirect $resultRedirect): Redirect
+    {
+        $reference = (string)$this->request->getParam('reference', '');
+        $lastOrderId = (string)$this->checkoutSession->getLastRealOrderId();
+
+        if ($reference !== '' && $lastOrderId === $reference && $this->checkoutSession->getLastQuoteId()) {
+            // Showing the success page clears the flag it checks, so a shopper who has already seen it would be
+            // bounced to the cart. Restore just that flag, from the session's own record of the order's cart.
+            $this->checkoutSession->setLastSuccessQuoteId($this->checkoutSession->getLastQuoteId());
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+
+            return $resultRedirect;
+        }
+
+        return $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
     }
 
     /**
