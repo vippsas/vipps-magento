@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
-## [3.0.5] - 2026-10-26
+## [3.0.5] - 2026-11-05
 
 ### Fixed
 - Regular payments could not be completed at all. The response to reading a payment has no user details
