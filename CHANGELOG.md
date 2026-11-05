@@ -34,7 +34,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Starting Express with no cart in the session, for example right after an order, no longer fails with a
   server error. The shopper is sent to the cart page with "Your cart is empty."
 
-## [3.0.5] - 2026-10-26
+## [3.0.5] - 2026-11-05
 
 ### Fixed
 - Regular payments could not be completed at all. The response to reading a payment has no user details
