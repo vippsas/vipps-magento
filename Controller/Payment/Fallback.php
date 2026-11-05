@@ -436,7 +436,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         } elseif (
             $this->statusVisitor->isReserved($transaction)
             || $this->statusVisitor->isCaptured($transaction)) {
-            $this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
+            $this->messageManager->addSuccessMessage(__('Your order was successfully placed.'));
         } elseif ($this->statusVisitor->isExpired($transaction)) {
             $this->messageManager->addErrorMessage(
                 __('Transaction was expired. Please, place your order again')

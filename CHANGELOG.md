@@ -34,9 +34,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Starting Express with no cart in the session, for example right after an order, no longer fails with a
   server error. The shopper is sent to the cart page with "Your cart is empty."
 
-## [3.0.5] - 2026-10-23
+## [3.0.5] - 2026-11-05
 
 ### Fixed
+- Regular payments could not be completed at all. The response to reading a payment has no user details
+  unless it is an approved Express payment, and building them from nothing threw, before either the
+  return page or the order fetch cron could get as far as resolving the payment. The shopper approved,
+  the amount was reserved, and the order stayed pending with the cron failing the same way on every run.
+  Present since 3.0.0.
+- The message telling a shopper their order was placed is shown as a success rather than a warning.
 - Regression in 3.0.4 for regular checkout using vipps payment method (not express) had a
   check against two orders for one cart counted that cancelled order, so the new payment was refused and
   only released again by the cancellation cron.
