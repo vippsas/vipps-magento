@@ -44,6 +44,7 @@ use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
 use Vipps\Payment\Model\Gdpr\Compliance;
 use Vipps\Payment\Model\OrderLocator;
+use Vipps\Payment\Model\ReturnToken;
 use Vipps\Payment\Model\Transaction\StatusVisitor;
 use Vipps\Payment\Model\TransactionProcessor;
 
@@ -132,6 +133,11 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     private $cartRestoreCookie;
 
     /**
+     * @var ReturnToken
+     */
+    private $returnToken;
+
+    /**
      * Fallback constructor.
      *
      * @param ResultFactory $resultFactory
@@ -164,7 +170,8 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         Config                   $config,
         StatusVisitor            $statusVisitor,
         AuthoriseProxy           $authoriseProxy,
-        CartRestoreCookie        $cartRestoreCookie
+        CartRestoreCookie        $cartRestoreCookie,
+        ReturnToken              $returnToken
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
@@ -181,6 +188,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         $this->statusVisitor = $statusVisitor;
         $this->authoriseProxy = $authoriseProxy;
         $this->cartRestoreCookie = $cartRestoreCookie;
+        $this->returnToken = $returnToken;
     }
 
     /**
@@ -190,12 +198,20 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     public function execute()
     {
         $transaction = null;
+        $authorised = false;
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         try {
             $vippsQuote = $this->getVippsQuote();
 
-            $this->authoriseProxy->do($this->request, $vippsQuote);
+            try {
+                $this->authoriseProxy->do($this->request, $vippsQuote);
+            } catch (LocalizedException $authorisationFailed) {
+                $this->logger->critical($this->enlargeMessage($authorisationFailed));
+
+                return $this->redirectUnauthorised($resultRedirect);
+            }
+            $authorised = true;
 
             $transaction = $this->transactionProcessor->process($vippsQuote);
 
@@ -210,21 +226,28 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
                     . ' Please contact to store administrator.')
             );
         } finally {
-            $vippsQuote = $this->getVippsQuote(true);
             $cartPersistence = $this->config->getValue('cancellation_cart_persistence');
 
-            $quoteCouldBeRestored = false;
-            if ($transaction) {
-                $quoteCouldBeRestored = $this->statusVisitor->isCanceled($transaction)
-                    || $this->statusVisitor->isExpired($transaction)
-                    || $this->statusVisitor->isVoided($transaction);
-            }
+            // Both branches below hand the visitor someone's cart or order, so neither may run for a request
+            // that failed authorisation.
+            $order = null;
+            if ($authorised) {
+                $vippsQuote = $this->getVippsQuote(true);
 
-            $order = $this->getOrder();
-            if ($quoteCouldBeRestored && $cartPersistence) {
-                $this->restoreQuote($vippsQuote);
-            } elseif ($order) {
-                $this->storeLastOrder($order);
+                $quoteCouldBeRestored = $transaction && $this->statusVisitor->isRestorable($transaction);
+
+                $order = $this->getOrder();
+                if ($quoteCouldBeRestored && $cartPersistence) {
+                    // Claimed before the cart is written, so of two simultaneous returns only one restores it.
+                    if ($this->returnToken->consume($vippsQuote)) {
+                        $this->restoreQuote($vippsQuote);
+                    }
+                } elseif ($order) {
+                    $this->storeLastOrder($order);
+                    $this->returnToken->consume($vippsQuote);
+                }
+                // Otherwise the payment is unresolved, e.g. the callback held the lock or Vipps/MobilePay did not
+                // answer. The token is left so the shopper can return again; it still expires.
             }
 
             if (isset($e)) {
@@ -330,6 +353,38 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
     }
 
     /**
+     * Where to send a return that could not be authorised.
+     *
+     * Nothing may be read about the payment itself: the reference is sequential, so an unauthorised caller
+     * must learn nothing from the answer. The visitor's own session is the one safe source, and it is enough
+     * for the case that matters, a shopper reopening a return link they have already used, whose token was
+     * consumed the first time. They go back to their confirmation instead of being told their completed
+     * order was invalid. Anyone else quietly gets the cart.
+     *
+     * No message is shown either way. The only people a rejection message reaches are real shoppers, who
+     * have done nothing wrong, and past releases have shown that telling a shopper their payment failed when
+     * it has not is what makes them pay a second time.
+     */
+    private function redirectUnauthorised(Redirect $resultRedirect): Redirect
+    {
+        $reference = (string)$this->request->getParam('reference', '');
+        $lastOrderId = (string)$this->checkoutSession->getLastRealOrderId();
+
+        if ($reference !== '' && $lastOrderId === $reference && $this->checkoutSession->getLastQuoteId()) {
+            // Showing the success page clears the flag it checks, so a shopper who has already seen it would be
+            // bounced to the cart. Restore just that flag, from the session's own record of the order's cart.
+            $this->checkoutSession->setLastSuccessQuoteId($this->checkoutSession->getLastQuoteId());
+            $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+
+            return $resultRedirect;
+        }
+
+        $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
+
+        return $resultRedirect;
+    }
+
+    /**
      * Method store order info to checkout session
      */
     private function storeLastOrder(OrderInterface $order)
@@ -378,7 +433,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
         } elseif (
             $this->statusVisitor->isReserved($transaction)
             || $this->statusVisitor->isCaptured($transaction)) {
-            $this->messageManager->addWarningMessage(__('Your order was successfully placed.'));
+            $this->messageManager->addSuccessMessage(__('Your order was successfully placed.'));
         } elseif ($this->statusVisitor->isExpired($transaction)) {
             $this->messageManager->addErrorMessage(
                 __('Transaction was expired. Please, place your order again')

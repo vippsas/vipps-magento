@@ -1,9 +1,9 @@
 type Query {
-    vippsGetPaymentDetails(order_number: String!): VippsPaymentDetails @resolver (class: "Vipps\\Payment\\GraphQl\\Resolver\\GetPaymentDetails") @doc(description: "Returns information about Vipps Payment") @cache(cacheable: false)
+    vippsGetPaymentDetails(order_number: String!, token: String! @doc(description: "The token from the return URL.")): VippsPaymentDetails @resolver (class: "Vipps\\Payment\\GraphQl\\Resolver\\GetPaymentDetails") @doc(description: "Returns information about Vipps Payment") @cache(cacheable: false)
 }
 type Mutation {
     vippsInitPayment(input: vippsInitPaymentInput): vippsInitPaymentOutput @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\InitPayment") @doc(description: "Initialize Vipps Payment")
-    vippsActivateCart(order_number: String!): String @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\ActivateCart") @doc(description: "Activate Cart")
+    vippsActivateCart(order_number: String!, token: String! @doc(description: "The token from the return URL.")): String @resolver(class: "Vipps\\Payment\\GraphQl\\Resolver\\ActivateCart") @doc(description: "Reactivate the cart of a cancelled or expired payment and return its masked ID.")
 }
 
 input vippsInitPaymentInput {

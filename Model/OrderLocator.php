@@ -18,6 +18,7 @@ namespace Vipps\Payment\Model;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 
 /**
  * Class OrderLocator
@@ -73,6 +74,29 @@ class OrderLocator
     public function getByQuoteId($quoteId)
     {
         $searchCriteria = $this->searchCriteriaBuilder->addFilter('quote_id', $quoteId, 'eq')->create();
+        $orderList = $this->orderRepository->getList($searchCriteria)->getItems();
+
+        $order = current($orderList);
+        return $order ?: null;
+    }
+
+    /**
+     * An order for the cart that has not been cancelled.
+     *
+     * A regular payment places its order before the shopper goes to Vipps/MobilePay, and cancels it when they
+     * abort, after which the cart is given back to them. That cancelled order must not count as the cart's order,
+     * or the payment they then make from the same cart can never be placed.
+     *
+     * @param $quoteId
+     *
+     * @return OrderInterface|null
+     */
+    public function getActiveByQuoteId($quoteId)
+    {
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('quote_id', $quoteId, 'eq')
+            ->addFilter('state', Order::STATE_CANCELED, 'neq')
+            ->create();
         $orderList = $this->orderRepository->getList($searchCriteria)->getItems();
 
         $order = current($orderList);

@@ -28,6 +28,7 @@ use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\GatewayEpayment\Request\SubjectReader;
 use Vipps\Payment\Model\QuoteFactory;
 use Vipps\Payment\Model\QuoteRepository;
+use Vipps\Payment\Model\ReturnToken;
 
 /**
  * Class InitiateHandler
@@ -102,6 +103,10 @@ class PostHandler implements HandlerInterface
         $payment = $paymentDO->getPayment();
         $orderAdapter = $paymentDO->getOrder();
 
+        // Kept on the monitoring quote only, not left on the payment where it would be saved with the cart.
+        $returnToken = $payment->getAdditionalInformation(ReturnToken::PAYMENT_KEY);
+        $payment->unsAdditionalInformation(ReturnToken::PAYMENT_KEY);
+
         if ($payment instanceof OrderPayment) {
             $order = $this->orderRepository->get($orderAdapter->getId());
             $quoteId = $order->getQuoteId();
@@ -117,7 +122,12 @@ class PostHandler implements HandlerInterface
         $vippsQuote->setQuoteId((int)$quoteId);
         $vippsQuote->setStatus(QuoteInterface::STATUS_NEW);
         $vippsQuote->setReservedOrderId($orderAdapter->getOrderIncrementId());
-        $vippsQuote->setAuthToken($transfer->getBody()['merchantInfo']['callbackAuthorizationToken'] ?? '');
+        // The transfer body is the request we sent, so this is the token AmountBuilder generated for Express.
+        // Regular payments carry none and store '', which CallbackAuthorization never accepts.
+        $vippsQuote->setAuthToken(
+            (string)($transfer->getBody()['shipping']['dynamicOptions']['callbackAuthorizationToken'] ?? '')
+        );
+        $vippsQuote->setReturnToken($returnToken ?: null);
         $this->quoteRepository->save($vippsQuote);
     }
 }

@@ -47,7 +47,7 @@ class TransactionProcessorCartGuardTest extends TestCase
 
         $orderLocator = $this->createMock(OrderLocator::class);
         $orderLocator->method('get')->with('000000001')->willReturn(null);
-        $orderLocator->method('getByQuoteId')->with(self::QUOTE_ID)->willReturn($existingOrder);
+        $orderLocator->method('getActiveByQuoteId')->with(self::QUOTE_ID)->willReturn($existingOrder);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessageMatches('/already been ordered as 000000002/');
@@ -60,7 +60,7 @@ class TransactionProcessorCartGuardTest extends TestCase
     public function testAllowsACartThatHasNotBeenOrdered(): void
     {
         $orderLocator = $this->createMock(OrderLocator::class);
-        $orderLocator->method('getByQuoteId')->with(self::QUOTE_ID)->willReturn(null);
+        $orderLocator->method('getActiveByQuoteId')->with(self::QUOTE_ID)->willReturn(null);
 
         $method = new \ReflectionMethod(TransactionProcessor::class, 'assertCartHasNoOrder');
         $method->invoke($this->processorWith($orderLocator), $this->vippsQuote());
@@ -76,7 +76,7 @@ class TransactionProcessorCartGuardTest extends TestCase
     public function testDoesNotBlockWhenTheCartReferenceIsGone(): void
     {
         $orderLocator = $this->createMock(OrderLocator::class);
-        $orderLocator->expects($this->never())->method('getByQuoteId');
+        $orderLocator->expects($this->never())->method('getActiveByQuoteId');
 
         $vippsQuote = $this->createMock(VippsQuote::class);
         $vippsQuote->method('getQuoteId')->willReturn(null);

@@ -13,6 +13,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.0.5] - 2026-11-05
+
+### Fixed
+- Regular payments could not be completed at all. The response to reading a payment has no user details
+  unless it is an approved Express payment, and building them from nothing threw, before either the
+  return page or the order fetch cron could get as far as resolving the payment. The shopper approved,
+  the amount was reserved, and the order stayed pending with the cron failing the same way on every run.
+  Present since 3.0.0.
+- The message telling a shopper their order was placed is shown as a success rather than a warning.
+- Regression in 3.0.4 for regular checkout using vipps payment method (not express) had a
+  check against two orders for one cart counted that cancelled order, so the new payment was refused and
+  only released again by the cancellation cron.
+- `vippsGetPaymentDetails` works again. It read the payment through methods that no longer existed after the
+  move to the ePayment API, so every call failed and the headless return flow with it.
+
+### Security
+- **Upgrade as soon as possible.** Returning from a Vipps/MobilePay payment is now authenticated with a
+  single-use secret token, issued when the payment starts, rather than with an identifier that could be
+  guessed. Every version from 2.4.23 to 3.0.4 could expose customer details held on carts and orders,
+  including name, address, email, phone number and basket contents. Rated high severity, 8.8 under
+  CVSS 4.0.
+  Reported by Michael Stochl of ICT IronByte. Full technical detail will follow in a GitHub security
+  advisory once merchants have had a chance to upgrade.
+
+### Changed
+- **Headless storefronts:** `vippsGetPaymentDetails` and `vippsActivateCart` take a required `token`
+  argument. Read it from the `token` parameter of the return URL, next to `reference`, and pass it to both.
+- **Upgrading:** a shopper who is at Vipps/MobilePay while you deploy comes back to the cart instead of the
+  confirmation page, because their payment was started without a return token. Their order is still created,
+  by the order fetch cron, within ten minutes.
+- **Upgrading:** an Express payment that was already under way when you deploy cannot be completed. The
+  shopper needs to start it again.
+
 ## [3.0.4] - 2026-09-30
 
 ### Fixed
@@ -81,6 +114,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - Vipps now uses the ePayment API for express and payment method flows
 
+[3.0.5]: https://github.com/vippsas/vipps-magento/compare/3.0.4...3.0.5
 [3.0.4]: https://github.com/vippsas/vipps-magento/compare/3.0.3...3.0.4
 [3.0.3]: https://github.com/vippsas/vipps-magento/compare/3.0.2...3.0.3
 [3.0.2]: https://github.com/vippsas/vipps-magento/compare/3.0.1...3.0.2
