@@ -16,21 +16,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## [3.1.0] - 2026-11-06
 
 ### Added
-- **Express now opens in a modal on your store instead of sending the shopper away.** Pressing the
-  Express button opens Vipps/MobilePay in an overlay on the page the shopper is already on, where they
-  enter their phone number and approve in the app, and the page they came from completes the order. They
-  never lose the product, cart or mini-cart page they started from, and there is no longer a redirect to
-  a Vipps/MobilePay page and back.
-  Built on the Vipps Widget SDK, https://developer.vippsmobilepay.com/docs/knowledge-base/widget. It is
-  **on by default**, per store view, at Stores, Configuration, Sales, Payment Methods, Vipps/MobilePay,
-  Widget SDK, "Enable Widget SDK". Turning it off restores the redirect of earlier versions, so the old
-  behaviour is still available without downgrading. The SDK script is loaded only on the pages the
-  Express button can appear on (product, cart and mini-cart), never on checkout.
+- Express opens Vipps/MobilePay in a modal on the store page rather than redirecting. The shopper
+  enters their phone number, approves in the app, and lands back on the page they started from. Built
+  on the Vipps Widget SDK, https://developer.vippsmobilepay.com/docs/knowledge-base/widget. On by
+  default, per store view, at Stores, Configuration, Sales, Payment Methods, Vipps/MobilePay,
+  Widget SDK.
 
 ### Changed
-- **Upgrading, Hyvä stores:** upgrade `vipps/module-payment-hyva` to 1.1.1 in the same step. The modal
-  is on by default and the Hyvä storefront needs that module's own template to drive it, so a Hyvä store
-  left on 1.0.0 gets an Express button that does nothing.
 - A cart now carries at most one live Express payment. Starting Express again terminates the cart's
   earlier payment at Vipps/MobilePay while it is still unapproved, instead of leaving the shopper able to
   approve both and hold two reservations on their card. An approved payment is never terminated.
