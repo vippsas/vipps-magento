@@ -78,7 +78,20 @@ class FallbackTest extends TestCase
         $this->cartRepository = $this->createMock(CartRepositoryInterface::class);
         $this->messageManager = $this->createMock(ManagerInterface::class);
         $this->cartRestoreCookie = $this->createMock(CartRestoreCookie::class);
-        $this->checkoutSession = $this->createMock(Session::class);
+        // The last-order accessors are DataObject magic, so createMock() cannot see them.
+        $this->checkoutSession = $this->getMockBuilder(Session::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getQuoteId', 'clearStorage', 'replaceQuote'])
+            ->addMethods([
+                'getLastRealOrderId',
+                'getLastQuoteId',
+                'setLastSuccessQuoteId',
+                'setLastQuoteId',
+                'setLastOrderId',
+                'setLastRealOrderId',
+                'setLastOrderStatus',
+            ])
+            ->getMock();
         $this->returnToken = $this->createMock(ReturnToken::class);
     }
 
@@ -87,7 +100,7 @@ class FallbackTest extends TestCase
         $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_AUTHORIZED));
         $this->orderLocator->method('get')->with(self::REFERENCE)->willReturn($this->createMock(OrderInterface::class));
 
-        $this->messageManager->expects($this->once())->method('addWarningMessage')
+        $this->messageManager->expects($this->once())->method('addSuccessMessage')
             ->with($this->callback(fn ($message) => (string)$message === 'Your order was successfully placed.'));
         $this->checkoutSession->expects($this->once())->method('clearStorage');
 
@@ -99,6 +112,9 @@ class FallbackTest extends TestCase
     public function testACancelledPaymentHandsTheCartBack(): void
     {
         $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_TERMINATED));
+        // The cart is only restored once the return token is claimed, so of two simultaneous returns
+        // one does nothing. Without this the mock claims nothing and the restore never runs.
+        $this->returnToken->method('consume')->willReturn(true);
 
         $cart = $this->createMock(Quote::class);
         $cart->expects($this->once())->method('setIsActive')->with(true)->willReturnSelf();
@@ -183,7 +199,7 @@ class FallbackTest extends TestCase
         $this->assertSame($expectedPath, $this->redirectPath);
     }
 
-    public function unusableTokenDataProvider(): array
+    public static function unusableTokenDataProvider(): array
     {
         return [
             'shopper reopening their own used link' =>
