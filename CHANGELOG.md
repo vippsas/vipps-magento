@@ -13,8 +13,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
-
-## [3.1.0] - 2026-10-05
+## [3.1.0] - 2026-11-06
 
 ### Added
 - Support for Vipps Widget SDK for express button https://developer.vippsmobilepay.com/docs/knowledge-base/widget
@@ -135,7 +134,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - Vipps now uses the ePayment API for express and payment method flows
 
-[3.1.0]: https://github.com/vippsas/vipps-magento/compare/3.0.4...3.1.0
+[3.1.0]: https://github.com/vippsas/vipps-magento/compare/3.0.5...3.1.0
+[3.0.5]: https://github.com/vippsas/vipps-magento/compare/3.0.4...3.0.5
 [3.0.4]: https://github.com/vippsas/vipps-magento/compare/3.0.3...3.0.4
 [3.0.3]: https://github.com/vippsas/vipps-magento/compare/3.0.2...3.0.3
 [3.0.2]: https://github.com/vippsas/vipps-magento/compare/3.0.1...3.0.2

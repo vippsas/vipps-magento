@@ -67,6 +67,7 @@ class FallbackTest extends TestCase
     private bool $cartPersistence = true;
     private string $fetchDest = 'document';
     private mixed $result = null;
+    private ?string $reference = self::REFERENCE;
 
     protected function setUp(): void
     {
@@ -136,16 +137,62 @@ class FallbackTest extends TestCase
         $this->assertSame('checkout/cart', $this->redirectPath);
     }
 
+    /**
+     * No message is shown: the only people a rejection reaches are real shoppers who have done nothing
+     * wrong, and telling them their payment failed when it has not is what makes them pay twice.
+     */
     public function testAnUnauthorisedReturnIsRefused(): void
     {
         $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
         $this->transactionProcessor->expects($this->never())->method('process');
         $this->returnToken->expects($this->never())->method('consume');
-        $this->messageManager->expects($this->once())->method('addErrorMessage');
+        $this->messageManager->expects($this->never())->method('addErrorMessage');
 
         $this->execute();
 
         $this->assertSame('checkout/cart', $this->redirectPath);
+    }
+
+    /**
+     * A return link whose token has already been used is the shopper opening their own confirmation again
+     * far more often than it is an attack. The reference is sequential, so the visitor's own session is the
+     * only thing that may decide which of the two it is.
+     *
+     * @dataProvider unusableTokenDataProvider
+     */
+    public function testAnUnauthorisedReturnDecidesFromTheSessionAlone(
+        ?string $reference,
+        ?string $lastRealOrderId,
+        ?int $lastQuoteId,
+        string $expectedPath
+    ): void {
+        $this->reference = $reference;
+        $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
+        $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
+        $this->checkoutSession->method('getLastQuoteId')->willReturn($lastQuoteId);
+
+        // The success page clears the flag it checks, so asserting the path alone would pass on a shopper
+        // who is then bounced straight back to the cart.
+        $this->checkoutSession
+            ->expects($expectedPath === 'checkout/onepage/success' ? $this->once() : $this->never())
+            ->method('setLastSuccessQuoteId')
+            ->with($lastQuoteId);
+
+        $this->execute();
+
+        $this->assertSame($expectedPath, $this->redirectPath);
+    }
+
+    public function unusableTokenDataProvider(): array
+    {
+        return [
+            'shopper reopening their own used link' =>
+                [self::REFERENCE, self::REFERENCE, 42, 'checkout/onepage/success'],
+            'someone else, or an expired session' => [self::REFERENCE, '000450190', 42, 'checkout/cart'],
+            'no order in the session at all' => [self::REFERENCE, null, null, 'checkout/cart'],
+            'order in the session but not its cart' => [self::REFERENCE, self::REFERENCE, null, 'checkout/cart'],
+            'no reference on the request' => [null, self::REFERENCE, 42, 'checkout/cart'],
+        ];
     }
 
     /**
@@ -256,6 +303,9 @@ class FallbackTest extends TestCase
 
         $request = $this->createMock(HttpRequest::class);
         $request->method('getRequestString')->willReturn('/vipps/payment/fallback');
+        $request->method('getParam')->willReturnCallback(
+            fn ($name, $default = null) => $name === 'reference' ? $this->reference : $default
+        );
         $request->method('getHeader')->willReturnCallback(
             fn ($name) => $name === 'Sec-Fetch-Dest' ? $this->fetchDest : false
         );
