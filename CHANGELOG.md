@@ -18,7 +18,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added
 - Express opens Vipps/MobilePay in a modal on the store page rather than redirecting. The shopper
   enters their phone number, approves in the app, and lands back on the page they started from. Built
-  on the Vipps Widget SDK, https://developer.vippsmobilepay.com/docs/knowledge-base/widget. On by
+  on the Vipps Widget SDK, https://developer.vippsmobilepay.com/docs/buttons-and-widgets/widget. On by
   default, per store view, at Stores, Configuration, Sales, Payment Methods, Vipps/MobilePay,
   Widget SDK.
 
