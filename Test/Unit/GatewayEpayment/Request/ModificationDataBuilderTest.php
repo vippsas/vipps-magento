@@ -45,6 +45,21 @@ class ModificationDataBuilderTest extends TestCase
     }
 
     /**
+     * Without the flag the same cancel call voids an authorised payment.
+     */
+    public function testAsksToCancelOnlyWhileUnapprovedWhenRequested(): void
+    {
+        $result = $this->build(null, ['reference' => '000000001', 'cancel_transaction_only' => true]);
+
+        $this->assertTrue($result['cancelTransactionOnly']);
+    }
+
+    public function testLeavesTheFlagOutOtherwise(): void
+    {
+        $this->assertArrayNotHasKey('cancelTransactionOnly', $this->build('000000002', []));
+    }
+
+    /**
      * @param string|null $orderIncrementId what the order adapter reports
      * @param array<string, mixed> $buildSubject what the caller passed in
      * @return array<string, mixed>

@@ -18,6 +18,13 @@
         <css src="Vipps_Payment::css/vipps_styles.css"/>
     </head>
     <body>
+        <referenceContainer name="head.additional">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="vipps.widget.sdk"
+                   as="vipps.widget.sdk"
+                   template="Vipps_Payment::widget-sdk.phtml"
+                   ifconfig="payment/vipps/widget_sdk_enabled"/>
+        </referenceContainer>
         <referenceContainer name="before.body.end">
             <block class="Magento\Framework\View\Element\Template"
                    name="vipps.cart.restore"

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2020 Vipps
+ * Copyright 2026 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,30 +13,30 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-return \json_decode(
-    '{
-        "orderId": "testOrderId",
-        "transactionLogHistory": [
-            {
-                "amount": 20000,
-                "transactionText": "One pair of Vipps socks",
-                "transactionId": "5001420062",
-                "timeStamp": "2018-11-14T15:21:22.126Z",
-                "operation": "RESERVE",
-                "requestId": "",
-                "operationSuccess": true
-            },
-            {
-                "amount": 20000,
-                "transactionText": "One pair of Vipps socks",
-                "transactionId": "5001420062",
-                "timeStamp": "2018-11-14T15:21:04.697Z",
-                "operation": "INITIATE",
-                "requestId": "",
-                "operationSuccess": true
-            }
-        ]
-    }',
-    true
-);
+namespace Vipps\Payment\Model\Checkout;
+
+use Magento\Checkout\Model\Session;
+use Magento\Sales\Api\Data\OrderInterface;
+
+/**
+ * Points the checkout session at an order so checkout/onepage/success can show it.
+ */
+class LastOrderSession
+{
+    public function __construct(
+        private readonly Session $checkoutSession
+    ) {
+    }
+
+    public function store(OrderInterface $order): void
+    {
+        $this->checkoutSession->clearStorage();
+        $this->checkoutSession->setLastQuoteId($order->getQuoteId());
+        $this->checkoutSession->setLastSuccessQuoteId($order->getQuoteId());
+        $this->checkoutSession->setLastOrderId($order->getEntityId());
+        $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
+        $this->checkoutSession->setLastOrderStatus($order->getStatus());
+    }
+}

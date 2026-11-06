@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2020 Vipps
+ * Copyright 2026 Vipps
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -13,30 +13,37 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-return \json_decode(
-    '{
-        "orderId": "testOrderId",
-        "transactionLogHistory": [
-            {
-                "amount": 20000,
-                "transactionText": "One pair of Vipps socks",
-                "transactionId": "5001420062",
-                "timeStamp": "2018-11-14T15:21:22.126Z",
-                "operation": "RESERVE",
-                "requestId": "",
-                "operationSuccess": false
-            },
-            {
-                "amount": 20000,
-                "transactionText": "One pair of Vipps socks",
-                "transactionId": "5001420062",
-                "timeStamp": "2018-11-14T15:21:04.697Z",
-                "operation": "INITIATE",
-                "requestId": "",
-                "operationSuccess": true
-            }
-        ]
-    }',
-    true
-);
+namespace Vipps\Payment\Model\Express;
+
+use Magento\Framework\Phrase;
+use Vipps\Payment\GatewayEpayment\Config\Config;
+
+/**
+ * Shopper messages for an already approved payment on their cart.
+ */
+class LivePaymentMessages
+{
+    public function __construct(
+        private readonly Config $config
+    ) {
+    }
+
+    public function orderPlaced(): Phrase
+    {
+        return __(
+            'Your payment in %1 was approved, and your order has been placed.',
+            $this->config->getTitle()
+        );
+    }
+
+    public function authorisedPending(): Phrase
+    {
+        return __(
+            'You have already approved a payment for this cart in %1, and your order is being completed.'
+            . ' Please wait a few minutes rather than paying again.',
+            $this->config->getTitle()
+        );
+    }
+}

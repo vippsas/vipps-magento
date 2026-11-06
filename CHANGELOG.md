@@ -13,6 +13,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [3.1.0] - 2026-11-06
+
+### Added
+- Express opens Vipps/MobilePay in a modal on the store page rather than redirecting. The shopper
+  enters their phone number, approves in the app, and lands back on the page they started from. Built
+  on the Vipps Widget SDK, https://developer.vippsmobilepay.com/docs/knowledge-base/widget. On by
+  default, per store view, at Stores, Configuration, Sales, Payment Methods, Vipps/MobilePay,
+  Widget SDK.
+
+### Changed
+- A cart now carries at most one live Express payment. Starting Express again terminates the cart's
+  earlier payment at Vipps/MobilePay while it is still unapproved, instead of leaving the shopper able to
+  approve both and hold two reservations on their card. An approved payment is never terminated.
+- A payment the shopper has already approved is turned into its order straight away: when they start
+  Express again, or when they come back to the store, rather than at the next order fetch. They are sent
+  to the order confirmation, or told it is being completed, instead of being offered a second payment.
+- An Express payment the shopper has not approved yet can be read again. Its user and shipping details are
+  absent until approval, and building them from nothing threw, so the payment could not be inspected,
+  cancelled or picked up by the order fetch until the shopper approved it.
+- Closing, cancelling or approving in the Express widget now ends in the shopper's own session: the cart is
+  restored with the cancellation message, or the order confirmation shown.
+- Starting Express with no cart in the session, for example right after an order, no longer fails with a
+  server error. The shopper is sent to the cart page with "Your cart is empty."
+
 ## [3.0.5] - 2026-11-05
 
 ### Fixed
@@ -114,6 +138,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - Vipps now uses the ePayment API for express and payment method flows
 
+[3.1.0]: https://github.com/vippsas/vipps-magento/compare/3.0.5...3.1.0
 [3.0.5]: https://github.com/vippsas/vipps-magento/compare/3.0.4...3.0.5
 [3.0.4]: https://github.com/vippsas/vipps-magento/compare/3.0.3...3.0.4
 [3.0.3]: https://github.com/vippsas/vipps-magento/compare/3.0.2...3.0.3

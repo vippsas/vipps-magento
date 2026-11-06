@@ -20,6 +20,7 @@
     "*": {
         "Vipps_Payment/js/vipps-cart-restore": {
             "restoreUrl": "<?= $block->escapeUrl($block->getUrl('vipps/payment/restoreCart')) ?>",
+            "checkReturnUrl": "<?= $block->escapeUrl($block->getUrl('vipps/payment/checkReturn')) ?>",
             "cartUrl": "<?= $block->escapeUrl($block->getUrl('checkout/cart')) ?>",
             "successUrl": "<?= $block->escapeUrl($block->getUrl('checkout/onepage/success')) ?>"
         }

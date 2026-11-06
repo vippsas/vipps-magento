@@ -13,297 +13,175 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
+
 namespace Vipps\Payment\Test\Unit\Model;
 
-use Magento\Payment\Gateway\ConfigInterface;
-use Magento\Framework\App\ScopeResolverInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\ScopeInterface;
+use Magento\Framework\App\ScopeResolverInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\Framework\HTTP\ZendClientFactory;
-use Magento\Framework\HTTP\ZendClient;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Magento\Framework\Serialize\SerializerInterface;
-use PHPUnit_Framework_MockObject_MockObject as MockObject;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\HTTP\Adapter\Curl;
+use Magento\Framework\HTTP\Adapter\CurlFactory;
+use Magento\Framework\Serialize\Serializer\Json;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Vipps\Payment\GatewayEpayment\Config\Config;
 use Vipps\Payment\GatewayEpayment\Exception\AuthenticationException;
 use Vipps\Payment\Model\TokenProvider;
 use Vipps\Payment\Model\UrlResolver;
-use Laminas\Http\Response;
 
 /**
- * Class TokenProvider
+ * Every call to Vipps/MobilePay carries this access token, so a stored one is reused while it lasts and a
+ * fresh one is fetched, and stored, shortly before it runs out.
+ *
  * @package Vipps\Payment\Test\Unit\Model
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TokenProviderTest extends TestCase
 {
-    /**
-     * @var TokenProvider
-     */
-    private $action;
+    private const STORE_ID = 1;
 
-    /**
-     * @var AdapterInterface|MockObject
-     */
-    private $connection;
+    private AdapterInterface|MockObject $connection;
+    private CurlFactory|MockObject $curlFactory;
 
-    /**
-     * @var \Magento\Framework\HTTP\Adapter\Curl|MockObject
-     */
-    private $httpClient;
+    /** @var array<string, mixed>|false the stored token row */
+    private array|false $storedRow = false;
 
-    /**
-     * @var \Magento\Framework\HTTP\Adapter\CurlFactory|MockObject
-     */
-    private $adapterFactory;
-
-    /**
-     * @var Laminas\Http\Response|MockObject
-     */
-    private $httpClientResponse;
-
-    /**
-     * @var ResourceConnection|MockObject
-     */
-    private $resourceConnection;
-
-    /**
-     * @var ConfigInterface|MockObject
-     */
-    private $config;
-
-    /**
-     * @var Select|MockObject
-     */
-    private $select;
-
-    /**
-     * @var UrlResolver|MockObject
-     */
-    private $urlResolver;
-
-    /**
-     * @var SerializerInterface|MockObject
-     */
-    private $serializer;
-
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private $logger;
-
-    /**
-     * @var ScopeInterface|MockObject
-     */
-    private $scope;
-
-    /**
-     * @var ScopeResolverInterface|MockObject
-     */
-    private $scopeResolver;
+    /** @var string raw HTTP response from the access token endpoint */
+    private string $httpResponse = '';
 
     protected function setUp(): void
     {
-        $this->resourceConnection = $this->getMockBuilder(ResourceConnection::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getConnection', 'getTableName'])
-            ->getMock();
-        $this->connection = $this->getMockBuilder(AdapterInterface::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['select', 'fetchRow', 'insert', 'update'])
-            ->getMockForAbstractClass();
-        $this->select = $this->getMockBuilder(Select::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $select = $this->createMock(Select::class);
+        foreach (['from', 'where', 'limit', 'order'] as $method) {
+            $select->method($method)->willReturnSelf();
+        }
 
-        $this->select->expects($this->any())->method('from')->will($this->returnSelf());
-        $this->select->expects($this->any())->method('where')->will($this->returnSelf());
-        $this->select->expects($this->any())->method('limit')->will($this->returnSelf());
-        $this->select->expects($this->any())->method('order')->will($this->returnSelf());
+        $this->connection = $this->createMock(AdapterInterface::class);
+        $this->connection->method('select')->willReturn($select);
+        $this->connection->method('fetchRow')->willReturnCallback(fn () => $this->storedRow);
 
-        $this->adapterFactory = $this->getMockBuilder(\Magento\Framework\HTTP\Adapter\CurlFactory::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['create'])
-            ->getMock();
-
-        $this->httpClient = $this->getMockBuilder(\Magento\Framework\HTTP\Adapter\Curl::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->httpClient->expects($this->any())->method('write')->willReturnSelf();
-        $this->httpClient->expects($this->any())->method('read')->willReturnSelf();
-
-        $this->httpClientResponse = $this->getMockBuilder(Response::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->config = $this->getMockBuilder(ConfigInterface::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getValue'])
-            ->getMockForAbstractClass();
-
-        $this->serializer = $this->getMockBuilder(\Magento\Framework\Serialize\Serializer\Json::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['unserialize'])
-            ->getMock();
-
-        $this->logger = $this->getMockBuilder(LoggerInterface::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['critical', 'debug'])
-            ->getMockForAbstractClass();
-
-        $this->urlResolver = $this->getMockBuilder(UrlResolver::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getUrl'])
-            ->getMock();
-
-        $this->scopeResolver = $this->getMockBuilder(ScopeResolverInterface::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getScope'])
-            ->getMockForAbstractClass();
-        $this->scope = $this->getMockBuilder(ScopeInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $managerHelper = new ObjectManager($this);
-        $this->action = $managerHelper->getObject(TokenProvider::class, [
-            'resourceConnection' => $this->resourceConnection,
-            'adapterFactory' => $this->adapterFactory,
-            'config' => $this->config,
-            'serializer' => $this->serializer,
-            'logger' => $this->logger,
-            'urlResolver' => $this->urlResolver,
-            'scopeResolver' => $this->scopeResolver
-        ]);
+        $this->curlFactory = $this->createMock(CurlFactory::class);
     }
 
-    public function testGetWithValidTokenRecord()
+    public function testReusesAStoredTokenThatIsStillValid(): void
     {
-        $jwtRecord = [
-            "token_id" => "2",
-            "scope_id" => "1",
-            "token_type" => "Bearer",
-            "expires_in" => "86398",
-            "ext_expires_in" => "0",
-            "expires_on" => "1926390711",
-            "not_before" => "1526304012",
-            "resource" => "00000002-0000-0000-c000-000000000000",
-            "access_token" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImlCakwxUmNx"
-        ];
+        $this->storedRow = ['token_id' => 5, 'access_token' => 'stored', 'expires_on' => time() + 3600];
+        $this->curlFactory->expects($this->never())->method('create');
 
-        $this->scopeResolver->expects($this->any())
-            ->method('getScope')
-            ->willReturn($this->scope);
-
-        $this->connection->expects(self::once())
-            ->method('select')
-            ->willReturn($this->select);
-
-        $this->resourceConnection->expects(self::once())
-            ->method('getConnection')
-            ->willReturn($this->connection);
-
-        $this->resourceConnection->expects(self::once())
-            ->method('getTableName')
-            ->willReturn('vipps_payment_jwt');
-
-        $this->connection->expects($this->once())
-            ->method('fetchRow')
-            ->willReturn($jwtRecord);
-
-        self::assertEquals($this->action->get(), $jwtRecord['access_token']);
+        $this->assertSame('stored', $this->provider()->get(self::STORE_ID));
     }
 
-    public function testGetWithoutValidTokenRecord()
+    /**
+     * A token about to run out could expire while the request that carries it is still in flight.
+     */
+    public function testReplacesAStoredTokenThatIsAboutToExpire(): void
     {
-        $jwtRecord = [];
-        $jwtRecordRequested = [
-            "scope_id" => "1",
-            "token_type" => "Bearer",
-            "expires_in" => "86398",
-            "ext_expires_in" => "0",
-            "expires_on" => "1926390711",
-            "not_before" => "1526304012",
-            "resource" => "00000002-0000-0000-c000-000000000000",
-            "access_token" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImlCakwxUmNx"
-        ];
+        $this->storedRow = ['token_id' => 5, 'access_token' => 'stored', 'expires_on' => time() + 30];
+        $this->respondWith(200, $this->jwt('fresh'));
 
-        $this->adapterFactory->expects(self::once())
-            ->method('create')
-            ->willReturn($this->httpClient);
+        $this->connection->expects($this->once())->method('update')
+            ->with('vipps_payment_jwt', $this->callback(fn ($row) => $row['access_token'] === 'fresh'), 'token_id = 5');
+        $this->connection->expects($this->never())->method('insert');
 
-        $this->scopeResolver->expects($this->any())
-            ->method('getScope')
-            ->willReturn($this->scope);
-
-        $this->resourceConnection->expects($this->any())
-            ->method('getConnection')
-            ->willReturn($this->connection);
-
-        $this->resourceConnection->expects(self::any())
-            ->method('getTableName')
-            ->willReturn('vipps_payment_jwt');
-
-        $this->connection->expects($this->once())
-            ->method('select')
-            ->willReturn($this->select);
-
-        $this->connection->expects($this->once())
-            ->method('fetchRow')
-            ->willReturn($jwtRecord);
-
-        $this->connection->expects($this->once())
-            ->method('insert')
-            ->willReturnSelf();
-
-        $this->httpClient->expects($this->once())
-            ->method('read')
-            ->willReturn($this->httpClientResponse->toString());
-
-        $this->httpClientResponse->expects($this->once())
-            ->method('getBody')
-            ->willReturn('');
-
-        $this->httpClientResponse->expects($this->once())
-            ->method('isSuccess')
-            ->willReturn(true);
-
-        $this->serializer->expects($this->once())
-            ->method('unserialize')
-            ->willReturn($jwtRecordRequested);
-
-        self::assertEquals($this->action->get(), $jwtRecordRequested['access_token']);
+        $this->assertSame('fresh', $this->provider()->get(self::STORE_ID));
     }
 
-    public function testGetCouldNotSaveException()
+    public function testStoresTheFirstTokenForTheStore(): void
     {
-        $exception = new \Exception();
-        $this->httpClient->method('read')
-            ->willThrowException($exception);
+        $this->respondWith(200, $this->jwt('fresh'));
 
-        $this->adapterFactory->expects(self::once())
-            ->method('create')
-            ->willReturn($this->httpClient);
+        $this->connection->expects($this->once())->method('insert')
+            ->with('vipps_payment_jwt', $this->callback(
+                fn ($row) => $row['access_token'] === 'fresh'
+                    && $row['scope'] === 'store'
+                    && $row['scope_id'] === self::STORE_ID
+            ));
 
-        $this->resourceConnection->expects($this->once())
-            ->method('getConnection')
-            ->willReturn($this->connection);
+        $this->assertSame('fresh', $this->provider()->get(self::STORE_ID));
+    }
 
-        $this->connection->expects($this->once())
-            ->method('select')
-            ->willReturn($this->select);
-
-        $this->scopeResolver->expects($this->any())
-            ->method('getScope')
-            ->willReturn($this->scope);
-
-        $this->serializer->expects($this->never())
-            ->method('unserialize');
+    public function testARejectedRequestIsAnAuthenticationError(): void
+    {
+        $this->respondWith(401, ['error' => 'unauthorized_client']);
 
         $this->expectException(AuthenticationException::class);
-        $this->action->get();
+        $this->provider()->get(self::STORE_ID);
+    }
+
+    public function testAnIncompleteTokenIsAnAuthenticationError(): void
+    {
+        $this->respondWith(200, ['access_token' => 'fresh']);
+
+        $this->expectException(AuthenticationException::class);
+        $this->provider()->get(self::STORE_ID);
+    }
+
+    public function testATokenThatCannotBeStoredIsReported(): void
+    {
+        $this->respondWith(200, $this->jwt('fresh'));
+        $this->connection->method('insert')->willThrowException(new \RuntimeException('read-only'));
+
+        $this->expectException(CouldNotSaveException::class);
+        $this->provider()->get(self::STORE_ID);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function jwt(string $accessToken): array
+    {
+        return [
+            'token_type' => 'Bearer',
+            'expires_in' => '86398',
+            'ext_expires_in' => '86398',
+            'expires_on' => (string)(time() + 86398),
+            'not_before' => (string)time(),
+            'resource' => '00000002-0000-0000-c000-000000000000',
+            'access_token' => $accessToken,
+        ];
+    }
+
+    private function respondWith(int $status, array $body): void
+    {
+        $reason = $status === 200 ? 'OK' : 'Unauthorized';
+        $this->httpResponse = "HTTP/1.1 {$status} {$reason}\r\nContent-Type: application/json\r\n\r\n"
+            . json_encode($body);
+
+        $curl = $this->createMock(Curl::class);
+        $curl->method('read')->willReturnCallback(fn () => $this->httpResponse);
+        $this->curlFactory->method('create')->willReturn($curl);
+    }
+
+    private function provider(): TokenProvider
+    {
+        $resourceConnection = $this->createMock(ResourceConnection::class);
+        $resourceConnection->method('getConnection')->willReturn($this->connection);
+        $resourceConnection->method('getTableName')->willReturnArgument(0);
+
+        $config = $this->createMock(Config::class);
+        $config->method('getValue')->willReturn('credential');
+        $config->method('getTitle')->willReturn('Vipps');
+
+        $urlResolver = $this->createMock(UrlResolver::class);
+        $urlResolver->method('getUrl')->willReturn('https://apitest.vipps.no/accessToken/get');
+
+        $scope = $this->createMock(ScopeInterface::class);
+        $scope->method('getId')->willReturn(self::STORE_ID);
+        $scopeResolver = $this->createMock(ScopeResolverInterface::class);
+        $scopeResolver->method('getScope')->willReturn($scope);
+
+        return new TokenProvider(
+            $resourceConnection,
+            $this->curlFactory,
+            $config,
+            new Json(),
+            $this->createMock(LoggerInterface::class),
+            $urlResolver,
+            $scopeResolver
+        );
     }
 }

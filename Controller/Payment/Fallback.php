@@ -197,6 +197,11 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
      */
     public function execute()
     {
+        // The widget's iframe has no session; the widget script repeats this request in the shopper's tab.
+        if ($this->request->getHeader('Sec-Fetch-Dest') === 'iframe') {
+            return $this->resultFactory->create(ResultFactory::TYPE_RAW)->setContents('');
+        }
+
         $transaction = null;
         $authorised = false;
         /** @var Redirect $resultRedirect */
@@ -379,9 +384,7 @@ class Fallback implements ActionInterface, CsrfAwareActionInterface
             return $resultRedirect;
         }
 
-        $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
-
-        return $resultRedirect;
+        return $resultRedirect->setPath('checkout/cart', ['_secure' => true]);
     }
 
     /**

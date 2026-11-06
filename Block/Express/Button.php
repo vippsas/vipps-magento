@@ -159,6 +159,48 @@ class Button extends Template implements ShortcutInterface
     }
 
     /**
+     * Whether this button should be wired to the Widget SDK's trigger instead of the legacy redirect flow.
+     *
+     * @return bool
+     */
+    public function getWidgetSdkEnabled(): bool
+    {
+        return (bool)$this->config->getValue('widget_sdk_enabled');
+    }
+
+    /**
+     * URL the Widget SDK trigger calls to create a payment session and get a payment URL.
+     *
+     * @return string
+     */
+    public function getWidgetTriggerUrl(): string
+    {
+        return $this->getUrl('vipps/payment/initWidget');
+    }
+
+    /**
+     * Store view language mapped to a Widget SDK language code ("no", "en", "da", "fi", "sv").
+     *
+     * @return string
+     */
+    public function getWidgetLanguage(): string
+    {
+        $language = strtolower(substr($this->getLocale(), 0, 2));
+
+        $map = [
+            'nb' => 'no',
+            'nn' => 'no',
+            'no' => 'no',
+            'sv' => 'sv',
+            'da' => 'da',
+            'fi' => 'fi',
+            'en' => 'en',
+        ];
+
+        return $map[$language] ?? 'en';
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @return AbstractBlock

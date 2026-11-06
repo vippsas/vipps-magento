@@ -59,13 +59,14 @@ class PaymentProvider
 
     /**
      * @param string $orderId
+     * @param bool $forceReload bypass the per-request cache
      *
      * @return Payment
      * @throws VippsException
      */
-    public function get($orderId): Payment
+    public function get($orderId, bool $forceReload = false): Payment
     {
-        if (!isset($this->cache[$orderId])) {
+        if ($forceReload || !isset($this->cache[$orderId])) {
             $response = $this->commandManager->getPayment($orderId);
             /** @var Payment $payment */
             $payment = $this->paymentBuilder->setData($response)->build();

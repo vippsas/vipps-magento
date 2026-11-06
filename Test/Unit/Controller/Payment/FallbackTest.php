@@ -13,672 +13,336 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 namespace Vipps\Payment\Test\Unit\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\Result\Redirect;
-use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Vipps\Payment\GatewayEpayment\Config\Config as VippsConfig;
-use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Log\LoggerInterface;
 use Vipps\Payment\Api\Data\QuoteInterface;
 use Vipps\Payment\Api\QuoteRepositoryInterface;
 use Vipps\Payment\Controller\Payment\Fallback;
-use Vipps\Payment\GatewayEpayment\Command\PaymentDetailsProvider;
+use Vipps\Payment\GatewayEpayment\Config\Config;
+use Vipps\Payment\GatewayEpayment\Data\Payment;
+use Vipps\Payment\Model\Express\CartRestoreCookie;
 use Vipps\Payment\Model\Fallback\AuthoriseProxy;
-use Vipps\Payment\Gateway\Transaction\ShippingDetails;
-use Vipps\Payment\Gateway\Transaction\Transaction;
-use Vipps\Payment\Gateway\Transaction\TransactionBuilder;
-use Vipps\Payment\Gateway\Transaction\TransactionInfo;
-use Vipps\Payment\Gateway\Transaction\TransactionLogHistory;
-use Vipps\Payment\Gateway\Transaction\TransactionSummary;
-use Vipps\Payment\Gateway\Transaction\UserDetails;
 use Vipps\Payment\Model\Gdpr\Compliance;
-use Vipps\Payment\Model\LockManager;
 use Vipps\Payment\Model\OrderLocator;
-use Vipps\Payment\Model\QuoteLocator;
-use Vipps\Payment\Model\QuoteManagement;
-use Vipps\Payment\Model\QuoteUpdater;
+use Vipps\Payment\Model\ReturnToken;
+use Vipps\Payment\Model\Transaction\StatusVisitor;
 use Vipps\Payment\Model\TransactionProcessor;
 
 /**
- * Class FallbackTestTest
+ * The shopper's browser coming back from Vipps/MobilePay. Fallback asks TransactionProcessor what happened
+ * and sends the shopper to their order, back to their cart, or tells them it will be checked again.
+ *
  * @package Vipps\Payment\Test\Unit\Controller\Payment
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyFields)
  */
 class FallbackTest extends TestCase
 {
-    /**
-     * @var Fallback
-     */
-    private $action;
-    /**
-     * @var Session|MockObject
-     */
-    private $checkoutSession;
-    /**
-     * @var ResultFactory|MockObject
-     */
-    private $resultFactory;
-    /**
-     * @var ResultInterface|MockObject
-     */
-    private $resultRedirect;
-    /**
-     * @var Quote|MockObject
-     */
-    private $quote;
-    /**
-     * @var Order|MockObject
-     */
-    private $order;
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private $logger;
-    /**
-     * @var RequestInterface|MockObject
-     */
-    private $request;
-    /**
-     * @var PaymentDetailsProvider|MockObject
-     */
-    private $paymentDetailsProvider;
-    /**
-     * @var ManagerInterface|MockObject
-     */
-    private $messageManagerMock;
-    /**
-     * @var ObjectManager
-     */
-    private $objectManagerHelper;
-    /**
-     * @var CartRepositoryInterface|MockObject
-     */
-    private $cartRepository;
-    /**
-     * @var MockObject
-     */
-    private $transactionProcessor;
-    /**
-     * @var MockObject
-     */
-    private $vippsQuoteRepository;
-    /**
-     * @var MockObject
-     */
-    private $compliance;
+    private const REFERENCE = '000450189';
 
-    /**
-     * @var MockObject
-     */
-    private $vippsQuote;
-    /**
-     * @var TransactionBuilder
-     */
-    private $transactionBuilder;
-    /**
-     * @var MockObject
-     */
-    private $orderRepository;
-    /**
-     * @var MockObject
-     */
-    private $cartManagement;
-    /**
-     * @var MockObject
-     */
-    private $quoteLocator;
-    /**
-     * @var MockObject
-     */
-    private $processor;
-    /**
-     * @var MockObject
-     */
-    private $quoteUpdater;
-    /**
-     * @var MockObject
-     */
-    private $lockManager;
-    /**
-     * @var MockObject
-     */
-    private $config;
-    /**
-     * @var MockObject
-     */
-    private $configMock;
-    /**
-     * @var MockObject
-     */
-    private $quoteManagement;
-    /**
-     * @var
-     */
-    private $orderLocator;
+    private TransactionProcessor|MockObject $transactionProcessor;
+    private AuthoriseProxy|MockObject $authoriseProxy;
+    private OrderLocator|MockObject $orderLocator;
+    private CartRepositoryInterface|MockObject $cartRepository;
+    private ManagerInterface|MockObject $messageManager;
+    private CartRestoreCookie|MockObject $cartRestoreCookie;
+    private Session|MockObject $checkoutSession;
+    private ReturnToken|MockObject $returnToken;
+    private ?string $redirectPath = null;
+    private bool $cartPersistence = true;
+    private string $fetchDest = 'document';
+    private mixed $result = null;
+    private ?string $reference = self::REFERENCE;
 
     protected function setUp(): void
     {
-        $this->action = $this->createActionInstance();
-    }
-
-    /**
-     * @param $orderId
-     * @param $token
-     *
-     * @throws CouldNotSaveException
-     *
-     * @dataProvider invalidParamsDataProvider
-     */
-    public function testExecuteWithInvalidParams($orderId, $token)
-    {
-        $this->request
-            ->expects($this->any())
-            ->method('getParam')
-            ->with($this->logicalOr(
-                $this->equalTo('order_id'),
-                $this->equalTo('auth_token')
-            ))
-            ->will($this->returnCallback(function ($param) use ($orderId, $token) {
-                if ($param == 'order_id') {
-                    return $orderId;
-                } else {
-                    return $token;
-                }
-            }));
-
-        $this->vippsQuote
-            ->method('getAuthToken')
-            ->willReturn($token . ' make it invalid');
-
-        $this->configMock
-            ->expects($this->atLeastOnce())
-            ->method('getValue')
-            ->willReturn(true);
-
-        $this->messageManagerMock->expects(self::once())
-            ->method('addErrorMessage');
-        $this->resultRedirect->expects(self::once())
-            ->method('setPath')->with('checkout/cart');
-
-        $this->action->execute();
-    }
-
-    /**
-     * @return array
-     */
-    public function invalidParamsDataProvider()
-    {
-        return [
-            ['00000000001', null],
-            [null, 'some token'],
-            ['00000000001', 'some token'],
-        ];
-    }
-
-    /**
-     * A return link whose token has already been used is the shopper opening their own confirmation again,
-     * far more often than it is an attack. It must not tell them their completed order was invalid, and it
-     * must decide that from their session alone, never from the guessable reference.
-     *
-     * @dataProvider unusableTokenDataProvider
-     */
-    public function testReturnWithUnusableTokenDecidesFromTheSessionAlone(
-        $lastRealOrderId,
-        $lastQuoteId,
-        $expectedPath
-    ) {
-        $authoriseProxy = $this->getMockBuilder(AuthoriseProxy::class)
+        $this->transactionProcessor = $this->createMock(TransactionProcessor::class);
+        $this->authoriseProxy = $this->createMock(AuthoriseProxy::class);
+        $this->authoriseProxy->method('getOrderId')->willReturn(self::REFERENCE);
+        $this->orderLocator = $this->createMock(OrderLocator::class);
+        $this->cartRepository = $this->createMock(CartRepositoryInterface::class);
+        $this->messageManager = $this->createMock(ManagerInterface::class);
+        $this->cartRestoreCookie = $this->createMock(CartRestoreCookie::class);
+        // The last-order accessors are DataObject magic, so createMock() cannot see them.
+        $this->checkoutSession = $this->getMockBuilder(Session::class)
             ->disableOriginalConstructor()
-            ->setMethods(['do', 'getOrderId'])
-            ->getMock();
-        $authoriseProxy->method('getOrderId')->willReturn('000000777');
-        $authoriseProxy->method('do')
-            ->willThrowException(new LocalizedException(__('Invalid request')));
-
-        $this->request->method('getParam')->willReturn('000000777');
-        $this->request->method('getRequestString')
-            ->willReturn('/vipps/payment/fallback/reference/000000777/token/used/');
-        $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
-        $this->checkoutSession->method('getLastQuoteId')->willReturn($lastQuoteId);
-
-        // The success page clears this flag the first time it is shown; without restoring it the shopper is
-        // bounced from the confirmation to the cart, so asserting the redirect path alone is not enough.
-        if ($expectedPath === 'checkout/onepage/success') {
-            $this->checkoutSession->expects(self::once())->method('setLastSuccessQuoteId')->with($lastQuoteId);
-        } else {
-            $this->checkoutSession->expects(self::never())->method('setLastSuccessQuoteId');
-        }
-
-        // The payment is never read and the cart is never touched for a return that failed authorisation.
-        $this->paymentDetailsProvider->expects(self::never())->method('get');
-        $this->checkoutSession->expects(self::never())->method('setLastRealOrderId');
-        $this->messageManagerMock->expects(self::never())->method('addErrorMessage');
-
-        $this->resultRedirect->expects(self::once())
-            ->method('setPath')
-            ->with($expectedPath, ['_secure' => true]);
-
-        $action = $this->objectManagerHelper->getObject(Fallback::class, [
-            'resultFactory' => $this->resultFactory,
-            'request' => $this->request,
-            'checkoutSession' => $this->checkoutSession,
-            'transactionProcessor' => $this->transactionProcessor,
-            'cartRepository' => $this->cartRepository,
-            'messageManager' => $this->messageManagerMock,
-            'vippsQuoteRepository' => $this->vippsQuoteRepository,
-            'orderLocator' => $this->orderLocator,
-            'compliance' => $this->compliance,
-            'orderManagement' => $this->createOrderManagement(),
-            'logger' => $this->logger,
-            'config' => $this->configMock,
-            'authoriseProxy' => $authoriseProxy
-        ]);
-
-        $action->execute();
-    }
-
-    /**
-     * @return array
-     */
-    public function unusableTokenDataProvider()
-    {
-        return [
-            'shopper reopening their own used link' => ['000000777', 42, 'checkout/onepage/success'],
-            'someone else, or an expired session' => ['000000778', 42, 'checkout/cart'],
-            'no order in the session at all' => [null, null, 'checkout/cart'],
-            'order in the session but not its cart' => ['000000777', null, 'checkout/cart'],
-        ];
-    }
-
-    public function testCouldNotAcquireLock()
-    {
-        $this->authorize();
-
-        $transaction = $this->buildTransaction(include __DIR__ . '/_files/could_not_acquire_lock.php');
-        $this->paymentDetailsProvider->method('get')
-            ->willReturn($transaction);
-
-        $this->vippsQuote->method('getReservedOrderId')->willReturn(null);
-
-        $this->messageManagerMock->expects(self::once())
-            ->method('addErrorMessage');
-        $this->resultRedirect->expects(self::once())
-            ->method('setPath')->with('checkout/onepage/failure');
-
-        $this->action->execute();
-    }
-
-    public function testTransactionWasCancelled()
-    {
-        $this->authorize();
-
-        $transaction = $this->buildTransaction(include __DIR__ . '/_files/cancelled_transaction.php');
-        $this->paymentDetailsProvider->method('get')
-            ->willReturn($transaction);
-
-        $this->vippsQuote->method('getReservedOrderId')->willReturn('000000001');
-        $this->vippsQuote->method('getOrderId')->willReturn('000000001');
-
-        $this->quoteManagement
-            ->expects($this->once())
-            ->method('save');
-
-        $this->order->expects($this->once())->method('getState')->willReturn('new');
-
-        $this->lockManager->method('lock')->willReturn(true);
-
-        $this->vippsQuote
-            ->expects($this->once())
-            ->method('setStatus')
-            ->with(QuoteInterface::STATUS_CANCELED);
-
-        $this->configMock
-            ->expects($this->any())
-            ->method('getValue')
-            ->willReturn(true);
-
-        $this->expectRestoreQuote();
-
-        $this->messageManagerMock->expects(self::once())
-            ->method('addWarningMessage');
-        $this->resultRedirect->expects(self::once())
-            ->method('setPath')->with('checkout/cart');
-
-        $this->action->execute();
-    }
-
-    private function expectRestoreQuote()
-    {
-        $this->quote->expects($this->once())->method('setIsActive')->with(true);
-        $this->quote->expects($this->once())->method('setReservedOrderId')->with(null);
-        $this->cartRepository->expects($this->once())->method('save');
-
-        $this->checkoutSession->expects($this->once())->method('replaceQuote');
-    }
-
-    public function testTransactionWasReservedWhenOrderExists()
-    {
-        $this->authorize();
-
-        $transaction = $this->buildTransaction(include __DIR__ . '/_files/reserved_transaction.php');
-        $this->paymentDetailsProvider->method('get')
-            ->willReturn($transaction);
-
-        $this->lockManager->method('lock')->willReturn(true);
-
-        $this->vippsQuote->method('getReservedOrderId')->willReturn('000000001');
-        $this->vippsQuote->method('getOrderId')->willReturn('000000001');
-
-        // we set status to 'processing' to prevent capture/authorize execution in this test
-        // otherwise test will be too complicated
-        $this->order->expects($this->once())->method('getState')->willReturn('processing');
-
-        $this->config
-            ->expects($this->once())
-            ->method('getValue')
-            ->with('vipps_payment_action')
-            ->willReturn('authorize');
-
-        $this->vippsQuote
-            ->expects($this->once())
-            ->method('setStatus')
-            ->with(QuoteInterface::STATUS_RESERVED);
-
-        $this->quoteManagement
-            ->expects($this->once())
-            ->method('save');
-
-        $this->resultRedirect->expects(self::once())
-            ->method('setPath')->with('checkout/onepage/success');
-
-        $this->action->execute();
-    }
-
-    private function authorize()
-    {
-        $this->request
-            ->expects($this->any())
-            ->method('getParam')
-            ->with($this->logicalOr(
-                $this->equalTo('order_id'),
-                $this->equalTo('auth_token')
-            ))
-            ->will($this->returnCallback(function ($param) {
-                if ($param == 'order_id') {
-                    return '00000001';
-                } else {
-                    return 'valid token';
-                }
-            }));
-
-        $this->vippsQuote
-            ->method('getAuthToken')
-            ->willReturn('valid token');
-    }
-
-    private function buildTransaction($data)
-    {
-        $this->transactionBuilder = $this->objectManagerHelper->getObject(TransactionBuilder::class, [
-            'transactionFactory' => $this->getMockFactory(Transaction::class),
-            'infoFactory' => $this->getMockFactory(TransactionInfo::class),
-            'summaryFactory' => $this->getMockFactory(TransactionSummary::class),
-            'logHistoryFactory' => $this->getMockFactory(TransactionLogHistory::class),
-            'itemFactory' => $this->getMockFactory(TransactionLogHistory\Item::class),
-            'userDetailsFactory' => $this->getMockFactory(UserDetails::class),
-            'shippingDetailsFactory' => $this->getMockFactory(ShippingDetails::class),
-
-        ]);
-
-        return $this->transactionBuilder->setData($data)->build();
-    }
-
-    private function getMockFactory($instanceName)
-    {
-        $objectManager = $this->objectManagerHelper;
-        $factory = $this->getMockBuilder($instanceName . 'Factory')
-            ->disableOriginalConstructor()
-            ->setMethods(['create'])
-            ->getMock();
-        $factory->expects($this->any())
-            ->method('create')
-            ->will($this->returnCallback(function ($args) use ($instanceName, $objectManager) {
-                return $objectManager->getObject($instanceName, $args);
-            }));
-        return $factory;
-    }
-
-    /**
-     * @return object|Fallback
-     */
-    private function createActionInstance()
-    {
-        $this->objectManagerHelper = new ObjectManager($this);
-
-        $this->resultRedirect = $this->getMockBuilder(Redirect::class)
-            ->setMethods(['setPath'])
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->resultFactory = $this->getMockBuilder(ResultFactory::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['create'])
-            ->getMock();
-        $this->resultFactory->expects(self::once())
-            ->method('create')
-            ->with(ResultFactory::TYPE_REDIRECT)
-            ->willReturn($this->resultRedirect);
-        $this->request = $this->getMockBuilder(RequestInterface::class)
-            ->setMethods(['getResultFactory', 'getRequest', 'getResponse', 'getParam', 'getRequestString'])
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
-        $this->messageManagerMock = $this->getMockBuilder(ManagerInterface::class)
-            ->setMethods(['addErrorMessage', 'addWarningMessage'])
-            ->getMockForAbstractClass();
-
-        $this->paymentDetailsProvider = $this->createPaymentDetailsProvider();
-        $this->checkoutSession = $this->createCheckoutSession();
-        $this->cartRepository = $this->createCartRepository();
-        $this->vippsQuoteRepository = $this->createVippsQuoteRepository();
-
-        $this->compliance = $this->getMockBuilder(Compliance::class)
-            ->setMethods(['process'])->disableOriginalConstructor()->getMock();
-
-        $this->logger = $this->getMockBuilder(LoggerInterface::class)->getMockForAbstractClass();
-
-        $this->transactionProcessor = $this->createTransactionProcessor();
-
-        // The controller requires the concrete config, so the interface mock it used before could never
-        // be constructed and every test in this file errored.
-        $this->configMock = $this->getMockBuilder(VippsConfig::class)
-            ->setMethods(['getValue'])
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->action = $this->objectManagerHelper->getObject(Fallback::class, [
-            'resultFactory' => $this->resultFactory,
-            'request' => $this->request,
-            'checkoutSession' => $this->checkoutSession,
-            'transactionProcessor' => $this->transactionProcessor,
-            'cartRepository' => $this->cartRepository,
-            'messageManager' => $this->messageManagerMock,
-            'vippsQuoteRepository' => $this->vippsQuoteRepository,
-            'orderLocator' => $this->orderLocator,
-            'compliance' => $this->compliance,
-            'orderManagement' => $this->createOrderManagement(),
-            'logger' => $this->logger,
-            'config' => $this->configMock
-        ]);
-
-        return $this->action;
-    }
-
-    /**
-     * @return MockObject
-     */
-    private function createPaymentDetailsProvider()
-    {
-        $paymentDetailsProvider = $this->getMockBuilder(PaymentDetailsProvider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['get'])
-            ->getMock();
-
-        return $paymentDetailsProvider;
-    }
-
-    /**
-     * @return MockObject
-     */
-    private function createCheckoutSession()
-    {
-        $checkoutSession = $this->getMockBuilder(Session::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'setLastQuoteId',
+            ->onlyMethods(['getQuoteId', 'clearStorage', 'replaceQuote'])
+            ->addMethods([
+                'getLastRealOrderId',
+                'getLastQuoteId',
                 'setLastSuccessQuoteId',
+                'setLastQuoteId',
                 'setLastOrderId',
                 'setLastRealOrderId',
                 'setLastOrderStatus',
-                'replaceQuote',
-                'clearStorage',
-                'getQuoteId',
-                'getLastRealOrderId',
-                'getLastQuoteId'
             ])
             ->getMock();
+        $this->returnToken = $this->createMock(ReturnToken::class);
+    }
 
-        return $checkoutSession;
+    public function testAnApprovedPaymentGoesToTheConfirmation(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_AUTHORIZED));
+        $this->orderLocator->method('get')->with(self::REFERENCE)->willReturn($this->createMock(OrderInterface::class));
+
+        $this->messageManager->expects($this->once())->method('addSuccessMessage')
+            ->with($this->callback(fn ($message) => (string)$message === 'Your order was successfully placed.'));
+        $this->checkoutSession->expects($this->once())->method('clearStorage');
+
+        $this->execute();
+
+        $this->assertSame('checkout/onepage/success', $this->redirectPath);
+    }
+
+    public function testACancelledPaymentHandsTheCartBack(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_TERMINATED));
+        // The cart is only restored once the return token is claimed, so of two simultaneous returns
+        // one does nothing. Without this the mock claims nothing and the restore never runs.
+        $this->returnToken->method('consume')->willReturn(true);
+
+        $cart = $this->createMock(Quote::class);
+        $cart->expects($this->once())->method('setIsActive')->with(true)->willReturnSelf();
+        $this->cartRepository->method('get')->willReturn($cart);
+        $this->cartRepository->expects($this->once())->method('save')->with($cart);
+
+        $this->execute();
+
+        $this->assertSame('checkout/cart', $this->redirectPath);
+    }
+
+    public function testACancelledPaymentLeavesTheCartAloneWithoutCartPersistence(): void
+    {
+        $this->cartPersistence = false;
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_TERMINATED));
+        $this->cartRepository->expects($this->never())->method('save');
+
+        $this->execute();
+
+        $this->assertSame('checkout/cart', $this->redirectPath);
     }
 
     /**
-     * @return MockObject
+     * process() logs and swallows its own failures, such as a lock held by the cron, and returns nothing.
+     * The payment is still in the queue, so the shopper is told it will be checked again.
      */
-    private function createOrderManagement()
+    public function testAnUnresolvedPaymentIsLeftForTheOrderFetch(): void
     {
-        $orderManagement = $this->getMockBuilder(OrderManagementInterface::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'getOrderByIncrementId',
-                'place',
-                'getQuoteByReservedOrderId',
-                'cancel',
-                'notify'
-            ])
-            ->getMockForAbstractClass();
+        $this->transactionProcessor->method('process')->willReturn(null);
 
-        return $orderManagement;
+        $this->messageManager->expects($this->once())->method('addWarningMessage')
+            ->with($this->callback(fn ($message) => str_contains((string)$message, 'It will be checked later again')));
+
+        $this->execute();
+
+        $this->assertSame('checkout/cart', $this->redirectPath);
     }
 
     /**
-     * @return MockObject
+     * No message is shown: the only people a rejection reaches are real shoppers who have done nothing
+     * wrong, and telling them their payment failed when it has not is what makes them pay twice.
      */
-    private function createVippsQuoteRepository()
+    public function testAnUnauthorisedReturnIsRefused(): void
     {
-        $this->vippsQuote = $this->getMockBuilder(QuoteInterface::class)
-            ->setMethods(['getAuthToken', 'getQuoteId', 'getOrderId', 'getReservedOrderId'])
-            ->getMockForAbstractClass();
+        $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
+        $this->transactionProcessor->expects($this->never())->method('process');
+        $this->returnToken->expects($this->never())->method('consume');
+        $this->messageManager->expects($this->never())->method('addErrorMessage');
 
-        $vippsQuoteRepository = $this->getMockBuilder(QuoteRepositoryInterface::class)
-            ->setMethods(['loadByOrderId'])->disableOriginalConstructor()->getMockForAbstractClass();
+        $this->execute();
 
-        $vippsQuoteRepository
-            ->method('loadByOrderId')
-            ->willReturn($this->vippsQuote);
-
-        return $vippsQuoteRepository;
+        $this->assertSame('checkout/cart', $this->redirectPath);
     }
 
     /**
-     * @return TransactionProcessor
+     * A return link whose token has already been used is the shopper opening their own confirmation again
+     * far more often than it is an attack. The reference is sequential, so the visitor's own session is the
+     * only thing that may decide which of the two it is.
+     *
+     * @dataProvider unusableTokenDataProvider
      */
-    private function createTransactionProcessor()
+    public function testAnUnauthorisedReturnDecidesFromTheSessionAlone(
+        ?string $reference,
+        ?string $lastRealOrderId,
+        ?int $lastQuoteId,
+        string $expectedPath
+    ): void {
+        $this->reference = $reference;
+        $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
+        $this->checkoutSession->method('getLastRealOrderId')->willReturn($lastRealOrderId);
+        $this->checkoutSession->method('getLastQuoteId')->willReturn($lastQuoteId);
+
+        // The success page clears the flag it checks, so asserting the path alone would pass on a shopper
+        // who is then bounced straight back to the cart.
+        $this->checkoutSession
+            ->expects($expectedPath === 'checkout/onepage/success' ? $this->once() : $this->never())
+            ->method('setLastSuccessQuoteId')
+            ->with($lastQuoteId);
+
+        $this->execute();
+
+        $this->assertSame($expectedPath, $this->redirectPath);
+    }
+
+    public static function unusableTokenDataProvider(): array
     {
-        $this->order = $this->getMockBuilder(OrderInterface::class)
-            ->setMethods(['getState', 'getStatus', 'getCanSendNewEmailFlag', 'getEmailSent', 'getEntityId'])
-            ->getMockForAbstractClass();
+        return [
+            'shopper reopening their own used link' =>
+                [self::REFERENCE, self::REFERENCE, 42, 'checkout/onepage/success'],
+            'someone else, or an expired session' => [self::REFERENCE, '000450190', 42, 'checkout/cart'],
+            'no order in the session at all' => [self::REFERENCE, null, null, 'checkout/cart'],
+            'order in the session but not its cart' => [self::REFERENCE, self::REFERENCE, null, 'checkout/cart'],
+            'no reference on the request' => [null, self::REFERENCE, 42, 'checkout/cart'],
+        ];
+    }
 
-        $this->orderRepository = $this->getMockBuilder(OrderRepositoryInterface::class)
-            ->setMethods(['save', 'get'])->disableOriginalConstructor()->getMockForAbstractClass();
-        $this->orderRepository->method('get')->willReturn($this->order);
+    /**
+     * The order number is sequential. A request that fails authorisation must not put someone else's order in
+     * the visitor's session, where the success page shows its email and offers to attach it to a new account,
+     * nor hand them the cart.
+     */
+    public function testAnUnauthorisedReturnNeverReachesTheSession(): void
+    {
+        $this->authoriseProxy->method('do')->willThrowException(new LocalizedException(__('Invalid request')));
+        $this->orderLocator->method('get')->willReturn($this->createMock(OrderInterface::class));
+        $this->checkoutSession->expects($this->never())->method('clearStorage');
+        $this->checkoutSession->expects($this->never())->method('replaceQuote');
+        $this->cartRepository->expects($this->never())->method('save');
 
-        $this->cartManagement = $this->getMockBuilder(CartManagementInterface::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMockForAbstractClass();
+        $this->execute();
+    }
 
-        $this->quoteLocator = $this->getMockBuilder(QuoteLocator::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMock();
+    public function testAFinishedReturnUsesUpItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_AUTHORIZED));
+        $this->orderLocator->method('get')->willReturn($this->createMock(OrderInterface::class));
+        $this->returnToken->expects($this->once())->method('consume');
 
-        $this->orderLocator = $this->getMockBuilder(OrderLocator::class)
-            ->setMethods(['get'])->disableOriginalConstructor()->getMock();
-        $this->orderLocator->method('get')->willReturn($this->order);
+        $this->execute();
+    }
 
-        $this->processor = $this->getMockBuilder(Order\Payment\Processor::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMock();
+    public function testARestoredCartUsesUpItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_ABORTED));
+        $this->cartRepository->method('get')->willReturn($this->createMock(Quote::class));
+        $this->returnToken->expects($this->once())->method('consume');
 
-        $this->quoteUpdater = $this->getMockBuilder(QuoteUpdater::class)
-            ->setMethods(['save'])->disableOriginalConstructor()->getMock();
+        $this->execute();
+    }
 
-        $this->lockManager = $this->getMockBuilder(LockManager::class)
-            ->setMethods(['lock', 'unlock'])->disableOriginalConstructor()->getMock();
+    /**
+     * The callback held the lock or Vipps/MobilePay did not answer: nothing was resolved, so the shopper must be
+     * able to come back with the same link.
+     */
+    public function testAnUnresolvedReturnKeepsItsToken(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn(null);
+        $this->returnToken->expects($this->never())->method('consume');
 
-        $this->config = $this->getMockBuilder(VippsConfig::class)
-            ->setMethods(['save', 'getValue'])->disableOriginalConstructor()->getMockForAbstractClass();
+        $this->execute();
+    }
 
-        $this->quoteManagement = $this->getMockBuilder(QuoteManagement::class)
-            ->setMethods(['save', 'reload'])->disableOriginalConstructor()->getMockForAbstractClass();
-        $this->quoteManagement->method('reload')->willReturn($this->vippsQuote);
+    /**
+     * Once the browser is back the payment is resolved here, so the cart restore must not run again.
+     */
+    public function testAlwaysClearsThePendingCartRestore(): void
+    {
+        $this->transactionProcessor->method('process')->willReturn($this->payment(Payment::STATE_CREATED));
+        $this->cartRestoreCookie->expects($this->once())->method('clearPending');
 
-        $transactionProcessor = $this->objectManagerHelper->getObject(
-            TransactionProcessor::class,
-            [
-                'orderRepository' => $this->orderRepository,
-                'cartRepository' => $this->cartRepository,
-                'cartManagement' => $this->cartManagement,
-                'quoteLocator' => $this->quoteLocator,
-                'processor' => $this->processor,
-                'quoteUpdater' => $this->quoteUpdater,
-                'lockManager' => $this->lockManager,
-                'config' => $this->config,
-                'quoteManagement' => $this->quoteManagement,
-                'orderManagement' => $this->createOrderManagement(),
-                'orderLocator' => $this->orderLocator,
-                'logger' => $this->logger,
-                'paymentDetailsProvider' => $this->paymentDetailsProvider
-            ]
+        $this->execute();
+    }
+
+    /**
+     * The widget's iframe has no session: resolving there would cancel or place in the wrong session, and its
+     * cart page would consume the shopper's message. The widget script repeats the request in their tab.
+     */
+    public function testAnIframeReturnDoesNothing(): void
+    {
+        $this->fetchDest = 'iframe';
+        $this->transactionProcessor->expects($this->never())->method('process');
+        $this->cartRepository->expects($this->never())->method('save');
+        $this->messageManager->expects($this->never())->method('addWarningMessage');
+        $this->cartRestoreCookie->expects($this->never())->method('clearPending');
+
+        $this->execute();
+
+        $this->assertInstanceOf(Raw::class, $this->result);
+        $this->assertNull($this->redirectPath);
+    }
+
+    private function payment(string $state): Payment
+    {
+        return new Payment([Payment::STATE => $state]);
+    }
+
+    private function execute(): void
+    {
+        $redirect = $this->createMock(Redirect::class);
+        $redirect->method('setPath')->willReturnCallback(function ($path) use ($redirect) {
+            $this->redirectPath = $path;
+            return $redirect;
+        });
+        $raw = $this->createMock(Raw::class);
+        $raw->method('setContents')->willReturnSelf();
+        $resultFactory = $this->createMock(ResultFactory::class);
+        $resultFactory->method('create')->willReturnCallback(
+            fn ($type) => $type === ResultFactory::TYPE_RAW ? $raw : $redirect
         );
 
-        return $transactionProcessor;
-    }
+        $vippsQuote = $this->createMock(QuoteInterface::class);
+        $vippsQuote->method('getReservedOrderId')->willReturn(self::REFERENCE);
+        $vippsQuote->method('getQuoteId')->willReturn(42);
+        $vippsQuoteRepository = $this->createMock(QuoteRepositoryInterface::class);
+        $vippsQuoteRepository->method('loadByOrderId')->with(self::REFERENCE)->willReturn($vippsQuote);
 
-    private function createCartRepository()
-    {
-        $this->quote = $this->getMockBuilder(CartInterface::class)
-            ->setMethods(['getId', 'setIsActive', 'setReservedOrderId'])
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
+        $config = $this->createMock(Config::class);
+        $config->method('getValue')->willReturnCallback(
+            fn ($field) => $field === 'cancellation_cart_persistence' ? $this->cartPersistence : null
+        );
+        $config->method('getTitle')->willReturn('Vipps');
 
-        $cartRepository = $this->getMockBuilder(CartRepositoryInterface::class)
-            ->setMethods(['save', 'get'])->disableOriginalConstructor()->getMockForAbstractClass();
+        $request = $this->createMock(HttpRequest::class);
+        $request->method('getRequestString')->willReturn('/vipps/payment/fallback');
+        $request->method('getParam')->willReturnCallback(
+            fn ($name, $default = null) => $name === 'reference' ? $this->reference : $default
+        );
+        $request->method('getHeader')->willReturnCallback(
+            fn ($name) => $name === 'Sec-Fetch-Dest' ? $this->fetchDest : false
+        );
 
-        $cartRepository->method('get')
-            ->willReturn($this->quote);
-
-        return $cartRepository;
+        $this->result = (new Fallback(
+            $resultFactory,
+            $request,
+            $this->checkoutSession,
+            $this->transactionProcessor,
+            $this->cartRepository,
+            $this->messageManager,
+            $vippsQuoteRepository,
+            $this->createMock(OrderManagementInterface::class),
+            $this->orderLocator,
+            $this->createMock(Compliance::class),
+            $this->createMock(LoggerInterface::class),
+            $config,
+            new StatusVisitor(),
+            $this->authoriseProxy,
+            $this->cartRestoreCookie,
+            $this->returnToken
+        ))->execute();
     }
 }
