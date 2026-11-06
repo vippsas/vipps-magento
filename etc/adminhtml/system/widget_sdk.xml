@@ -21,7 +21,7 @@
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>payment/vipps/widget_sdk_enabled</config_path>
             <comment>
-                <![CDATA[Loads the Vipps MobilePay Widget SDK script on storefront pages where the Express Checkout button can appear (product, cart, and mini-cart pages), excluding checkout. See https://developer.vippsmobilepay.com/docs/knowledge-base/widget/]]>
+                <![CDATA[Loads the Vipps MobilePay Widget SDK script on storefront pages where the Express Checkout button can appear (product, cart, and mini-cart pages), excluding checkout. See https://developer.vippsmobilepay.com/docs/buttons-and-widgets/widget/]]>
             </comment>
             <requires>
                 <group id="vipps_required"/>
